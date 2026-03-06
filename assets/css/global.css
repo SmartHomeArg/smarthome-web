@@ -8,6 +8,9 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+}
 
 /* ================================================= */
 /* VARIABLES DEL SITIO */
@@ -100,13 +103,9 @@ main {
 .navbar .menu-principal .nav-link {
 
   color: var(--color-primario);
-
   font-weight: 500;
-
-  padding: 22px 18px;
-
+  padding: 18px 16px;
   position: relative;
-
   transition: all 0.25s ease;
 
 }
@@ -177,7 +176,7 @@ main {
 
   .menu-principal .nav-link {
 
-    padding: 14px 10px;
+    padding: 10px 0;
 
   }
 
@@ -902,5 +901,125 @@ FOOTER
 
   .navbar-brand img {
     max-width: 170px;
+  }
+}
+
+.site-header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.navbar-brand img {
+  max-width: 170px;
+  height: auto;
+}
+
+.navbar-toggler {
+  flex-shrink: 0;
+}
+
+.site-header {
+  width: 100%;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.navbar-brand {
+  margin-right: 0;
+  max-width: calc(100% - 60px);
+}
+
+.logo {
+  display: block;
+  max-width: 180px;
+  width: auto;
+  height: auto;
+}
+
+.navbar-toggler {
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+@media (max-width: 991.98px) {
+  .header-container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .logo {
+    max-width: 165px;
+  }
+}
+
+/* TEST HEADER MOBILE */
+.site-header,
+.site-header * {
+  box-sizing: border-box;
+}
+
+.site-header {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.site-header .navbar {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.site-header .container,
+.site-header .header-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding-left: 12px;
+  padding-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.site-header .navbar-brand {
+  margin: 0;
+  padding: 0;
+  max-width: calc(100% - 56px);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.site-header .logo {
+  display: block;
+  max-width: 170px;
+  width: 100%;
+  height: auto;
+}
+
+.site-header .navbar-toggler {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+}
+
+@media (max-width: 991.98px) {
+  .site-header .navbar-collapse {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    z-index: 999;
+  }
+
+  .site-header .menu-principal {
+    width: 100%;
   }
 }

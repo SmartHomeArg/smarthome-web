@@ -1,33 +1,28 @@
 <header class="site-header">
-
   <nav class="navbar navbar-expand-lg navbar-light">
-
-    <div class="container">
+    <div class="container header-container">
 
       <!-- LOGO -->
-
       <a class="navbar-brand" href="index.html">
-        <img src="assets/img/logo.png" class="logo">
+        <img src="assets/img/logo.png" class="logo" alt="SmartHome">
       </a>
 
-
       <!-- BOTON MOBILE -->
-
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal">
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#menuPrincipal"
+        aria-controls="menuPrincipal"
+        aria-expanded="false"
+        aria-label="Abrir menú"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
 
-
       <!-- MENU -->
-
       <div class="collapse navbar-collapse justify-content-center" id="menuPrincipal">
-
         <ul class="navbar-nav menu-principal">
-          <!--
-          <li class="nav-item">
-            <a class="nav-link" href="index.html">Inicio</a>
-          </li>
-          -->
           <li class="nav-item">
             <a class="nav-link" href="pages/hogar.html">Hogar</a>
           </li>
@@ -36,44 +31,36 @@
             <a class="nav-link" href="pages/negocio.html">Negocio</a>
           </li>
 
-          <!-- DROPDOWN -->
-
           <li class="nav-item dropdown como-dropdown">
-
             <a class="nav-link como-link" href="#">
-                Cómo funciona
-                <span class="arrow"></span>
+              Cómo funciona
+              <span class="arrow"></span>
             </a>
 
             <ul class="dropdown-menu como-menu">
-                <li><a class="dropdown-item" href="#">Control 24</a></li>
-                <li><a class="dropdown-item" href="#">Control 24 Full</a></li>
-                <li><a class="dropdown-item" href="#">Comercial Full</a></li>
+              <li><a class="dropdown-item" href="#">Control 24</a></li>
+              <li><a class="dropdown-item" href="#">Control 24 Full</a></li>
+              <li><a class="dropdown-item" href="#">Comercial Full</a></li>
             </ul>
-
-            </li>
-<!--
-          <li class="nav-item">
-            <a class="nav-link" href="pages/quienes-somos.html">Quiénes somos</a>
           </li>
--->
+
           <li class="nav-item">
             <a class="nav-link" href="https://smarthome.net.ar/" target="_blank">Tienda</a>
           </li>
-          
-          <li class="nav-item dropdown como-dropdown">
 
+          <li class="nav-item dropdown como-dropdown">
             <a class="nav-link como-link" href="#">
-                Soluciones a Medida
-                <span class="arrow"></span>
+              Soluciones a Medida
+              <span class="arrow"></span>
             </a>
 
             <ul class="dropdown-menu como-menu">
-                <li><a class="dropdown-item" href="#">Cerco Electrico</a></li>
-                <li><a class="dropdown-item" href="#">Sistemas de Camaras</a></li>
-                <li><a class="dropdown-item" href="#">Domotica</a></li>
+              <li><a class="dropdown-item" href="#">Cerco Eléctrico</a></li>
+              <li><a class="dropdown-item" href="#">Sistemas de Cámaras</a></li>
+              <li><a class="dropdown-item" href="#">Domótica</a></li>
             </ul>
-            
+          </li>
+
           <li class="nav-item">
             <a class="nav-link" href="https://indusec.com.ar/" target="_blank">Industria</a>
           </li>
@@ -81,13 +68,9 @@
           <li class="nav-item">
             <a class="nav-link" href="pages/contacto.html">Contacto</a>
           </li>
-
         </ul>
-
       </div>
 
     </div>
-
   </nav>
-
 </header>
