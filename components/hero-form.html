@@ -9,113 +9,80 @@
     <h4>Solicitá GRATIS una asesoría telefónica</h4>
 
     <form id="hero-lead-form" action="javascript:void(0);" novalidate>
-  <input type="hidden" name="origen" id="lead-origen">
-  <input type="hidden" name="formLoadedAt" id="formLoadedAt">
+      <input type="hidden" name="origen" id="lead-origen">
+      <input type="hidden" name="formLoadedAt" id="formLoadedAt">
 
-  <div class="form-group">
-    <label for="lead-nombre">Nombre y apellido *</label>
-    <input
-      type="text"
-      id="lead-nombre"
-      name="nombre"
-      placeholder="Tu nombre completo"
-      required
-      minlength="3"
-      autocomplete="name"
-    >
-  </div>
+      <div class="form-group">
+        <label for="lead-nombre">Nombre y apellido *</label>
+        <input type="text" id="lead-nombre" name="nombre" placeholder="Tu nombre completo" required minlength="3"
+          autocomplete="name">
+      </div>
 
-  <div class="form-row">
-    <div class="form-group">
-      <label for="lead-area">Cod Área *</label>
-      <input
-        type="text"
-        id="lead-area"
-        name="area"
-        placeholder="Cod Área"
-        required
-        inputmode="numeric"
-        maxlength="5"
-      >
-    </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="lead-area">Cod Área *</label>
+          <input type="text" id="lead-area" name="area" placeholder="Cod Área" required inputmode="numeric"
+            maxlength="5">
+        </div>
 
-    <div class="form-group">
-      <label for="lead-telefono">Teléfono *</label>
-      <input
-        type="text"
-        id="lead-telefono"
-        name="telefono"
-        placeholder="Tu teléfono"
-        required
-        inputmode="numeric"
-        maxlength="10"
-      >
-      <small>Sin 0 y sin 15</small>
-    </div>
-  </div>
+        <div class="form-group">
+          <label for="lead-telefono">Teléfono *</label>
+          <input type="text" id="lead-telefono" name="telefono" placeholder="Tu teléfono" required inputmode="numeric"
+            maxlength="10">
+          <small>Sin 0 y sin 15</small>
+        </div>
+      </div>
 
-  <div class="form-group">
-    <label for="lead-provincia">Provincia *</label>
-    <select id="lead-provincia" name="provincia" required>
-      <option value="">Seleccionar</option>
-      <option value="Buenos Aires">Buenos Aires</option>
-      <option value="CABA">CABA</option>
-      <option value="Catamarca">Catamarca</option>
-      <option value="Chaco">Chaco</option>
-      <option value="Chubut">Chubut</option>
-      <option value="Córdoba">Córdoba</option>
-      <option value="Corrientes">Corrientes</option>
-      <option value="Entre Ríos">Entre Ríos</option>
-      <option value="Formosa">Formosa</option>
-      <option value="Jujuy">Jujuy</option>
-      <option value="La Pampa">La Pampa</option>
-      <option value="La Rioja">La Rioja</option>
-      <option value="Mendoza">Mendoza</option>
-      <option value="Misiones">Misiones</option>
-      <option value="Neuquén">Neuquén</option>
-      <option value="Río Negro">Río Negro</option>
-      <option value="Salta">Salta</option>
-      <option value="San Juan">San Juan</option>
-      <option value="San Luis">San Luis</option>
-      <option value="Santa Cruz">Santa Cruz</option>
-      <option value="Santa Fe">Santa Fe</option>
-      <option value="Santiago del Estero">Santiago del Estero</option>
-      <option value="Tierra del Fuego">Tierra del Fuego</option>
-      <option value="Tucumán">Tucumán</option>
-    </select>
-  </div>
+      <div class="form-group">
+        <label for="lead-provincia">Provincia *</label>
+        <select id="lead-provincia" name="provincia" required>
+          <option value="">Seleccionar</option>
+          <option value="Buenos Aires">Buenos Aires</option>
+          <option value="CABA">CABA</option>
+          <option value="Catamarca">Catamarca</option>
+          <option value="Chaco">Chaco</option>
+          <option value="Chubut">Chubut</option>
+          <option value="Córdoba">Córdoba</option>
+          <option value="Corrientes">Corrientes</option>
+          <option value="Entre Ríos">Entre Ríos</option>
+          <option value="Formosa">Formosa</option>
+          <option value="Jujuy">Jujuy</option>
+          <option value="La Pampa">La Pampa</option>
+          <option value="La Rioja">La Rioja</option>
+          <option value="Mendoza">Mendoza</option>
+          <option value="Misiones">Misiones</option>
+          <option value="Neuquén">Neuquén</option>
+          <option value="Río Negro">Río Negro</option>
+          <option value="Salta">Salta</option>
+          <option value="San Juan">San Juan</option>
+          <option value="San Luis">San Luis</option>
+          <option value="Santa Cruz">Santa Cruz</option>
+          <option value="Santa Fe">Santa Fe</option>
+          <option value="Santiago del Estero">Santiago del Estero</option>
+          <option value="Tierra del Fuego">Tierra del Fuego</option>
+          <option value="Tucumán">Tucumán</option>
+        </select>
+      </div>
 
-  <div class="form-group">
-    <label for="lead-email">Mail *</label>
-    <input
-      type="email"
-      id="lead-email"
-      name="email"
-      placeholder="Tu correo electrónico"
-      required
-      autocomplete="email"
-    >
-  </div>
+      <div class="form-group">
+        <label for="lead-email">Mail *</label>
+        <input type="email" id="lead-email" name="email" placeholder="Tu correo electrónico" required
+          autocomplete="email">
+      </div>
 
-  <!-- Honeypot anti-bot -->
-  <div class="form-group hp-field" aria-hidden="true">
-    <label for="lead-website">Sitio web</label>
-    <input
-      type="text"
-      id="lead-website"
-      name="website"
-      tabindex="-1"
-      autocomplete="off"
-    >
-  </div>
+      <!-- Honeypot anti-bot -->
+      <div class="form-group hp-field" aria-hidden="true">
+        <label for="lead-website">Sitio web</label>
+        <input type="text" id="lead-website" name="website" tabindex="-1" autocomplete="off">
+      </div>
 
-  <button type="submit" class="hero-form-submit" id="hero-form-submit">
-    Enviar
-  </button>
+      <button type="submit" class="hero-form-submit" id="hero-form-submit">
+        Enviar
+      </button>
 
-  <p class="form-required">* Campos obligatorios</p>
-  <p id="hero-form-message" class="form-message" role="status" aria-live="polite"></p>
-</form>
+      <p class="form-required">* Campos obligatorios</p>
+      <p id="hero-form-message" class="form-message" role="status" aria-live="polite"></p>
+    </form>
 
     <div class="form-message" id="form-message"></div>
   </div>

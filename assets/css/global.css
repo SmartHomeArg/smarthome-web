@@ -8,7 +8,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   overflow-x: hidden;
 }
 
@@ -134,7 +135,8 @@ main {
 
 .header-spacer {
   flex: 0 0 auto;
-  width: 140px; /* ajustar según el ancho visual del logo */
+  width: 140px;
+  /* ajustar según el ancho visual del logo */
 }
 
 @media (max-width: 991.98px) {
@@ -244,6 +246,7 @@ main {
   }
 
 }
+
 /* ================================================= */
 /* DROPDOWN COMO FUNCIONA */
 /* ================================================= */
@@ -284,7 +287,7 @@ main {
 
   border-radius: 0;
 
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 
   margin-top: 0;
 
@@ -328,64 +331,65 @@ main {
   }
 
 }
+
 /* =============================== */
 /* DROPDOWN "COMO FUNCIONA" */
 /* =============================== */
 
-.como-dropdown{
+.como-dropdown {
   position: relative;
 }
 
 /* FLECHA */
 
-.arrow{
-  display:inline-block;
-  margin-left:8px;
-  width:8px;
-  height:8px;
-  border-right:2px solid #0b5ed7;
-  border-bottom:2px solid #0b5ed7;
+.arrow {
+  display: inline-block;
+  margin-left: 8px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #0b5ed7;
+  border-bottom: 2px solid #0b5ed7;
   transform: rotate(45deg);
   transition: transform 0.25s ease;
 }
 
 /* OCULTAR MENU */
 
-.como-menu{
-  display:none !important;
-  position:absolute;
-  top:100%;
-  left:0;
-  background:#fff;
-  min-width:180px;
-  border:none;
-  border-radius:0;
-  box-shadow:0 8px 20px rgba(0,0,0,0.08);
-  padding:8px 0;
+.como-menu {
+  display: none !important;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  min-width: 180px;
+  border: none;
+  border-radius: 0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  padding: 8px 0;
 }
 
 /* ITEMS */
 
-.como-menu .dropdown-item{
-  color:#0b5ed7;
-  padding:10px 20px;
-  font-weight:500;
+.como-menu .dropdown-item {
+  color: #0b5ed7;
+  padding: 10px 20px;
+  font-weight: 500;
 }
 
-.como-menu .dropdown-item:hover{
-  background:#f4f7ff;
-  color:#084298;
+.como-menu .dropdown-item:hover {
+  background: #f4f7ff;
+  color: #084298;
 }
 
 /* MOSTRAR MENU */
 
-.como-dropdown:hover .como-menu{
-  display:block !important;
+.como-dropdown:hover .como-menu {
+  display: block !important;
 }
 
 /* ROTAR FLECHA */
 
-.como-dropdown:hover .arrow{
+.como-dropdown:hover .arrow {
   transform: rotate(-135deg);
 }
 
@@ -401,7 +405,7 @@ FOOTER
 
 .footer-container {
   display: grid;
-  grid-template-columns: repeat(4,1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 40px;
 }
 
@@ -441,7 +445,7 @@ FOOTER
 }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255,255,255,0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
   margin-top: 40px;
   padding: 20px 0;
   text-align: center;
@@ -478,13 +482,11 @@ FOOTER
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(0, 0, 0, 0.65) 0%,
-    rgba(0, 0, 0, 0.45) 35%,
-    rgba(0, 0, 0, 0.30) 60%,
-    rgba(0, 0, 0, 0.35) 100%
-  );
+  background: linear-gradient(90deg,
+      rgba(0, 0, 0, 0.65) 0%,
+      rgba(0, 0, 0, 0.45) 35%,
+      rgba(0, 0, 0, 0.30) 60%,
+      rgba(0, 0, 0, 0.35) 100%);
   z-index: 1;
 }
 
@@ -594,31 +596,32 @@ FOOTER
     margin: 0 auto;
   }
 }
-  .hero-inner {
-    padding-top: 56px;
-    padding-bottom: 56px;
-    gap: 22px;
-  }
 
-  .hero-label {
-    font-size: 12px;
-    margin-bottom: 12px;
-  }
+.hero-inner {
+  padding-top: 56px;
+  padding-bottom: 56px;
+  gap: 22px;
+}
 
-  .hero-text h1 {
-    font-size: 50px;
-  }
+.hero-label {
+  font-size: 12px;
+  margin-bottom: 12px;
+}
 
-  .hero-text p {
-    font-size: 20px;
-    line-height: 1.5;
-  }
+.hero-text h1 {
+  font-size: 50px;
+}
 
-  .hero-form-box {
-    padding: 24px;
-    border-radius: 16px;
-    min-height: 220px;
-  }
+.hero-text p {
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.hero-form-box {
+  padding: 24px;
+  border-radius: 16px;
+  min-height: 220px;
+}
 
 
 /* =========================================================
@@ -887,6 +890,7 @@ FOOTER
 .hero-lead-form .is-invalid {
   border-color: #c62828;
 }
+
 /* =========================================================
    CONTENEDOR DEL FORM EN EL HERO
 ========================================================= */
@@ -902,6 +906,7 @@ FOOTER
 ========================================================= */
 
 @media (max-width: 991.98px) {
+
   .hero-form-card,
   #hero-form-container {
     max-width: 340px;
@@ -910,6 +915,7 @@ FOOTER
 }
 
 @media (max-width: 767.98px) {
+
   .hero-form-card,
   #hero-form-container {
     max-width: 100%;
@@ -1039,7 +1045,7 @@ FOOTER
   left: 0;
   width: 100%;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .logo {

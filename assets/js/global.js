@@ -19,67 +19,67 @@
 
 (function () {
 
-"use strict";
+  "use strict";
 
 
-/* =========================================================
-   CONFIGURACIÓN DEL SITIO
-   ========================================================= */
+  /* =========================================================
+     CONFIGURACIÓN DEL SITIO
+     ========================================================= */
 
-const SITE_CONFIG = {
+  const SITE_CONFIG = {
 
     siteName: "SmartHome",
 
     breakpoints: {
-        mobile: 576,
-        tablet: 768,
-        desktop: 992,
-        large: 1200
+      mobile: 576,
+      tablet: 768,
+      desktop: 992,
+      large: 1200
     }
 
-};
+  };
 
 
 
-/* =========================================================
-   UTILIDADES GENERALES
-   ========================================================= */
+  /* =========================================================
+     UTILIDADES GENERALES
+     ========================================================= */
 
-/**
- * Selecciona un elemento del DOM
- */
-function $(selector) {
+  /**
+   * Selecciona un elemento del DOM
+   */
+  function $(selector) {
     return document.querySelector(selector);
-}
+  }
 
-/**
- * Selecciona múltiples elementos
- */
-function $$(selector) {
+  /**
+   * Selecciona múltiples elementos
+   */
+  function $$(selector) {
     return document.querySelectorAll(selector);
-}
+  }
 
-/**
- * Verifica si un elemento existe
- */
-function elementExists(selector) {
+  /**
+   * Verifica si un elemento existe
+   */
+  function elementExists(selector) {
     return document.querySelector(selector) !== null;
-}
+  }
 
 
 
-/* =========================================================
-   INICIALIZACIÓN DEL SITIO
-   ========================================================= */
+  /* =========================================================
+     INICIALIZACIÓN DEL SITIO
+     ========================================================= */
 
-document.addEventListener("DOMContentLoaded", initSite);
+  document.addEventListener("DOMContentLoaded", initSite);
 
 
-/**
- * Función principal de inicialización
- */
+  /**
+   * Función principal de inicialización
+   */
 
-function initSite() {
+  function initSite() {
 
     console.log("SmartHome website initialized");
 
@@ -88,131 +88,131 @@ function initSite() {
     initAnimations();
     initLazyLoading();
 
-}
+  }
 
 
 
-/* =========================================================
-   NAVEGACIÓN
-   ========================================================= */
+  /* =========================================================
+     NAVEGACIÓN
+     ========================================================= */
 
-function initNavigation() {
+  function initNavigation() {
 
     if (!elementExists("header")) return;
 
     // Aquí se pueden agregar comportamientos del menú
     // Ejemplo: menú hamburguesa, scroll automático, etc
 
-}
+  }
 
-/* =========================================
-   CARGA COMPONENTES GLOBALES
-========================================= */
+  /* =========================================
+     CARGA COMPONENTES GLOBALES
+  ========================================= */
 
-document.addEventListener("DOMContentLoaded", function () {
-  cargarHeader();
-  cargarHeroForm();
-});
+  document.addEventListener("DOMContentLoaded", function () {
+    cargarHeader();
+    cargarHeroForm();
+  });
 
-/* =========================================
-   DETECTAR RUTA BASE
-========================================= */
+  /* =========================================
+     DETECTAR RUTA BASE
+  ========================================= */
 
-let basePath = "";
+  let basePath = "";
 
-if (window.location.pathname.includes("/pages/")) {
-  basePath = "../";
-}
+  if (window.location.pathname.includes("/pages/")) {
+    basePath = "../";
+  }
 
 
-/* =========================================
-   HEADER
-========================================= */
+  /* =========================================
+     HEADER
+  ========================================= */
 
-function cargarHeader() {
-  const enPages = window.location.pathname.includes('/pages/');
-  const base = enPages ? '../' : '';
+  function cargarHeader() {
+    const enPages = window.location.pathname.includes('/pages/');
+    const base = enPages ? '../' : '';
 
-  fetch(base + 'components/header.html')
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById('header').innerHTML = data;
+    fetch(base + 'components/header.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('header').innerHTML = data;
 
-      const logo = document.querySelector('.navbar-brand img');
-      if (logo) {
-        logo.src = base + 'assets/img/logo.png';
-      }
-
-      const brandLink = document.querySelector('.navbar-brand');
-      if (brandLink) {
-        brandLink.href = base + 'index.html';
-      }
-
-      document.querySelectorAll('.menu-principal a').forEach(link => {
-        const href = link.getAttribute('href');
-
-        if (!href || href.startsWith('#') || href.startsWith('http')) return;
-
-        if (enPages) {
-          if (href.startsWith('pages/')) {
-            link.href = '../' + href;
-          } else {
-            link.href = base + href;
-          }
-        } else {
-          link.href = href;
+        const logo = document.querySelector('.navbar-brand img');
+        if (logo) {
+          logo.src = base + 'assets/img/logo.png';
         }
-      });
-    })
-    .catch(error => console.error('Error cargando header:', error));
-}
 
-/* =========================================
-   FOOTER
-========================================= */
+        const brandLink = document.querySelector('.navbar-brand');
+        if (brandLink) {
+          brandLink.href = base + 'index.html';
+        }
 
-function cargarFooter() {
-  const enPages = window.location.pathname.includes('/pages/');
-  const base = enPages ? '../' : '';
+        document.querySelectorAll('.menu-principal a').forEach(link => {
+          const href = link.getAttribute('href');
 
-  fetch(base + 'components/footer.html')
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById('footer').innerHTML = data;
+          if (!href || href.startsWith('#') || href.startsWith('http')) return;
 
-      const footerLogo = document.querySelector('.footer-brand img');
-      if (footerLogo) {
-        footerLogo.src = base + 'assets/img/logo.png';
-      }
-    })
-    .catch(error => console.error('Error cargando footer:', error));
-}
+          if (enPages) {
+            if (href.startsWith('pages/')) {
+              link.href = '../' + href;
+            } else {
+              link.href = base + href;
+            }
+          } else {
+            link.href = href;
+          }
+        });
+      })
+      .catch(error => console.error('Error cargando header:', error));
+  }
 
-/* =========================================
-   INICIALIZACION
-========================================= */
+  /* =========================================
+     FOOTER
+  ========================================= */
 
-document.addEventListener('DOMContentLoaded', () => {
-  cargarHeader();
-  cargarFooter();
-});
+  function cargarFooter() {
+    const enPages = window.location.pathname.includes('/pages/');
+    const base = enPages ? '../' : '';
 
-/* =========================================================
-   EFECTOS DE SCROLL
-   ========================================================= */
+    fetch(base + 'components/footer.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('footer').innerHTML = data;
 
-function initScrollEffects() {
+        const footerLogo = document.querySelector('.footer-brand img');
+        if (footerLogo) {
+          footerLogo.src = base + 'assets/img/logo.png';
+        }
+      })
+      .catch(error => console.error('Error cargando footer:', error));
+  }
+
+  /* =========================================
+     INICIALIZACION
+  ========================================= */
+
+  document.addEventListener('DOMContentLoaded', () => {
+    cargarHeader();
+    cargarFooter();
+  });
+
+  /* =========================================================
+     EFECTOS DE SCROLL
+     ========================================================= */
+
+  function initScrollEffects() {
 
     window.addEventListener("scroll", handleHeaderOnScroll);
 
-}
+  }
 
 
-/**
- * Cambia estilo del header cuando se hace scroll
- */
+  /**
+   * Cambia estilo del header cuando se hace scroll
+   */
 
-function handleHeaderOnScroll() {
+  function handleHeaderOnScroll() {
 
     const header = $("header");
 
@@ -220,43 +220,43 @@ function handleHeaderOnScroll() {
 
     if (window.scrollY > 50) {
 
-        header.classList.add("scrolled");
+      header.classList.add("scrolled");
 
     } else {
 
-        header.classList.remove("scrolled");
+      header.classList.remove("scrolled");
 
     }
 
-}
+  }
 
 
 
-/* =========================================================
-   ANIMACIONES
-   ========================================================= */
+  /* =========================================================
+     ANIMACIONES
+     ========================================================= */
 
-function initAnimations() {
+  function initAnimations() {
 
     if (typeof AOS !== "undefined") {
 
-        AOS.init({
-            duration: 800,
-            once: true,
-            offset: 100
-        });
+      AOS.init({
+        duration: 800,
+        once: true,
+        offset: 100
+      });
 
     }
 
-}
+  }
 
 
 
-/* =========================================================
-   LAZY LOADING DE IMÁGENES
-   ========================================================= */
+  /* =========================================================
+     LAZY LOADING DE IMÁGENES
+     ========================================================= */
 
-function initLazyLoading() {
+  function initLazyLoading() {
 
     const images = $$("img[data-src]");
 
@@ -264,57 +264,57 @@ function initLazyLoading() {
 
     const observer = new IntersectionObserver((entries, observer) => {
 
-        entries.forEach(entry => {
+      entries.forEach(entry => {
 
-            if (!entry.isIntersecting) return;
+        if (!entry.isIntersecting) return;
 
-            const img = entry.target;
+        const img = entry.target;
 
-            img.src = img.dataset.src;
+        img.src = img.dataset.src;
 
-            observer.unobserve(img);
+        observer.unobserve(img);
 
-        });
+      });
 
     });
 
     images.forEach(img => observer.observe(img));
 
-}
+  }
 
 
 
-/* =========================================================
-   UTILIDADES UI
-   ========================================================= */
+  /* =========================================================
+     UTILIDADES UI
+     ========================================================= */
 
-/**
- * Scroll suave hacia un elemento
- */
+  /**
+   * Scroll suave hacia un elemento
+   */
 
-function scrollToElement(selector) {
+  function scrollToElement(selector) {
 
     const element = $(selector);
 
     if (!element) return;
 
     element.scrollIntoView({
-        behavior: "smooth"
+      behavior: "smooth"
     });
 
-}
+  }
 
 
 
-/* =========================================================
-   MODO DEBUG
-   ========================================================= */
+  /* =========================================================
+     MODO DEBUG
+     ========================================================= */
 
-const DEBUG = false;
+  const DEBUG = false;
 
-if (DEBUG) {
+  if (DEBUG) {
     console.log("Debug mode enabled");
-}
+  }
 
 
 })();
@@ -367,19 +367,19 @@ async function cargarHeroForm() {
     }
 
     const formHTML = await response.text();
-heroFormContainer.innerHTML = formHTML;
+    heroFormContainer.innerHTML = formHTML;
 
-/* Toma el origen desde el data attribute del contenedor */
-const origen = heroFormContainer.dataset.origen || "desconocido";
+    /* Toma el origen desde el data attribute del contenedor */
+    const origen = heroFormContainer.dataset.origen || "desconocido";
 
-/* Completa el input hidden del formulario */
-const origenInput = document.getElementById("lead-origen");
-if (origenInput) {
-  origenInput.value = origen;
-}
+    /* Completa el input hidden del formulario */
+    const origenInput = document.getElementById("lead-origen");
+    if (origenInput) {
+      origenInput.value = origen;
+    }
 
-/* Inicializa la lógica del formulario una vez que el HTML ya fue insertado */
-initHeroLeadForm();
+    /* Inicializa la lógica del formulario una vez que el HTML ya fue insertado */
+    initHeroLeadForm();
 
   } catch (error) {
     console.error("Error cargando hero-form.html:", error);
@@ -492,61 +492,61 @@ function initHeroLeadForm() {
   }
 
   form.addEventListener('submit', async function (event) {
-  event.preventDefault();
-  event.stopPropagation();
-  event.stopImmediatePropagation();
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
 
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  if (submitButton) submitButton.disabled = true;
-  showMessage('Enviando...', '');
+    if (submitButton) submitButton.disabled = true;
+    showMessage('Enviando...', '');
 
-  const loadedAt = Number(formLoadedAtInput?.value || Date.now());
-  const tiempoSegundos = Math.floor((Date.now() - loadedAt) / 1000);
+    const loadedAt = Number(formLoadedAtInput?.value || Date.now());
+    const tiempoSegundos = Math.floor((Date.now() - loadedAt) / 1000);
 
-  const payload = {
-    nombreApellido: nombreInput ? nombreInput.value.trim() : '',
-    area: areaInput ? onlyDigits(areaInput.value) : '',
-    telefono: telefonoInput ? onlyDigits(telefonoInput.value) : '',
-    provincia: provinciaInput ? provinciaInput.value.trim() : '',
-    mail: emailInput ? emailInput.value.trim() : '',
-    website: websiteInput ? websiteInput.value.trim() : '',
-    tiempoSegundos: tiempoSegundos,
-    pagina: origenInput ? origenInput.value : (document.title || 'Página sin título'),
-    url: window.location.href,
-    userAgent: navigator.userAgent
-  };
+    const payload = {
+      nombreApellido: nombreInput ? nombreInput.value.trim() : '',
+      area: areaInput ? onlyDigits(areaInput.value) : '',
+      telefono: telefonoInput ? onlyDigits(telefonoInput.value) : '',
+      provincia: provinciaInput ? provinciaInput.value.trim() : '',
+      mail: emailInput ? emailInput.value.trim() : '',
+      website: websiteInput ? websiteInput.value.trim() : '',
+      tiempoSegundos: tiempoSegundos,
+      pagina: origenInput ? origenInput.value : (document.title || 'Página sin título'),
+      url: window.location.href,
+      userAgent: navigator.userAgent
+    };
 
-  try {
-    const response = await fetch(scriptURL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await fetch(scriptURL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (result.ok) {
-      showMessage('Datos enviados correctamente. Redirigiendo...', 'success');
+      if (result.ok) {
+        showMessage('Datos enviados correctamente. Redirigiendo...', 'success');
 
-      setTimeout(function () {
-        const successURL = window.location.pathname.includes('/pages/')
-          ? '../gracias.html'
-          : 'gracias.html';
+        setTimeout(function () {
+          const successURL = window.location.pathname.includes('/pages/')
+            ? '../gracias.html'
+            : 'gracias.html';
 
-        window.location.href = successURL;
-      }, 700);
-    } else {
-      showMessage('No se pudo enviar el formulario. Revisá los datos e intentá nuevamente.', 'error');
-      console.error('Respuesta del backend:', result);
+          window.location.href = successURL;
+        }, 700);
+      } else {
+        showMessage('No se pudo enviar el formulario. Revisá los datos e intentá nuevamente.', 'error');
+        console.error('Respuesta del backend:', result);
+      }
+    } catch (error) {
+      showMessage('Ocurrió un error al enviar. Intentá nuevamente en unos minutos.', 'error');
+      console.error('Error enviando formulario:', error);
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
-  } catch (error) {
-    showMessage('Ocurrió un error al enviar. Intentá nuevamente en unos minutos.', 'error');
-    console.error('Error enviando formulario:', error);
-  } finally {
-    if (submitButton) submitButton.disabled = false;
-  }
-});
+  });
 }
