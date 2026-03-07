@@ -1269,7 +1269,7 @@ FOOTER
 
   .why-smarthome-grid {
     grid-template-columns: 1fr;
-    gap: 22px;
+    gap: 42px;
   }
 
   .why-card {
@@ -1309,5 +1309,9 @@ FOOTER
   .why-card p {
     font-size: 0.96rem;
     line-height: 1.65;
+  }
+
+  .why-smarthome-grid {
+    gap: 44px;
   }
 }
