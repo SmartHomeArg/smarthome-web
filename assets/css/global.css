@@ -1315,3 +1315,222 @@ FOOTER
     gap: 44px;
   }
 }
+
+/* =========================================================
+   SECCION PLANES HOME - SOLO INDEX
+========================================================= */
+
+.plans-home-section {
+  position: relative;
+  padding: 0 0 90px;
+  background: #f5f7fb;
+}
+
+.plans-home-band {
+  background: var(--color-primary, #0d63b5);
+  min-height: 210px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 42px;
+}
+
+.plans-home-heading {
+  text-align: center;
+}
+
+.plans-home-heading h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.6rem, 2vw, 2.2rem);
+  font-weight: 700;
+}
+
+.plans-home-content {
+  margin-top: -92px;
+  position: relative;
+  z-index: 2;
+}
+
+.plans-home-slider {
+  overflow: visible;
+}
+
+.plan-home-card {
+  height: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(13, 24, 45, 0.08);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 45px rgba(10, 32, 68, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-home-card__image-wrap {
+  position: relative;
+}
+
+.plan-home-card__image {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  display: block;
+}
+
+.plan-home-card__tag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3c316;
+  color: #111111;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 9px 14px;
+  border-radius: 8px;
+}
+
+.plan-home-card__body {
+  padding: 24px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.plan-home-card__text {
+  margin: 0 0 22px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #202733;
+  min-height: 54px;
+}
+
+.plan-home-card__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: 100%;
+  max-width: 210px;
+  min-height: 48px;
+  margin-bottom: 24px;
+  border-radius: 999px;
+  background: #1f2430;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.plan-home-card__button:hover {
+  background: #0d63b5;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.plan-home-card__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plan-home-card__features li {
+  position: relative;
+  padding: 0 0 16px 28px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(13, 24, 45, 0.12);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #263142;
+}
+
+.plan-home-card__features li:last-child {
+  margin-bottom: 0;
+}
+
+.plan-home-card__features li::before {
+  content: "\f26e";
+  font-family: "bootstrap-icons";
+  position: absolute;
+  top: 1px;
+  left: 0;
+  color: #39c2a0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* DESKTOP: igual a una grilla de 3 bloques */
+@media (min-width: 992px) {
+  .plans-home-slider .swiper-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+    transform: none !important;
+  }
+
+  .plans-home-slider .swiper-slide {
+    width: auto !important;
+    height: auto;
+  }
+}
+
+/* MOBILE / TABLET: slider arrastrable */
+@media (max-width: 991.98px) {
+  .plans-home-section {
+    padding-bottom: 70px;
+  }
+
+  .plans-home-band {
+    min-height: 180px;
+    padding-top: 34px;
+  }
+
+  .plans-home-content {
+    margin-top: -72px;
+  }
+
+  .plans-home-slider {
+    overflow: hidden;
+    padding-bottom: 8px;
+  }
+
+  .plans-home-slider .swiper-slide {
+    width: 85%;
+    height: auto;
+  }
+
+  .plan-home-card__image {
+    height: 220px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .plans-home-heading h2 {
+    font-size: 1.35rem;
+  }
+
+  .plans-home-slider .swiper-slide {
+    width: 88%;
+  }
+
+  .plan-home-card__body {
+    padding: 20px 18px 20px;
+  }
+
+  .plan-home-card__text {
+    font-size: 0.96rem;
+    min-height: auto;
+  }
+
+  .plan-home-card__features li {
+    font-size: 0.9rem;
+  }
+
+  .plan-home-card__image {
+    height: 200px;
+  }
+}

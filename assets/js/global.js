@@ -550,3 +550,48 @@ function initHeroLeadForm() {
     }
   });
 }
+
+/* =========================================================
+   SECCION PLANES HOME - SWIPER SOLO EN MOBILE
+========================================================= */
+
+(function () {
+  const sliderElement = document.getElementById("plansHomeSlider");
+
+  if (!sliderElement || typeof Swiper === "undefined") return;
+
+  let plansHomeSwiper = null;
+  const mobileBreakpoint = window.matchMedia("(max-width: 991.98px)");
+
+  function enablePlansHomeSwiper() {
+    if (plansHomeSwiper) return;
+
+    plansHomeSwiper = new Swiper(sliderElement, {
+      loop: true,
+      speed: 600,
+      grabCursor: true,
+      centeredSlides: false,
+      slidesPerView: "auto",
+      spaceBetween: 16,
+      watchOverflow: true
+    });
+  }
+
+  function disablePlansHomeSwiper() {
+    if (!plansHomeSwiper) return;
+
+    plansHomeSwiper.destroy(true, true);
+    plansHomeSwiper = null;
+  }
+
+  function handlePlansHomeSlider() {
+    if (mobileBreakpoint.matches) {
+      enablePlansHomeSwiper();
+    } else {
+      disablePlansHomeSwiper();
+    }
+  }
+
+  handlePlansHomeSlider();
+  mobileBreakpoint.addEventListener("change", handlePlansHomeSlider);
+})();
