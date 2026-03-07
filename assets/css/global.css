@@ -1177,3 +1177,137 @@ FOOTER
     padding: 12px 0;
   }
 }
+
+/* =========================================================
+   HOME - SECCION POR QUE SMARTHOME
+========================================================= */
+
+.why-smarthome-section {
+  padding: 80px 0;
+}
+
+.why-smarthome-wrap {
+  width: min(100%, 1040px);
+  margin: 0 auto;
+}
+
+.why-smarthome-section .section-heading {
+  margin-bottom: 46px;
+}
+
+.why-smarthome-section .section-heading h2 {
+  margin-bottom: 12px;
+}
+
+.why-smarthome-section .section-heading p {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.why-smarthome-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+.why-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 64px 28px 32px;
+  text-align: center;
+  box-shadow: 0 18px 40px rgba(1, 2, 41, 0.267);
+  height: 100%;
+}
+
+.why-card-icon {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(4, 42, 99, 0.28);
+}
+
+.why-card-icon i {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.why-card h3 {
+  margin: 0 0 16px;
+  font-size: 1.18rem;
+  line-height: 1.35;
+}
+
+.why-card p {
+  margin: 0;
+  line-height: 1.7;
+  font-size: 0.98rem;
+}
+
+/* Tablet grande / notebook chica */
+@media (max-width: 1199.98px) {
+  .why-smarthome-wrap {
+    width: min(100%, 100%);
+  }
+}
+
+/* Tablet */
+@media (max-width: 991.98px) {
+  .why-smarthome-section {
+    padding: 68px 0;
+  }
+
+  .why-smarthome-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .why-card {
+    padding: 60px 24px 28px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 575.98px) {
+  .why-smarthome-section {
+    padding: 56px 0;
+  }
+
+  .why-smarthome-section .section-heading {
+    margin-bottom: 38px;
+  }
+
+  .why-card {
+    border-radius: 18px;
+    padding: 58px 20px 24px;
+  }
+
+  .why-card-icon {
+    width: 58px;
+    height: 58px;
+    top: -22px;
+  }
+
+  .why-card-icon i {
+    font-size: 1.3rem;
+  }
+
+  .why-card h3 {
+    font-size: 1.08rem;
+  }
+
+  .why-card p {
+    font-size: 0.96rem;
+    line-height: 1.65;
+  }
+}
