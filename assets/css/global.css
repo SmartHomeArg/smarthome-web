@@ -546,10 +546,6 @@ FOOTER
   overflow: hidden;
 }
 
-/* Imagen del hero para la home */
-.hero-home {
-  background-image: url("../img/hero-home.jpg");
-}
 
 /* =========================================================
    HERO RESPONSIVE
