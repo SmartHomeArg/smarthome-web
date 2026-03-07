@@ -552,6 +552,10 @@ function initHeroLeadForm() {
 }
 
 /* =========================================================
+   SECCION PLANES HOME
+========================================================= */
+
+/* =========================================================
    SECCION PLANES HOME - SWIPER SOLO EN MOBILE
 ========================================================= */
 
@@ -561,19 +565,29 @@ function initHeroLeadForm() {
   if (!sliderElement || typeof Swiper === "undefined") return;
 
   let plansHomeSwiper = null;
-  const mobileBreakpoint = window.matchMedia("(max-width: 991.98px)");
 
   function enablePlansHomeSwiper() {
     if (plansHomeSwiper) return;
 
     plansHomeSwiper = new Swiper(sliderElement, {
       loop: true,
-      speed: 600,
+      speed: 550,
       grabCursor: true,
-      centeredSlides: false,
+      centeredSlides: true,
       slidesPerView: "auto",
-      spaceBetween: 16,
-      watchOverflow: true
+      spaceBetween: 18,
+      watchOverflow: true,
+      observer: true,
+      observeParents: true,
+      slideToClickedSlide: true,
+      simulateTouch: true,
+      allowTouchMove: true,
+      touchRatio: 1,
+      touchAngle: 45,
+      shortSwipes: true,
+      longSwipes: true,
+      longSwipesRatio: 0.2,
+      threshold: 5
     });
   }
 
@@ -585,13 +599,13 @@ function initHeroLeadForm() {
   }
 
   function handlePlansHomeSlider() {
-    if (mobileBreakpoint.matches) {
+    if (window.innerWidth <= 991.98) {
       enablePlansHomeSwiper();
     } else {
       disablePlansHomeSwiper();
     }
   }
 
-  handlePlansHomeSlider();
-  mobileBreakpoint.addEventListener("change", handlePlansHomeSlider);
+  window.addEventListener("load", handlePlansHomeSlider);
+  window.addEventListener("resize", handlePlansHomeSlider);
 })();
