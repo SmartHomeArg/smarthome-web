@@ -567,29 +567,31 @@ function initHeroLeadForm() {
   let plansHomeSwiper = null;
 
   function enablePlansHomeSwiper() {
-    if (plansHomeSwiper) return;
+  if (plansHomeSwiper) return;
 
-    plansHomeSwiper = new Swiper(sliderElement, {
-      loop: true,
-      speed: 550,
-      grabCursor: true,
-      centeredSlides: true,
-      slidesPerView: "auto",
-      spaceBetween: 18,
-      watchOverflow: true,
-      observer: true,
-      observeParents: true,
-      slideToClickedSlide: true,
-      simulateTouch: true,
-      allowTouchMove: true,
-      touchRatio: 1,
-      touchAngle: 45,
-      shortSwipes: true,
-      longSwipes: true,
-      longSwipesRatio: 0.2,
-      threshold: 5
-    });
-  }
+  plansHomeSwiper = new Swiper(sliderElement, {
+    loop: true,
+    speed: 550,
+    grabCursor: true,
+    centeredSlides: true,
+    slidesPerView: "auto",
+    spaceBetween: 18,
+    watchOverflow: true,
+    observer: true,
+    observeParents: true,
+    slideToClickedSlide: true,
+    simulateTouch: true,
+    allowTouchMove: true,
+    touchRatio: 1,
+    touchAngle: 45,
+    shortSwipes: true,
+    longSwipes: true,
+    longSwipesRatio: 0.2,
+    threshold: 5
+  });
+
+  plansHomeSwiper.update();
+}
 
   function disablePlansHomeSwiper() {
     if (!plansHomeSwiper) return;
