@@ -367,18 +367,186 @@ async function cargarHeroForm() {
     }
 
     const formHTML = await response.text();
-    heroFormContainer.innerHTML = formHTML;
+heroFormContainer.innerHTML = formHTML;
 
-    /* Toma el origen desde el data attribute del contenedor */
-    const origen = heroFormContainer.dataset.origen || "desconocido";
+/* Toma el origen desde el data attribute del contenedor */
+const origen = heroFormContainer.dataset.origen || "desconocido";
 
-    /* Completa el input hidden del formulario */
-    const origenInput = document.getElementById("lead-origen");
-    if (origenInput) {
-      origenInput.value = origen;
-    }
+/* Completa el input hidden del formulario */
+const origenInput = document.getElementById("lead-origen");
+if (origenInput) {
+  origenInput.value = origen;
+}
+
+/* Inicializa la lógica del formulario una vez que el HTML ya fue insertado */
+initHeroLeadForm();
 
   } catch (error) {
     console.error("Error cargando hero-form.html:", error);
   }
+}
+
+function initHeroLeadForm() {
+  const form = document.getElementById('hero-lead-form');
+  if (!form) return;
+
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzxkHX0fbZlJiENW5xcMq-CAkGLS3K3aI18A0vVuEySE079E1JOddCB-s6xDa3bEIasjw/exec';
+
+  const nombreInput = document.getElementById('lead-nombre');
+  const areaInput = document.getElementById('lead-area');
+  const telefonoInput = document.getElementById('lead-telefono');
+  const provinciaInput = document.getElementById('lead-provincia');
+  const emailInput = document.getElementById('lead-email');
+  const websiteInput = document.getElementById('lead-website');
+  const origenInput = document.getElementById('lead-origen');
+  const formLoadedAtInput = document.getElementById('formLoadedAt');
+  const submitButton = document.getElementById('hero-form-submit');
+  const messageBox = document.getElementById('hero-form-message');
+
+  if (form.dataset.initialized === 'true') return;
+  form.dataset.initialized = 'true';
+
+  if (origenInput && !origenInput.value) {
+    origenInput.value = document.title || 'Página sin título';
+  }
+
+  if (formLoadedAtInput) {
+    formLoadedAtInput.value = Date.now();
+  }
+
+  const onlyDigits = (value) => String(value || '').replace(/\D/g, '');
+  const emailIsValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  if (areaInput) {
+    areaInput.addEventListener('input', function () {
+      this.value = onlyDigits(this.value).slice(0, 5);
+    });
+  }
+
+  if (telefonoInput) {
+    telefonoInput.addEventListener('input', function () {
+      this.value = onlyDigits(this.value).slice(0, 10);
+    });
+  }
+
+  function clearFieldError(field) {
+    if (field) field.classList.remove('is-invalid');
+  }
+
+  function setFieldError(field) {
+    if (field) field.classList.add('is-invalid');
+  }
+
+  function showMessage(text, type) {
+    if (!messageBox) return;
+
+    messageBox.textContent = text;
+    messageBox.classList.remove('is-error', 'is-success');
+
+    if (type === 'error') messageBox.classList.add('is-error');
+    if (type === 'success') messageBox.classList.add('is-success');
+  }
+
+  function validateForm() {
+    let isValid = true;
+
+    [nombreInput, areaInput, telefonoInput, provinciaInput, emailInput].forEach(clearFieldError);
+    showMessage('', '');
+
+    const nombre = nombreInput ? nombreInput.value.trim() : '';
+    const area = areaInput ? onlyDigits(areaInput.value) : '';
+    const telefono = telefonoInput ? onlyDigits(telefonoInput.value) : '';
+    const provincia = provinciaInput ? provinciaInput.value.trim() : '';
+    const email = emailInput ? emailInput.value.trim() : '';
+
+    if (nombre.length < 3) {
+      setFieldError(nombreInput);
+      isValid = false;
+    }
+
+    if (area.length < 2 || area.length > 5) {
+      setFieldError(areaInput);
+      isValid = false;
+    }
+
+    if (telefono.length < 6 || telefono.length > 10) {
+      setFieldError(telefonoInput);
+      isValid = false;
+    }
+
+    if (!provincia) {
+      setFieldError(provinciaInput);
+      isValid = false;
+    }
+
+    if (!emailIsValid(email)) {
+      setFieldError(emailInput);
+      isValid = false;
+    }
+
+    if (!isValid) {
+      showMessage('Revisá los campos marcados antes de enviar.', 'error');
+    }
+
+    return isValid;
+  }
+
+  form.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  if (!validateForm()) return;
+
+  if (submitButton) submitButton.disabled = true;
+  showMessage('Enviando...', '');
+
+  const loadedAt = Number(formLoadedAtInput?.value || Date.now());
+  const tiempoSegundos = Math.floor((Date.now() - loadedAt) / 1000);
+
+  const payload = {
+    nombreApellido: nombreInput ? nombreInput.value.trim() : '',
+    area: areaInput ? onlyDigits(areaInput.value) : '',
+    telefono: telefonoInput ? onlyDigits(telefonoInput.value) : '',
+    provincia: provinciaInput ? provinciaInput.value.trim() : '',
+    mail: emailInput ? emailInput.value.trim() : '',
+    website: websiteInput ? websiteInput.value.trim() : '',
+    tiempoSegundos: tiempoSegundos,
+    pagina: origenInput ? origenInput.value : (document.title || 'Página sin título'),
+    url: window.location.href,
+    userAgent: navigator.userAgent
+  };
+
+  try {
+    const response = await fetch(scriptURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (result.ok) {
+      showMessage('Datos enviados correctamente. Redirigiendo...', 'success');
+
+      setTimeout(function () {
+        const successURL = window.location.pathname.includes('/pages/')
+          ? '../gracias.html'
+          : 'gracias.html';
+
+        window.location.href = successURL;
+      }, 700);
+    } else {
+      showMessage('No se pudo enviar el formulario. Revisá los datos e intentá nuevamente.', 'error');
+      console.error('Respuesta del backend:', result);
+    }
+  } catch (error) {
+    showMessage('Ocurrió un error al enviar. Intentá nuevamente en unos minutos.', 'error');
+    console.error('Error enviando formulario:', error);
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
+});
 }

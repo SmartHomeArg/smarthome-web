@@ -813,6 +813,24 @@ FOOTER
   line-height: 1.35;
 }
 
+.hp-field {
+  position: absolute !important;
+  left: -9999px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.form-message.is-error {
+  color: #c62828;
+}
+
+.form-message.is-success {
+  color: #1b5e20;
+}
+
+.hero-lead-form .is-invalid {
+  border-color: #c62828;
+}
 /* =========================================================
    CONTENEDOR DEL FORM EN EL HERO
 ========================================================= */
