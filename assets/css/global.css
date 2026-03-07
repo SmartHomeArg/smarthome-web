@@ -82,10 +82,66 @@ main {
   left: 0;
   width: 100%;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgb(0, 0, 0);
 
 }
 
+/* altura fija del navbar */
+
+.navbar {
+  min-height: 80px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+
+/* centra logo y hamburguesa verticalmente */
+
+.navbar-brand,
+.navbar-toggler {
+
+  height: 80px;
+
+  display: flex;
+
+  align-items: center;
+
+}
+
+/* ================================================= */
+/* HEADER LAYOUT */
+/* ================================================= */
+
+.header-inner {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-brand {
+  flex: 0 0 auto;
+  margin-right: 0;
+}
+
+#menuPrincipal {
+  flex: 1 1 auto;
+}
+
+.menu-principal {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.header-spacer {
+  flex: 0 0 auto;
+  width: 140px; /* ajustar según el ancho visual del logo */
+}
+
+@media (max-width: 991.98px) {
+  .header-spacer {
+    display: none;
+  }
+}
 
 /* ================================================= */
 /* LOGO */
