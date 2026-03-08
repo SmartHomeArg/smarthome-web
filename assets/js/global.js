@@ -92,145 +92,6 @@
 
 
 
-  /* =========================================================
-     NAVEGACIÓN
-     ========================================================= */
-
-  function initNavigation() {
-
-    if (!elementExists("header")) return;
-
-    // Aquí se pueden agregar comportamientos del menú
-    // Ejemplo: menú hamburguesa, scroll automático, etc
-
-  }
-
-  /* =========================================
-     CARGA COMPONENTES GLOBALES
-  ========================================= */
-
-  document.addEventListener("DOMContentLoaded", function () {
-    cargarHeader();
-    cargarHeroForm();
-  });
-
-  /* =========================================
-     DETECTAR RUTA BASE
-  ========================================= */
-
-  let basePath = "";
-
-  if (window.location.pathname.includes("/pages/")) {
-    basePath = "../";
-  }
-
-
-  /* =========================================
-     HEADER
-  ========================================= */
-
-  function cargarHeader() {
-    const enPages = window.location.pathname.includes('/pages/');
-    const base = enPages ? '../' : '';
-
-    fetch(base + 'components/header.html')
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById('header').innerHTML = data;
-
-        const logo = document.querySelector('.navbar-brand img');
-        if (logo) {
-          logo.src = base + 'assets/img/logo.png';
-        }
-
-        const brandLink = document.querySelector('.navbar-brand');
-        if (brandLink) {
-          brandLink.href = base + 'index.html';
-        }
-
-        document.querySelectorAll('.menu-principal a').forEach(link => {
-          const href = link.getAttribute('href');
-
-          if (!href || href.startsWith('#') || href.startsWith('http')) return;
-
-          if (enPages) {
-            if (href.startsWith('pages/')) {
-              link.href = '../' + href;
-            } else {
-              link.href = base + href;
-            }
-          } else {
-            link.href = href;
-          }
-        });
-      })
-      .catch(error => console.error('Error cargando header:', error));
-  }
-
-  /* =========================================
-     FOOTER
-  ========================================= */
-
-  function cargarFooter() {
-    const enPages = window.location.pathname.includes('/pages/');
-    const base = enPages ? '../' : '';
-
-    fetch(base + 'components/footer.html')
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById('footer').innerHTML = data;
-
-        const footerLogo = document.querySelector('.footer-brand img');
-        if (footerLogo) {
-          footerLogo.src = base + 'assets/img/logo.png';
-        }
-      })
-      .catch(error => console.error('Error cargando footer:', error));
-  }
-
-  /* =========================================
-     INICIALIZACION
-  ========================================= */
-
-  document.addEventListener('DOMContentLoaded', () => {
-    cargarHeader();
-    cargarFooter();
-  });
-
-  /* =========================================================
-     EFECTOS DE SCROLL
-     ========================================================= */
-
-  function initScrollEffects() {
-
-    window.addEventListener("scroll", handleHeaderOnScroll);
-
-  }
-
-
-  /**
-   * Cambia estilo del header cuando se hace scroll
-   */
-
-  function handleHeaderOnScroll() {
-
-    const header = $("header");
-
-    if (!header) return;
-
-    if (window.scrollY > 50) {
-
-      header.classList.add("scrolled");
-
-    } else {
-
-      header.classList.remove("scrolled");
-
-    }
-
-  }
-
-
 
   /* =========================================================
      ANIMACIONES
@@ -338,6 +199,84 @@ function activarMenu() {
 
   });
 
+}
+
+/* =========================================
+   CARGA COMPONENTES GLOBALES (HEADER / FOOTER)
+========================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+  cargarHeader();
+  cargarFooter();
+  cargarHeroForm();
+});
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+function cargarHeader() {
+  const enPages = window.location.pathname.includes('/pages/');
+  const base = enPages ? '../' : '';
+
+  fetch(base + 'components/header.html')
+    .then(response => response.text())
+    .then(data => {
+      const headerEl = document.getElementById('header');
+      if (headerEl) headerEl.innerHTML = data;
+
+      const logo = document.querySelector('.navbar-brand img');
+      if (logo) {
+        logo.src = base + 'assets/img/logo.png';
+      }
+
+      const brandLink = document.querySelector('.navbar-brand');
+      if (brandLink) {
+        brandLink.href = base + 'index.html';
+      }
+
+      document.querySelectorAll('.menu-principal a').forEach(link => {
+        const href = link.getAttribute('href');
+
+        if (!href || href.startsWith('#') || href.startsWith('http')) return;
+
+        if (enPages) {
+          if (href.startsWith('pages/')) {
+            link.href = '../' + href;
+          } else {
+            link.href = base + href;
+          }
+        } else {
+          link.href = href;
+        }
+      });
+
+    })
+    .catch(error => console.error('Error cargando header:', error));
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+function cargarFooter() {
+  const enPages = window.location.pathname.includes('/pages/');
+  const base = enPages ? '../' : '';
+
+  fetch(base + 'components/footer.html')
+    .then(response => response.text())
+    .then(data => {
+      const footerEl = document.getElementById('footer');
+      if (footerEl) footerEl.innerHTML = data;
+
+      const footerLogo = document.querySelector('.footer-brand img');
+      if (footerLogo) {
+        footerLogo.src = base + 'assets/img/logo.png';
+      }
+    })
+    .catch(error => console.error('Error cargando footer:', error));
 }
 
 /* =========================================================
@@ -567,31 +506,25 @@ function initHeroLeadForm() {
   let plansHomeSwiper = null;
 
   function enablePlansHomeSwiper() {
-  if (plansHomeSwiper) return;
+    if (plansHomeSwiper) return;
+    // Determinar número de slides y usar el índice central como inicio
+    const slides = sliderElement.querySelectorAll('.swiper-slide');
+    const slidesCount = Math.max(1, slides.length);
+    const initialIndex = Math.floor(slidesCount / 2) || 0;
 
-  plansHomeSwiper = new Swiper(sliderElement, {
-    loop: true,
-    speed: 550,
-    grabCursor: true,
-    centeredSlides: true,
-    slidesPerView: "auto",
-    spaceBetween: 18,
-    watchOverflow: true,
-    observer: true,
-    observeParents: true,
-    slideToClickedSlide: true,
-    simulateTouch: true,
-    allowTouchMove: true,
-    touchRatio: 1,
-    touchAngle: 45,
-    shortSwipes: true,
-    longSwipes: true,
-    longSwipesRatio: 0.2,
-    threshold: 5
-  });
-
-  plansHomeSwiper.update();
-}
+    plansHomeSwiper = new Swiper(sliderElement, {
+      loop: true,
+      slidesPerView: 1.12,
+      spaceBetween: 18,
+      speed: 600,
+      grabCursor: true,
+      simulateTouch: true,
+      allowTouchMove: true,
+      touchRatio: 1,
+      touchAngle: 45,
+      threshold: 6
+    });
+  }
 
   function disablePlansHomeSwiper() {
     if (!plansHomeSwiper) return;
@@ -608,6 +541,88 @@ function initHeroLeadForm() {
     }
   }
 
-  window.addEventListener("load", handlePlansHomeSlider);
-  window.addEventListener("resize", handlePlansHomeSlider);
+  // Ejecutar al iniciar y al redimensionar
+  handlePlansHomeSlider();
+  window.addEventListener('resize', handlePlansHomeSlider);
+  window.addEventListener('orientationchange', handlePlansHomeSlider);
+
+})();
+
+/* =========================================================
+   SECCION FUNCIONALIDADES HOME
+========================================================= */
+
+(function () {
+  const sliderElement = document.getElementById("funcionalidadesHomeSlider");
+
+  if (!sliderElement || typeof Swiper === "undefined") return;
+
+  const slides = sliderElement.querySelectorAll(".swiper-slide");
+  const slidesCount = slides.length;
+
+  /*
+    Con loop + centeredSlides + 3 visibles en desktop,
+    conviene tener al menos 5 slides reales.
+  */
+  const canLoop = slidesCount >= 5;
+  const middleIndex = Math.floor(slidesCount / 2);
+
+  const funcionalidadesHomeSwiper = new Swiper(sliderElement, {
+    loop: canLoop,
+    centeredSlides: true,
+    initialSlide: middleIndex,
+    slidesPerView: 1,
+    spaceBetween: 16,
+    speed: 700,
+    grabCursor: true,
+    watchSlidesProgress: true,
+    allowTouchMove: true,
+    loopAdditionalSlides: canLoop ? 3 : 0,
+
+    autoplay: {
+      delay: 5000,
+      disableOnInteraction: false,
+      pauseOnMouseEnter: true,
+      reverseDirection: false
+    },
+
+    navigation: {
+      nextEl: "#funcionalidadesHomeNext",
+      prevEl: "#funcionalidadesHomePrev"
+    },
+
+    breakpoints: {
+      0: {
+        slidesPerView: 1,
+        spaceBetween: 16
+      },
+      992: {
+        slidesPerView: 3,
+        spaceBetween: 26
+      }
+    },
+
+    on: {
+      init: function (swiper) {
+        /*
+          Esto fuerza a que al cargar arranque centrado
+          en el slide del medio real, manteniendo uno
+          visible a la izquierda y otro a la derecha.
+        */
+        if (canLoop) {
+          swiper.slideToLoop(middleIndex, 0, false);
+        }
+      }
+    }
+  });
+
+  /*
+    Si por alguna razón cambiás slides manualmente
+    más adelante, esto ayuda a refrescar.
+  */
+  window.addEventListener("resize", function () {
+    if (funcionalidadesHomeSwiper) {
+      funcionalidadesHomeSwiper.update();
+    }
+  });
 })();
