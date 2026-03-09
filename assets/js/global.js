@@ -272,10 +272,9 @@ function cargarFooter() {
     .then(data => {
       const footerEl = document.getElementById('footer');
       if (footerEl) footerEl.innerHTML = data;
-
       const footerLogo = document.querySelector('.footer-brand img');
       if (footerLogo) {
-        footerLogo.src = base + 'assets/img/logo.png';
+        footerLogo.src = base + 'assets/img/logo-blanco.png';
       }
     })
     .catch(error => console.error('Error cargando footer:', error));
