@@ -2014,6 +2014,9 @@ FOOTER
   line-height: 1.28;
   font-weight: 700;
   transition: color 0.35s ease;
+  text-shadow:
+  0 0 1.5px rgba(255, 255, 255, 0.8),
+  0 0 3px rgba(255, 255, 255, 0.4);
 }
 
 .funcionalidades-home__description {
@@ -2252,5 +2255,170 @@ FOOTER
   .funcionalidades-home__description {
     font-size: 0.94rem;
     line-height: 1.55;
+  }
+}
+
+/* =========================================================
+   SECCION CONTACTATE HOME
+========================================================= */
+
+.contactate-home {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.contactate-home__image {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.contactate-home__image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.contactate-home .container {
+  position: relative;
+  z-index: 2;
+}
+
+.contactate-home__inner {
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  padding: 56px 0;
+}
+
+.contactate-home__content {
+  width: min(100%, 420px);
+}
+
+.contactate-home__title {
+  margin: 0 0 18px;
+  font-size: clamp(2rem, 2.7vw, 3rem);
+  line-height: 1.1;
+  font-weight: 700;
+  color: #0b5db0;
+}
+
+.contactate-home__text {
+  margin: 0 0 28px;
+  max-width: 340px;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: #1f1f1f;
+}
+
+.contactate-home__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 58px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: #20242a;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    background 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.contactate-home__button:hover {
+  background: #11151a;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.contactate-home__button:focus-visible {
+  outline: 2px solid #0b5db0;
+  outline-offset: 3px;
+}
+
+.contactate-home__arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+/* =========================
+   TABLET Y MOBILE
+========================= */
+
+@media (max-width: 991.98px) {
+  .contactate-home {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .contactate-home__image {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: clamp(300px, 72vw, 460px);
+    order: 2;
+    overflow: hidden;
+  }
+
+  .contactate-home__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+  }
+
+  .contactate-home__inner {
+    min-height: auto;
+    justify-content: center;
+    padding: 56px 0 34px;
+  }
+
+  .contactate-home__content {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .contactate-home__text {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .contactate-home__inner {
+    padding: 42px 0 28px;
+  }
+
+  .contactate-home__title {
+    margin-bottom: 14px;
+  }
+
+  .contactate-home__text {
+    margin-bottom: 24px;
+    font-size: 1rem;
+  }
+
+  .contactate-home__button {
+    min-height: 54px;
+    padding: 0 24px;
+    font-size: 0.96rem;
+  }
+
+  .contactate-home__image {
+    height: 305px;
   }
 }

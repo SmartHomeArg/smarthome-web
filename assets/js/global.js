@@ -209,6 +209,8 @@ document.addEventListener("DOMContentLoaded", function () {
   cargarHeader();
   cargarFooter();
   cargarHeroForm();
+  cargarContactateHome();
+
 });
 
 
@@ -626,3 +628,21 @@ function initHeroLeadForm() {
     }
   });
 })();
+
+/* =========================================
+   CONTACTATE HOME
+========================================= */
+
+function cargarContactateHome() {
+  const placeholder = document.getElementById("contactate-home-placeholder");
+  if (!placeholder) return;
+
+  fetch("components/contactate-home.html")
+    .then(response => response.text())
+    .then(data => {
+      placeholder.innerHTML = data;
+    })
+    .catch(error => {
+      console.error("Error al cargar contactate-home:", error);
+    });
+}
