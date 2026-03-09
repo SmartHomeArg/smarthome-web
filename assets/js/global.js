@@ -345,7 +345,6 @@ function initHeroLeadForm() {
   const scriptURL = 'https://script.google.com/macros/s/AKfycbzxkHX0fbZlJiENW5xcMq-CAkGLS3K3aI18A0vVuEySE079E1JOddCB-s6xDa3bEIasjw/exec';
 
   const nombreInput = document.getElementById('lead-nombre');
-  const areaInput = document.getElementById('lead-area');
   const telefonoInput = document.getElementById('lead-telefono');
   const provinciaInput = document.getElementById('lead-provincia');
   const emailInput = document.getElementById('lead-email');
@@ -368,12 +367,6 @@ function initHeroLeadForm() {
 
   const onlyDigits = (value) => String(value || '').replace(/\D/g, '');
   const emailIsValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-
-  if (areaInput) {
-    areaInput.addEventListener('input', function () {
-      this.value = onlyDigits(this.value).slice(0, 5);
-    });
-  }
 
   if (telefonoInput) {
     telefonoInput.addEventListener('input', function () {
@@ -402,11 +395,10 @@ function initHeroLeadForm() {
   function validateForm() {
     let isValid = true;
 
-    [nombreInput, areaInput, telefonoInput, provinciaInput, emailInput].forEach(clearFieldError);
+    [nombreInput, telefonoInput, provinciaInput, emailInput].forEach(clearFieldError);
     showMessage('', '');
 
     const nombre = nombreInput ? nombreInput.value.trim() : '';
-    const area = areaInput ? onlyDigits(areaInput.value) : '';
     const telefono = telefonoInput ? onlyDigits(telefonoInput.value) : '';
     const provincia = provinciaInput ? provinciaInput.value.trim() : '';
     const email = emailInput ? emailInput.value.trim() : '';
@@ -416,12 +408,8 @@ function initHeroLeadForm() {
       isValid = false;
     }
 
-    if (area.length < 2 || area.length > 5) {
-      setFieldError(areaInput);
-      isValid = false;
-    }
-
-    if (telefono.length < 6 || telefono.length > 10) {
+    // Ahora requerimos exactamente 10 dígitos para teléfono
+    if (telefono.length !== 10) {
       setFieldError(telefonoInput);
       isValid = false;
     }
@@ -465,7 +453,6 @@ function initHeroLeadForm() {
 
     const payload = {
       nombreApellido: nombreInput ? nombreInput.value.trim() : '',
-      area: areaInput ? onlyDigits(areaInput.value) : '',
       telefono: telefonoInput ? onlyDigits(telefonoInput.value) : '',
       provincia: provinciaInput ? provinciaInput.value.trim() : '',
       mail: emailInput ? emailInput.value.trim() : '',
