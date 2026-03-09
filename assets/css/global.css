@@ -2648,3 +2648,187 @@ FOOTER
     max-height: 1200px;
   }
 }
+
+/* =========================================================
+   SECCION TU HOGAR PROTEGIDO
+========================================================= */
+
+.tu-hogar-protegido {
+  padding: 80px 0;
+}
+
+.tu-hogar-protegido__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
+  align-items: center;
+  gap: 48px;
+  margin-bottom: 40px;
+}
+
+.tu-hogar-protegido__content {
+  max-width: 620px;
+}
+
+.tu-hogar-protegido__title {
+  margin: 0 0 18px;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.15;
+  font-weight: 700;
+  color: #0b5dbb;
+}
+
+.tu-hogar-protegido__text {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.75;
+  color: #1f1f1f;
+}
+
+.tu-hogar-protegido__media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tu-hogar-protegido__media img {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  object-fit: contain;
+}
+
+.tu-hogar-protegido__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.tu-hogar-protegido__card {
+  position: relative;
+  margin: 0;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.tu-hogar-protegido__card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+.tu-hogar-protegido__card-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 420px;
+  margin: 0;
+  padding: 14px 20px;
+  border-radius: 999px;
+  background: rgba(11, 59, 143, 0.90);
+  color: #ffffff;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 991.98px) {
+  .tu-hogar-protegido {
+    padding: 64px 0;
+  }
+
+  .tu-hogar-protegido__top {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+
+  .tu-hogar-protegido__content {
+    max-width: 100%;
+  }
+
+  .tu-hogar-protegido__title {
+    text-align: center;
+  }
+
+  .tu-hogar-protegido__media {
+    justify-content: flex-start;
+  }
+
+  .tu-hogar-protegido__media img {
+    max-width: 460px;
+  }
+
+  .tu-hogar-protegido__cards {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .tu-hogar-protegido__card img {
+    aspect-ratio: 16 / 7;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 767.98px) {
+  .tu-hogar-protegido {
+    padding: 48px 0;
+  }
+
+  .tu-hogar-protegido__top {
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .tu-hogar-protegido__title {
+    margin-bottom: 14px;
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  .tu-hogar-protegido__text {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .tu-hogar-protegido__media {
+    justify-content: center;
+  }
+
+  .tu-hogar-protegido__media img {
+    max-width: 100%;
+  }
+
+  .tu-hogar-protegido__cards {
+    gap: 16px;
+  }
+
+  .tu-hogar-protegido__card {
+    border-radius: 20px;
+  }
+
+  .tu-hogar-protegido__card img {
+    aspect-ratio: 16 / 8;
+    border-radius: 20px;
+  }
+
+  .tu-hogar-protegido__card-caption {
+    bottom: 14px;
+    width: calc(100% - 24px);
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+}
