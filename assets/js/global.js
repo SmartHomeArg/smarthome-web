@@ -438,8 +438,15 @@ function initHeroLeadForm() {
 
     if (!validateForm()) return;
 
-    if (submitButton) submitButton.disabled = true;
-    showMessage('Enviando...', '');
+    // Cambiar texto del botón a 'Enviando...' y deshabilitarlo
+    const originalButtonText = submitButton ? submitButton.textContent.trim() : '';
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.dataset.originalText = originalButtonText || 'Enviar';
+      submitButton.textContent = 'Enviando...';
+    }
+    // limpiar mensajes en pantalla
+    showMessage('', '');
 
     const loadedAt = Number(formLoadedAtInput?.value || Date.now());
     const tiempoSegundos = Math.floor((Date.now() - loadedAt) / 1000);
@@ -469,6 +476,7 @@ function initHeroLeadForm() {
       const result = await response.json();
 
       if (result.ok) {
+        // Mostrar mensaje de éxito centrado antes de redirigir
         showMessage('Datos enviados correctamente. Redirigiendo...', 'success');
 
         setTimeout(function () {
@@ -486,7 +494,14 @@ function initHeroLeadForm() {
       showMessage('Ocurrió un error al enviar. Intentá nuevamente en unos minutos.', 'error');
       console.error('Error enviando formulario:', error);
     } finally {
-      if (submitButton) submitButton.disabled = false;
+      // Restaurar texto y estado del botón si no se redirige
+      if (submitButton) {
+        submitButton.disabled = false;
+        // Restaurar texto original después de un pequeño retraso para que el usuario vea el cambio
+        const original = submitButton.dataset.originalText || 'Enviar';
+        submitButton.textContent = original;
+        delete submitButton.dataset.originalText;
+      }
     }
   });
 }

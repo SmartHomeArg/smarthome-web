@@ -700,6 +700,90 @@ FOOTER
   border-radius: 18px 18px 0 0;
 }
 
+/* Hacer que la cabecera azul se extienda hasta los bordes del contenedor
+   y mantenga el alineamiento del contenido usando padding interno. */
+.hero-form-top {
+  /* horizontal padding coincide con el padding interno de .hero-form-card */
+  padding-top: 24px;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 16px;
+  /* extenderse hacia los bordes del contenedor (compensa el padding del card) */
+  margin-left: -24px;
+  margin-right: -24px;
+  /* mantener el radio superior para quedar redondeado con el contenedor */
+  border-radius: 18px 18px 0 0;
+}
+
+@media (max-width: 991.98px) {
+  .hero-form-top {
+    padding-top: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 12px;
+    margin-left: -20px;
+    margin-right: -20px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero-form-top {
+    padding-left: 16px;
+    padding-right: 16px;
+    margin-left: -16px;
+    margin-right: -16px;
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+/* Ajustes para que el formulario (azul + blanco) rellene todo el
+   rectángulo del contenedor y no deje el área "transparente" visible. */
+.hero-form-box {
+  /* movemos el espaciado adentro de la tarjeta: */
+  padding: 0;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.hero-form-box .hero-form-card {
+  height: 100%;
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* espacio interior: mover padding superior a .hero-form-top para que la banda azul llegue arriba */
+  padding: 0 24px 24px;
+  border-radius: 18px;
+}
+
+.hero-form-top {
+  flex: 0 0 auto;
+  border-radius: 12px 12px 0 0;
+}
+
+.hero-form-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 991.98px) {
+  .hero-form-box .hero-form-card {
+    padding: 0 20px 20px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero-form-box .hero-form-card {
+    padding: 0 16px 16px;
+    border-radius: 16px;
+  }
+  .hero-form-top {
+    border-radius: 16px 16px 0 0;
+  }
+}
+
 .hero-form-top::after {
   content: "";
   position: absolute;
@@ -899,6 +983,17 @@ FOOTER
   margin-top: 10px;
   font-size: 0.8rem;
   line-height: 1.35;
+}
+
+/* Centrar y ampliar el mensaje de éxito dentro de la tarjeta del hero
+   para que quede alineado con el botón del formulario. */
+.hero-form-body .form-message.is-success {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin: 12px auto 0;
+  color: #1b5e20; /* igual que la clase is-success */
+  font-weight: 600;
 }
 
 .hp-field {
@@ -1508,17 +1603,27 @@ FOOTER
 
 /* DESKTOP */
 @media (min-width: 992px) {
+  /* Use a flex-wrap layout so rows with fewer than 3 items are centered */
   .plans-home-slider .swiper-wrapper {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex !important;
+    flex-wrap: wrap;
     gap: 28px;
+    justify-content: center;
     transform: none !important;
   }
 
+  /* Each slide takes approx one third of the available width minus gaps */
   .plans-home-slider .swiper-slide {
-    width: auto !important;
+    flex: 0 0 calc((100% - 56px) / 3);
+    max-width: calc((100% - 56px) / 3);
     margin: 0 !important;
     height: auto;
+  }
+
+  /* If the container is narrower than three columns, allow slides to shrink
+     to keep layout stable while still centering rows. */
+  .plans-home-slider .swiper-slide {
+    box-sizing: border-box;
   }
 }
 
