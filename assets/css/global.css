@@ -2422,3 +2422,91 @@ FOOTER
     height: 305px;
   }
 }
+
+/* =========================================================
+   BOTON FLOTANTE WHATSAPP
+========================================================= */
+
+.whatsapp-float {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  z-index: 9999;
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(18px) scale(0.9);
+  animation:
+    whatsappEntrance 0.6s ease forwards,
+    whatsappBounce 3.5s ease-in-out 1.2s infinite;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.whatsapp-float:hover {
+  transform: scale(1.08);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+}
+
+.whatsapp-float img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Aparición al cargar */
+@keyframes whatsappEntrance {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Pequeño salto cada algunos segundos */
+@keyframes whatsappBounce {
+  0%, 85%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  90% {
+    transform: translateY(-8px) scale(1.03);
+  }
+  95% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Tablet */
+@media (max-width: 991.98px) {
+  .whatsapp-float {
+    width: 58px;
+    height: 58px;
+    right: 18px;
+    bottom: 18px;
+  }
+
+  .whatsapp-float img {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 575.98px) {
+  .whatsapp-float {
+    width: 54px;
+    height: 54px;
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .whatsapp-float img {
+    width: 100px;
+    height: 100px;
+  }
+}

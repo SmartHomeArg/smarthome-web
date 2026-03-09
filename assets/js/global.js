@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
   cargarFooter();
   cargarHeroForm();
   cargarContactateHome();
-
+  cargarWhatsappFloat();
 });
 
 
@@ -644,4 +644,27 @@ function cargarContactateHome() {
     .catch(error => {
       console.error("Error al cargar contactate-home:", error);
     });
+}
+
+/* =========================================
+   BOTON FLOTANTE DE WHATSAPP
+========================================= */
+
+function cargarWhatsappFloat() {
+  const contenedor = document.getElementById("whatsapp-float-container");
+  if (!contenedor) return;
+
+  const rutaBase = window.location.pathname.includes("/pages/") ? "../" : "./";
+
+  fetch(`${rutaBase}components/whatsapp-float.html`)
+    .then(response => response.text())
+    .then(data => {
+      contenedor.innerHTML = data;
+
+      const imagen = contenedor.querySelector("img");
+      if (imagen) {
+        imagen.src = `${rutaBase}assets/img/whatsapp-logo.png`;
+      }
+    })
+    .catch(error => console.error("Error cargando botón flotante de WhatsApp:", error));
 }
