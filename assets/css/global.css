@@ -1951,12 +1951,11 @@ FOOTER
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(7, 18, 45, 0.10) 0%,
-      rgba(7, 18, 45, 0.58) 100%
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(7, 18, 45, 0.10) 0%,
+    rgba(7, 18, 45, 0.58) 100%
+  );
   z-index: 1;
   transition: opacity 0.35s ease;
 }
@@ -1989,7 +1988,10 @@ FOOTER
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease;
 }
 
 .funcionalidades-home__icon i {
@@ -1998,12 +2000,26 @@ FOOTER
   transition: color 0.35s ease;
 }
 
+.funcionalidades-home__text {
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
 .funcionalidades-home__title {
   margin: 0;
-  max-width: 260px;
-  font-size: 1.28rem;
+  font-size: 1.34rem;
   line-height: 1.3;
   font-weight: 700;
+  transition: color 0.35s ease;
+}
+
+.funcionalidades-home__description {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.65;
   transition: color 0.35s ease;
 }
 
@@ -2040,6 +2056,10 @@ FOOTER
     color: #0b3b8f;
   }
 
+  .funcionalidades-home__slider .swiper-slide .funcionalidades-home__description {
+    color: #4b5563;
+  }
+
   .funcionalidades-home__slider .swiper-slide.swiper-slide-active .funcionalidades-home__card {
     transform: scale(1);
     box-shadow: 0 26px 60px rgba(10, 32, 68, 0.18);
@@ -2064,7 +2084,11 @@ FOOTER
   }
 
   .funcionalidades-home__slider .swiper-slide.swiper-slide-active .funcionalidades-home__title {
-    color: #ffffff;
+    color: #8ec5ff;
+  }
+
+  .funcionalidades-home__slider .swiper-slide.swiper-slide-active .funcionalidades-home__description {
+    color: rgba(255, 255, 255, 0.96);
   }
 }
 
@@ -2087,7 +2111,10 @@ FOOTER
   align-items: center;
   justify-content: center;
   z-index: 20;
-  transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease;
 }
 
 .funcionalidades-home__nav:hover {
@@ -2162,10 +2189,21 @@ FOOTER
     color: #ffffff;
   }
 
+  .funcionalidades-home__text {
+    max-width: 270px;
+    gap: 12px;
+  }
+
   .funcionalidades-home__title {
-    max-width: 250px;
-    font-size: 1.15rem;
-    color: #ffffff;
+    max-width: 260px;
+    font-size: 1.24rem;
+    color: #8ec5ff;
+  }
+
+  .funcionalidades-home__description {
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.96);
   }
 }
 
@@ -2201,8 +2239,18 @@ FOOTER
     font-size: 1.8rem;
   }
 
+  .funcionalidades-home__text {
+    max-width: 230px;
+    gap: 10px;
+  }
+
   .funcionalidades-home__title {
-    font-size: 1.05rem;
-    max-width: 220px;
+    font-size: 1.12rem;
+    max-width: 225px;
+  }
+
+  .funcionalidades-home__description {
+    font-size: 0.94rem;
+    line-height: 1.55;
   }
 }
