@@ -1589,10 +1589,6 @@ FOOTER
     padding: 0 14px 8px;
   }
 
-  .plans-home-slider .swiper-slide {
-    /* Swiper controla el ancho con slidesPerView */
-  }
-
   .plan-home-card__body {
     padding: 20px 18px 20px;
   }
