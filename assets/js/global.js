@@ -254,6 +254,18 @@ function cargarHeader() {
         }
       });
 
+      // Inicializar comportamiento táctil para dropdowns del header y auto-close del menu móvil
+      try {
+        initHeaderDropdownTouch();
+      } catch (e) {
+        // fail silently if function not available
+      }
+      try {
+        initMobileMenuAutoClose();
+      } catch (e) {
+        // fail silently
+      }
+
     })
     .catch(error => console.error('Error cargando header:', error));
 }
@@ -682,4 +694,182 @@ function cargarWhatsappFloat() {
       }
     })
     .catch(error => console.error("Error cargando botón flotante de WhatsApp:", error));
+}
+
+
+/* =========================================
+   Inicializar dropdowns del header para dispositivos táctiles
+   - Detecta dispositivos touch y agrega click handlers que
+     hacen toggle de la clase `is-open` en `.como-dropdown`.
+   - Cierra dropdowns al tocar fuera.
+========================================= */
+function initHeaderDropdownTouch() {
+  try {
+    // Activar en touch o en anchos móviles (para asegurar funcionamiento en tablets/emulación táctil)
+    const shouldInit = ('ontouchstart' in window) || window.innerWidth < 992 || window.matchMedia('(hover: none)').matches;
+    if (!shouldInit) return;
+
+    const dropdowns = document.querySelectorAll('.como-dropdown');
+
+    dropdowns.forEach(drop => {
+      const toggle = drop.querySelector('.como-link');
+      if (!toggle) return;
+
+      if (toggle.dataset.touchInit === 'true') return;
+      toggle.dataset.touchInit = 'true';
+
+      const handler = function (e) {
+        // Evitar navegación si el link es sólo para abrir el menú
+        const href = this.getAttribute('href') || '';
+        if (href === '#' || href.startsWith('#')) {
+          e.preventDefault();
+        }
+
+        // Evitar que otros manejadores cierren inmediatamente
+        if (e.stopPropagation) e.stopPropagation();
+
+        // Toggle del estado abierto
+        const isOpen = drop.classList.contains('is-open');
+
+        // Cerrar otros abiertos
+        document.querySelectorAll('.como-dropdown.is-open').forEach(d => {
+          if (d !== drop) d.classList.remove('is-open');
+        });
+
+        if (isOpen) {
+          drop.classList.remove('is-open');
+        } else {
+          drop.classList.add('is-open');
+        }
+      };
+
+      toggle.addEventListener('click', handler, false);
+      toggle.addEventListener('touchend', handler, false);
+    });
+
+    // Cerrar al tocar fuera
+    document.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.como-dropdown')) return;
+      document.querySelectorAll('.como-dropdown.is-open').forEach(d => d.classList.remove('is-open'));
+    }, false);
+
+  } catch (err) {
+    // Si algo falla, no bloquear el sitio
+    console.error('initHeaderDropdownTouch error:', err);
+  }
+}
+
+
+/* =========================================
+   Auto-close del menú mobile/tablet
+   - Cierra el collapse `#menuPrincipal` cuando está abierto
+     al tocar fuera, al hacer scroll o al hacer touchmove.
+   - Usa la API de Bootstrap si está disponible.
+========================================= */
+function initMobileMenuAutoClose() {
+  try {
+    const menu = document.getElementById('menuPrincipal');
+    if (!menu) return;
+
+    // evitar inicializar varias veces
+    if (menu.dataset.autoCloseInit === 'true') return;
+    menu.dataset.autoCloseInit = 'true';
+
+    const isOpen = () => menu.classList.contains('show');
+
+    const smoothClose = (el) => {
+      if (!el || !el.classList.contains('show')) return;
+
+      // evitar reentradas
+      if (el.dataset.animating === 'true') return;
+      el.dataset.animating = 'true';
+
+      // altura actual del contenido
+      const height = el.scrollHeight;
+
+      // preparar la animación
+      el.style.maxHeight = height + 'px';
+      el.style.overflow = 'hidden';
+      // forzar reflow
+      // eslint-disable-next-line no-unused-expressions
+      el.offsetHeight;
+
+      el.style.transition = 'max-height 260ms ease';
+      requestAnimationFrame(() => {
+        el.style.maxHeight = '0px';
+      });
+
+      let cleanup = () => {
+        el.classList.remove('show');
+        el.style.transition = '';
+        el.style.maxHeight = '';
+        el.style.overflow = '';
+        el.removeEventListener('transitionend', onEnd);
+        el.dataset.animating = 'false';
+
+        // actualizar togglers
+        document.querySelectorAll('.navbar-toggler').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+      };
+
+      const onEnd = (ev) => {
+        if (ev.propertyName === 'max-height') cleanup();
+      };
+
+      el.addEventListener('transitionend', onEnd);
+      // Fallback: si transitionend no se dispara, limpiar después de 600ms
+      const fallbackTimer = setTimeout(() => {
+        try { cleanup(); } catch (e) { /* silent */ }
+      }, 600);
+      const origCleanup = cleanup;
+      cleanup = function () {
+        clearTimeout(fallbackTimer);
+        origCleanup();
+      };
+    };
+    const closeMenu = () => {
+      try {
+        // Preferir usar la API de Bootstrap (si existe) para cerrar correctamente y mantener estado interno
+        if (window.bootstrap && typeof window.bootstrap.Collapse === 'function') {
+          const inst = window.bootstrap.Collapse.getOrCreateInstance(menu, {toggle: false});
+          if (inst && typeof inst.hide === 'function') {
+            inst.hide();
+            return;
+          }
+        }
+
+        // Soporte para Bootstrap 4 con jQuery
+        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.collapse === 'function') {
+          try {
+            jQuery(menu).collapse('hide');
+            return;
+          } catch (e) { /* fallback abajo */ }
+        }
+
+        // Fallback: animación manual y limpieza garantizada
+        smoothClose(menu);
+      } catch (err) {
+        console.error('closeMenu error:', err);
+      }
+    };
+
+    // Click fuera del menú
+    document.addEventListener('click', function (e) {
+      if (!isOpen()) return;
+      if (e.target.closest && (e.target.closest('#menuPrincipal') || e.target.closest('.navbar-toggler'))) return;
+      closeMenu();
+    }, false);
+
+    // Detectar scroll / gestures que indican intención de interacción fuera
+    const closeOnScrollOrTouch = () => {
+      if (isOpen()) closeMenu();
+    };
+
+    window.addEventListener('scroll', closeOnScrollOrTouch, {passive: true});
+    window.addEventListener('wheel', closeOnScrollOrTouch, {passive: true});
+    window.addEventListener('touchstart', closeOnScrollOrTouch, {passive: true});
+    window.addEventListener('touchmove', closeOnScrollOrTouch, {passive: true});
+
+  } catch (err) {
+    console.error('initMobileMenuAutoClose error:', err);
+  }
 }

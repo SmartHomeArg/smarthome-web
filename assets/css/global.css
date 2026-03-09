@@ -200,6 +200,15 @@ main {
 
 }
 
+/* Asegurar que la línea también aparezca en foco/activo y cuando
+   el item está abierto por JS (.is-open) — útil en touch devices */
+.menu-principal .nav-link:focus::before,
+.menu-principal .nav-link:active::before,
+.menu-principal .nav-item.is-open > .nav-link::before,
+.como-dropdown.is-open > .nav-link::before {
+  width: 100%;
+}
+
 
 .menu-principal .nav-link:hover {
 
@@ -390,6 +399,16 @@ main {
 /* ROTAR FLECHA */
 
 .como-dropdown:hover .arrow {
+  transform: rotate(-135deg);
+}
+
+/* Mostrar y rotar también cuando se agrega la clase `.is-open`
+   (usada por la lógica táctil para toggle por touch/click) */
+.como-dropdown.is-open .como-menu {
+  display: block !important;
+}
+
+.como-dropdown.is-open .arrow {
   transform: rotate(-135deg);
 }
 
@@ -2609,5 +2628,23 @@ FOOTER
   .whatsapp-float img {
     width: 100px;
     height: 100px;
+  }
+}
+
+/* =========================================================
+   Suavizar la apertura/cierre del collapse del menú en mobile
+   - Aplica solo en anchos <= 991.98px para no interferir en desktop
+   - Usa transición de max-height para un cierre más fluido
+========================================================= */
+@media (max-width: 991.98px) {
+  .navbar-collapse.collapse {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 260ms ease;
+  }
+
+  .navbar-collapse.collapse.show {
+    /* valor suficientemente alto para contener el menú; no debe cortar contenido */
+    max-height: 1200px;
   }
 }
