@@ -2832,3 +2832,422 @@ FOOTER
     font-size: 0.95rem;
   }
 }
+
+/* =========================================================
+   SECCION ZONAS PROTECCION HOGAR
+========================================================= */
+
+.zonas-proteccion-hogar {
+  position: relative;
+  padding: 90px 0 80px;
+  background: linear-gradient(
+    to bottom,
+    #eef1f4 0%,
+    #f4f5f7 10%,
+    #ffffff 22%,
+    #ffffff 100%
+  );
+  overflow: hidden;
+}
+
+.zonas-proteccion-hogar__inner {
+  position: relative;
+}
+
+/* =========================
+   SUBSECCION TITULO
+========================= */
+
+.zonas-proteccion-hogar__header {
+  text-align: center;
+  margin-bottom: 34px;
+}
+
+.zonas-proteccion-hogar__title {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.28;
+  font-weight: 400;
+  color: #111111;
+}
+
+.zonas-proteccion-hogar__title span {
+  display: block;
+  font-weight: 700;
+}
+
+/* =========================
+   SUBSECCION SUPERIOR / TABS
+========================= */
+
+.zonas-proteccion-hogar__tabs {
+  display: grid;
+  grid-template-columns: repeat(4, max-content);
+  justify-content: center;
+  gap: 34px;
+  margin-bottom: 44px;
+}
+
+.zonas-proteccion-hogar__tab {
+  position: relative;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0 0 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #0b3b8f;
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+
+.zonas-proteccion-hogar__tab::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: #0b63ce;
+  transform: translateX(-50%);
+  transition: width 0.25s ease, height 0.25s ease;
+}
+
+.zonas-proteccion-hogar__tab:hover {
+  color: #0b63ce;
+}
+
+.zonas-proteccion-hogar__tab:hover::after {
+  width: 100%;
+}
+
+.zonas-proteccion-hogar__tab.is-active {
+  color: #0b63ce;
+}
+
+.zonas-proteccion-hogar__tab.is-active::after {
+  width: 100%;
+  height: 4px;
+}
+
+/* =========================
+   SUBSECCION MEDIA
+========================= */
+
+.zonas-proteccion-hogar__media {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(320px, 1fr);
+  align-items: center;
+  gap: 42px;
+  margin-bottom: 54px;
+}
+
+/* Columna izquierda */
+
+.zonas-proteccion-hogar__visual {
+  position: relative;
+  min-width: 0;
+}
+
+.zonas-proteccion-hogar__image-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.zonas-proteccion-hogar__main-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Iconos flotantes */
+
+.zonas-proteccion-hogar__marker {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: #55b7e7;
+  color: #0b3b8f;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow:
+    0 0 0 4px rgba(85, 183, 231, 0.18),
+    0 10px 26px rgba(11, 59, 143, 0.18);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  z-index: 2;
+}
+
+.zonas-proteccion-hogar__marker:hover {
+  transform: scale(1.08);
+}
+
+.zonas-proteccion-hogar__marker.is-active {
+  background: #0b63ce;
+  color: #ffffff;
+  box-shadow:
+    0 0 0 7px rgba(85, 183, 231, 0.22),
+    0 14px 34px rgba(11, 59, 143, 0.22);
+}
+
+/* Posiciones iniciales de ejemplo */
+.zonas-proteccion-hogar__marker[data-slide="0"] {
+  top: 23%;
+  left: 9%;
+}
+
+.zonas-proteccion-hogar__marker[data-slide="1"] {
+  top: 36%;
+  left: 26%;
+}
+
+.zonas-proteccion-hogar__marker[data-slide="2"] {
+  top: 69%;
+  left: 48%;
+}
+
+.zonas-proteccion-hogar__marker[data-slide="3"] {
+  top: 49%;
+  right: 12%;
+}
+
+/* Columna derecha */
+
+.zonas-proteccion-hogar__panel {
+  position: relative;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 34px 26px 28px;
+  box-shadow: 0 26px 70px rgba(15, 33, 70, 0.12);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.zonas-proteccion-hogar__panel-close {
+  display: none;
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: #0b63ce;
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.zonas-proteccion-hogar__panel-text {
+  padding-right: 16px;
+}
+
+.zonas-proteccion-hogar__panel-title {
+  margin: 0 0 14px;
+  font-size: 1.45rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #0b3b8f;
+}
+
+.zonas-proteccion-hogar__panel-description {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: #444444;
+}
+
+.zonas-proteccion-hogar__panel-slider {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.zonas-proteccion-hogar__arrow {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: #f3f7fc;
+  color: #0b63ce;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.zonas-proteccion-hogar__arrow:hover {
+  transform: scale(1.06);
+  background: #e7f1ff;
+}
+
+.zonas-proteccion-hogar__product-image-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+}
+
+.zonas-proteccion-hogar__product-image {
+  display: block;
+  max-width: 100%;
+  max-height: 260px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* =========================
+   SUBSECCION INFERIOR
+========================= */
+
+.zonas-proteccion-hogar__benefits {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 34px;
+  margin-bottom: 42px;
+}
+
+.zonas-proteccion-hogar__benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.zonas-proteccion-hogar__benefit-icon {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #eef5ff;
+  color: #0b63ce;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.zonas-proteccion-hogar__benefit p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #222222;
+}
+
+/* =========================
+   CTA
+========================= */
+
+.zonas-proteccion-hogar__cta {
+  display: flex;
+  justify-content: center;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 991.98px) {
+  .zonas-proteccion-hogar {
+    padding: 78px 0 72px;
+  }
+
+  .zonas-proteccion-hogar__title {
+    font-size: 1.8rem;
+  }
+
+  .zonas-proteccion-hogar__tabs {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 340px;
+    margin: 0 auto 38px;
+  }
+
+  .zonas-proteccion-hogar__tab {
+    text-align: center;
+  }
+
+  .zonas-proteccion-hogar__media {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: 42px;
+  }
+
+  .zonas-proteccion-hogar__visual {
+    z-index: 1;
+  }
+
+  .zonas-proteccion-hogar__panel {
+    width: min(88%, 420px);
+    min-height: auto;
+    margin: -70px auto 0;
+    padding: 34px 24px 24px;
+    z-index: 3;
+  }
+
+  .zonas-proteccion-hogar__benefits {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 767.98px) {
+  .zonas-proteccion-hogar {
+    padding: 64px 0 64px;
+  }
+
+  .zonas-proteccion-hogar__header {
+    margin-bottom: 26px;
+  }
+
+  .zonas-proteccion-hogar__title {
+    font-size: 1.55rem;
+    line-height: 1.3;
+  }
+
+  .zonas-proteccion-hogar__tabs {
+    max-width: 280px;
+    gap: 14px;
+    margin-bottom: 30px;
+  }
+
+  .zonas-proteccion-hogar__tab {
+    font-size: 0.92rem;
+    padding-bottom: 10px;
+  }
+
+  .zonas-proteccion-hogar__marker {
+    width: 30px;
+    height: 30px;
+    font-size: 0.78rem;
+  }
+
+  .zonas-proteccion-hogar__panel {
+    position: relative;
+    width: min(90%, 360px);
+    margin: -56px auto 0;
+    border-radius: 24px;
+    padding: 42px 20px 22px;
+  }
+
+  .zonas-proteccion-hogar__panel-close {
+    display: block;
+  }
+
+ 

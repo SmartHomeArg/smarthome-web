@@ -211,6 +211,8 @@ document.addEventListener("DOMContentLoaded", function () {
   cargarHeroForm();
   cargarContactateHome();
   cargarWhatsappFloat();
+  cargarZonasProteccionHogar();
+
 });
 
 
@@ -817,7 +819,7 @@ function initMobileMenuAutoClose() {
       try {
         // Preferir usar la API de Bootstrap (si existe) para cerrar correctamente y mantener estado interno
         if (window.bootstrap && typeof window.bootstrap.Collapse === 'function') {
-          const inst = window.bootstrap.Collapse.getOrCreateInstance(menu, {toggle: false});
+          const inst = window.bootstrap.Collapse.getOrCreateInstance(menu, { toggle: false });
           if (inst && typeof inst.hide === 'function') {
             inst.hide();
             return;
@@ -851,12 +853,50 @@ function initMobileMenuAutoClose() {
       if (isOpen()) closeMenu();
     };
 
-    window.addEventListener('scroll', closeOnScrollOrTouch, {passive: true});
-    window.addEventListener('wheel', closeOnScrollOrTouch, {passive: true});
-    window.addEventListener('touchstart', closeOnScrollOrTouch, {passive: true});
-    window.addEventListener('touchmove', closeOnScrollOrTouch, {passive: true});
+    window.addEventListener('scroll', closeOnScrollOrTouch, { passive: true });
+    window.addEventListener('wheel', closeOnScrollOrTouch, { passive: true });
+    window.addEventListener('touchstart', closeOnScrollOrTouch, { passive: true });
+    window.addEventListener('touchmove', closeOnScrollOrTouch, { passive: true });
 
   } catch (err) {
     console.error('initMobileMenuAutoClose error:', err);
   }
+}
+
+/* =========================================
+   CARGA SECCION ZONAS PROTECCION HOGAR
+========================================= */
+async function cargarZonasProteccionHogar() {
+  const container = document.getElementById("zonas-proteccion-hogar-container");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const rutaComponente = enPages
+      ? "../components/zonas-proteccion-hogar.html"
+      : "components/zonas-proteccion-hogar.html";
+
+    const response = await fetch(rutaComponente);
+
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el componente zonas-proteccion-hogar.html");
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    initZonasProteccionHogar();
+  } catch (error) {
+    console.error("Error al cargar la sección zonas-proteccion-hogar:", error);
+  }
+}
+
+/* =========================================
+   INICIALIZAR SECCION ZONAS PROTECCION HOGAR
+========================================= */
+function initZonasProteccionHogar() {
+  const section = document.querySelector(".zonas-proteccion-hogar");
+  if (!section) return;
+
+  console.log("Sección zonas-proteccion-hogar cargada correctamente");
 }
