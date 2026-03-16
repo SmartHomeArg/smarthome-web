@@ -898,5 +898,267 @@ function initZonasProteccionHogar() {
   const section = document.querySelector(".zonas-proteccion-hogar");
   if (!section) return;
 
-  console.log("Sección zonas-proteccion-hogar cargada correctamente");
+  const tabs = Array.from(section.querySelectorAll(".zonas-proteccion-hogar__tab"));
+  const markers = Array.from(section.querySelectorAll(".zonas-proteccion-hogar__marker"));
+  const panel = section.querySelector(".zonas-proteccion-hogar__panel");
+  const panelTitle = section.querySelector(".zonas-proteccion-hogar__panel-title");
+  const panelDescription = section.querySelector(".zonas-proteccion-hogar__panel-description");
+  const productImage = section.querySelector(".zonas-proteccion-hogar__product-image");
+  const mainImage = section.querySelector(".zonas-proteccion-hogar__main-image");
+  const prevButton = section.querySelector(".zonas-proteccion-hogar__arrow--prev");
+  const nextButton = section.querySelector(".zonas-proteccion-hogar__arrow--next");
+  const closeButton = section.querySelector(".zonas-proteccion-hogar__panel-close");
+
+  if (
+    !tabs.length ||
+    !markers.length ||
+    !panel ||
+    !panelTitle ||
+    !panelDescription ||
+    !productImage ||
+    !prevButton ||
+    !nextButton
+  ) {
+    return;
+  }
+
+  const enPages = window.location.pathname.includes("/pages/");
+  const imageBasePath = enPages ? "../assets/img/" : "assets/img/";
+
+  if (mainImage) {
+    mainImage.src = imageBasePath + "escena-hogar.png";
+  }
+
+  const sectionData = {
+    perimetral: [
+      {
+        title: "Contacto magnético exterior",
+        description: "Detector de contacto ideal para proteger accesos exteriores, puertas y ventanas del perímetro del hogar.",
+        image: "escena-hogar-mag.png",
+        alt: "Contacto magnético exterior",
+        marker: { top: "23%", left: "9%" }
+      },
+      {
+        title: "Sensor PIR de movimiento",
+        description: "Detecta movimiento en zonas de paso y dispara alertas cuando hay actividad no autorizada.",
+        image: "escena-hogar-pir-mov.png",
+        alt: "Sensor de movimiento PIR",
+        marker: { top: "36%", left: "26%" }
+      },
+      {
+        title: "Sirena disuasiva",
+        description: "Al activarse, emite sonido y señal visual para advertir y ayudar a disuadir intrusiones.",
+        image: "escena-hogar-mag.png",
+        alt: "Sirena disuasiva exterior",
+        marker: { top: "69%", left: "48%" }
+      },
+      {
+        title: "Refuerzo en accesos laterales",
+        description: "Cobertura en zonas laterales y puntos ciegos para completar la protección perimetral.",
+        image: "escena-hogar-pir-mov.png",
+        alt: "Protección de accesos laterales",
+        marker: { top: "49%", left: "86%" }
+      }
+    ],
+    interior: [
+      {
+        title: "Panel inteligente",
+        description: "El panel centraliza la operación y comunica el estado del sistema para una gestión simple y segura.",
+        image: "equipamiento-panel.png",
+        alt: "Panel inteligente de alarma",
+        marker: { top: "29%", left: "34%" }
+      },
+      {
+        title: "Monitoreo de ambientes",
+        description: "Control continuo de áreas internas para detectar cambios y eventos importantes en tiempo real.",
+        image: "tu-hogar-protegido-2.png",
+        alt: "Monitoreo de ambientes interiores",
+        marker: { top: "53%", left: "19%" }
+      },
+      {
+        title: "Control desde celular",
+        description: "Gestioná armado, desarmado y estado del sistema con acceso rápido desde la app.",
+        image: "tu-hogar-protegido-3.png",
+        alt: "Control del sistema desde celular",
+        marker: { top: "63%", left: "57%" }
+      },
+      {
+        title: "Cobertura integral interior",
+        description: "Integración de dispositivos para proteger espacios internos clave de forma coordinada.",
+        image: "tu-hogar-protegido.png",
+        alt: "Cobertura integral interior",
+        marker: { top: "43%", left: "82%" }
+      }
+    ],
+    video: [
+      {
+        title: "Video inteligente",
+        description: "Visualización y verificación remota para responder con más contexto ante eventos de seguridad.",
+        image: "funcionalidades-video-inteligencia.jpg",
+        alt: "Video inteligente",
+        marker: { top: "28%", left: "17%" }
+      },
+      {
+        title: "Smart cam interior",
+        description: "Seguimiento de actividad en espacios internos con acceso desde la aplicación.",
+        image: "funcionalidades-smart-cam.jpg",
+        alt: "Camara inteligente interior",
+        marker: { top: "49%", left: "33%" }
+      },
+      {
+        title: "Registro de eventos",
+        description: "Historial visual para consultar eventos detectados y facilitar la toma de decisiones.",
+        image: "funcionalidades-hogar-y-mascotas.jpg",
+        alt: "Registro de eventos de seguridad",
+        marker: { top: "67%", left: "54%" }
+      },
+      {
+        title: "Cobertura de zonas críticas",
+        description: "Distribución de cámaras para cubrir puntos de ingreso y circulación con mayor precisión.",
+        image: "funcionalidades-smart-cam.jpg",
+        alt: "Cobertura de zonas criticas",
+        marker: { top: "47%", left: "82%" }
+      }
+    ],
+    conectividad: [
+      {
+        title: "Conectividad del sistema",
+        description: "Comunicación estable entre dispositivos para sostener la protección y el monitoreo en todo momento.",
+        image: "plan-home-control.jpg",
+        alt: "Conectividad del sistema de seguridad",
+        marker: { top: "31%", left: "25%" }
+      },
+      {
+        title: "Integracion con app",
+        description: "Control unificado para visualizar estado del hogar y gestionar acciones desde cualquier lugar.",
+        image: "plan-home-live.jpg",
+        alt: "Integracion de la app con la alarma",
+        marker: { top: "48%", left: "42%" }
+      },
+      {
+        title: "Automatizacion de rutinas",
+        description: "Programación de acciones y notificaciones para una experiencia de seguridad más cómoda.",
+        image: "plan-home-plus.jpg",
+        alt: "Automatizacion del sistema",
+        marker: { top: "64%", left: "61%" }
+      },
+      {
+        title: "Canales de respaldo",
+        description: "Redundancia de comunicación para mantener disponibilidad ante cortes o interferencias.",
+        image: "equipamiento-panel.png",
+        alt: "Canales de respaldo de conectividad",
+        marker: { top: "40%", left: "84%" }
+      }
+    ]
+  };
+
+  let activeTab = "perimetral";
+  let activeIndex = 0;
+
+  const isMobileViewport = () => window.matchMedia("(max-width: 991.98px)").matches;
+
+  const clampIndex = (index, total) => {
+    if (!total) return 0;
+    return ((index % total) + total) % total;
+  };
+
+  const openPanel = () => {
+    panel.classList.remove("is-collapsed");
+    panel.setAttribute("aria-hidden", "false");
+  };
+
+  const closePanel = () => {
+    if (!isMobileViewport()) return;
+    panel.classList.add("is-collapsed");
+    panel.setAttribute("aria-hidden", "true");
+  };
+
+  const getActiveItems = () => sectionData[activeTab] || [];
+
+  function render() {
+    const items = getActiveItems();
+    if (!items.length) return;
+
+    activeIndex = clampIndex(activeIndex, items.length);
+    const currentItem = items[activeIndex];
+
+    tabs.forEach((tab) => {
+      const isActive = tab.dataset.tab === activeTab;
+      tab.classList.toggle("is-active", isActive);
+      tab.setAttribute("aria-selected", isActive ? "true" : "false");
+    });
+
+    markers.forEach((marker, index) => {
+      const markerItem = items[index];
+      if (!markerItem) {
+        marker.style.display = "none";
+        marker.classList.remove("is-active");
+        marker.removeAttribute("aria-current");
+        return;
+      }
+
+      marker.style.display = "inline-flex";
+      marker.style.top = markerItem.marker.top;
+      marker.style.left = markerItem.marker.left;
+      marker.textContent = String(index + 1);
+      marker.classList.toggle("is-active", index === activeIndex);
+
+      if (index === activeIndex) {
+        marker.setAttribute("aria-current", "true");
+      } else {
+        marker.removeAttribute("aria-current");
+      }
+    });
+
+    panelTitle.textContent = currentItem.title;
+    panelDescription.textContent = currentItem.description;
+    productImage.src = imageBasePath + currentItem.image;
+    productImage.alt = currentItem.alt;
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", function () {
+      const nextTab = this.dataset.tab;
+      if (!nextTab || nextTab === activeTab) return;
+      activeTab = nextTab;
+      activeIndex = 0;
+      openPanel();
+      render();
+    });
+  });
+
+  markers.forEach((marker, index) => {
+    marker.addEventListener("click", function () {
+      const total = getActiveItems().length;
+      if (index >= total) return;
+      activeIndex = index;
+      openPanel();
+      render();
+    });
+  });
+
+  prevButton.addEventListener("click", function () {
+    activeIndex -= 1;
+    openPanel();
+    render();
+  });
+
+  nextButton.addEventListener("click", function () {
+    activeIndex += 1;
+    openPanel();
+    render();
+  });
+
+  if (closeButton) {
+    closeButton.addEventListener("click", closePanel);
+  }
+
+  window.addEventListener("resize", function () {
+    if (!isMobileViewport()) {
+      openPanel();
+    }
+  });
+
+  panel.setAttribute("aria-hidden", "false");
+  render();
 }

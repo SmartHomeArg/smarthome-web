@@ -8,6 +8,7 @@
   box-sizing: border-box;
 }
 
+
 html,
 body {
   overflow-x: hidden;
@@ -2970,6 +2971,9 @@ FOOTER
 
 .zonas-proteccion-hogar__marker {
   position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 34px;
   height: 34px;
   border: 0;
@@ -3031,6 +3035,7 @@ FOOTER
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: transform 0.28s ease, opacity 0.28s ease, visibility 0.28s ease;
 }
 
 .zonas-proteccion-hogar__panel-close {
@@ -3155,6 +3160,27 @@ FOOTER
   justify-content: center;
 }
 
+.zonas-proteccion-hogar .btn-principal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 188px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(180deg, #0b63ce 0%, #084298 100%);
+  box-shadow: 0 14px 36px rgba(8, 66, 152, 0.26);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.zonas-proteccion-hogar .btn-principal:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 42px rgba(8, 66, 152, 0.30);
+}
+
 /* =========================
    TABLET
 ========================= */
@@ -3177,6 +3203,11 @@ FOOTER
 
   .zonas-proteccion-hogar__tab {
     text-align: center;
+  }
+
+  .zonas-proteccion-hogar__tab::after {
+    left: 0;
+    transform: none;
   }
 
   .zonas-proteccion-hogar__media {
@@ -3232,6 +3263,14 @@ FOOTER
     padding-bottom: 10px;
   }
 
+  .zonas-proteccion-hogar__tab:hover::after {
+    width: 0;
+  }
+
+  .zonas-proteccion-hogar__tab.is-active::after {
+    width: 100%;
+  }
+
   .zonas-proteccion-hogar__marker {
     width: 30px;
     height: 30px;
@@ -3250,4 +3289,34 @@ FOOTER
     display: block;
   }
 
- 
+  .zonas-proteccion-hogar__panel.is-collapsed {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(20px);
+  }
+
+  .zonas-proteccion-hogar__benefits {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+
+  .zonas-proteccion-hogar__benefits::-webkit-scrollbar {
+    display: none;
+  }
+
+  .zonas-proteccion-hogar__benefit {
+    min-width: min(88vw, 330px);
+    scroll-snap-align: center;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 14px 32px rgba(15, 33, 70, 0.08);
+  }
+
+}
+

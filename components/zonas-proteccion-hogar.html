@@ -11,19 +11,23 @@
 
         <!-- SUBSECCION SUPERIOR -->
         <div class="zonas-proteccion-hogar__tabs" role="tablist" aria-label="Zonas de protección del hogar">
-            <button class="zonas-proteccion-hogar__tab is-active" type="button" data-tab="perimetral">
+            <button class="zonas-proteccion-hogar__tab is-active" type="button" data-tab="perimetral"
+                role="tab" aria-selected="true" aria-controls="zonas-proteccion-hogar-panel">
                 Protección Perimetral
             </button>
 
-            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="interior">
+            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="interior"
+                role="tab" aria-selected="false" aria-controls="zonas-proteccion-hogar-panel">
                 Protección Interior
             </button>
 
-            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="video">
+            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="video"
+                role="tab" aria-selected="false" aria-controls="zonas-proteccion-hogar-panel">
                 Video
             </button>
 
-            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="conectividad">
+            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="conectividad"
+                role="tab" aria-selected="false" aria-controls="zonas-proteccion-hogar-panel">
                 Conectividad
             </button>
         </div>
@@ -61,7 +65,8 @@
             </div>
 
             <!-- COLUMNA DERECHA -->
-            <div class="zonas-proteccion-hogar__panel">
+            <div class="zonas-proteccion-hogar__panel" id="zonas-proteccion-hogar-panel" role="tabpanel"
+                aria-live="polite">
                 <button class="zonas-proteccion-hogar__panel-close" type="button" aria-label="Cerrar panel">
                     ×
                 </button>
