@@ -444,11 +444,14 @@ async function cargarPlanesSlide() {
     const html = await response.text();
     container.innerHTML = html;
 
-    if (enPages) {
-      container.querySelectorAll('img[src^="assets/"]').forEach(img => {
-        img.src = "../" + img.getAttribute("src");
-      });
-    }
+    const imageBase = base + "components/planes-slide/";
+    container.querySelectorAll(".plan-home-card__image").forEach((img) => {
+      const currentSrc = img.getAttribute("src") || "";
+      const fileName = currentSrc.split("/").pop();
+      if (fileName) {
+        img.src = imageBase + fileName;
+      }
+    });
 
     initPlansHomeSlider();
   } catch (error) {
