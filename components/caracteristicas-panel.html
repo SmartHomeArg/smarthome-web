@@ -1,0 +1,121 @@
+<!-- ================================================================
+     SECCIÓN: CARACTERÍSTICAS DEL PANEL INTELIGENTE
+     ================================================================
+     
+     DESCRIPCIÓN:
+     Sección con imagen fija en la izquierda y slide de características
+     en la derecha. Auto-advance cada 5 segundos con controles manuales.
+     
+     ESTRUCTURA:
+     1. Imagen del panel a la izquierda
+     2. Slider de características (título + descripción)
+     3. Controles de navegación < >
+     
+     PARA AGREGAR/EDITAR CARACTERÍSTICAS:
+     En el JavaScript, busca la sección "caracteristicasData" y agrega
+     o modifica los items con { titulo, descripcion }
+     
+     ================================================================ -->
+
+<section class="caracteristicas-panel section--caracteristicas-panel">
+    <div class="caracteristicas-panel__inner container">
+        
+        <!-- Título principal -->
+        <h2 class="caracteristicas-panel__title">
+            Descubrí las características de nuestro Panel Inteligente
+        </h2>
+
+        <!-- Contenedor principal con imagen + slider -->
+        <div class="caracteristicas-panel__content">
+            
+            <!-- Columna izquierda: imagen fija -->
+            <div class="caracteristicas-panel__image-column">
+                <div class="caracteristicas-panel__image-wrap">
+                    <img 
+                        src="../assets/img/panel-inteligente.png" 
+                        alt="Panel inteligente de alarma para el hogar"
+                        class="caracteristicas-panel__image">
+                </div>
+            </div>
+
+            <!-- Columna derecha: slider de características -->
+            <div class="caracteristicas-panel__slider-column">
+                
+                <!-- Contenedor con flechas a los costados -->
+                <div class="caracteristicas-panel__slider-wrapper">
+                    
+                    <!-- Flecha anterior (izquierda) -->
+                    <button 
+                        class="caracteristicas-panel__arrow caracteristicas-panel__arrow--prev" 
+                        type="button"
+                        aria-label="Característica anterior">
+                        ‹
+                    </button>
+
+                    <!-- Slider container -->
+                    <div class="caracteristicas-panel__slider" id="caracteristicas-slider">
+                        <div class="caracteristicas-panel__slide is-active">
+                            <h3 class="caracteristicas-panel__slide-title">Familiarmente táctil</h3>
+                            <p class="caracteristicas-panel__slide-description">
+                                Tenés un smartphone, ¿verdad? Este nuevo panel es como tu teléfono: tocá para verlo, 
+                                deslizate por la pantalla, hacia arriba o hacia abajo. Es muy fácil y resulta muy familiar.
+                            </p>
+                        </div>
+                        
+                        <div class="caracteristicas-panel__slide">
+                            <h3 class="caracteristicas-panel__slide-title">Conectividad x2</h3>
+                            <p class="caracteristicas-panel__slide-description">
+                                El panel cuenta con conectividad simultánea que permite obtener mayor velocidad, 
+                                mejor desempeño y mayor confiabilidad en la comunicación.
+                            </p>
+                        </div>
+                        
+                        <div class="caracteristicas-panel__slide">
+                            <h3 class="caracteristicas-panel__slide-title">Si olvidás activar tu sistema</h3>
+                            <p class="caracteristicas-panel__slide-description">
+                                Te recordamos que armes tu sistema en caso de que lo hayas olvidado al salir. 
+                                Esto es posible gracias a nuestros geo-servicios y notificaciones push desde la app.
+                            </p>
+                        </div>
+                        
+                        <div class="caracteristicas-panel__slide">
+                            <h3 class="caracteristicas-panel__slide-title">Vos decidís quién accede</h3>
+                            <p class="caracteristicas-panel__slide-description">
+                                Podés dar códigos de usuario a todas las personas que deban tener acceso y sabrás 
+                                cuándo los usan. Recibirás notificaciones con fecha, hora y usuario.
+                            </p>
+                        </div>
+                        
+                        <div class="caracteristicas-panel__slide">
+                            <h3 class="caracteristicas-panel__slide-title">Lucí tus fotos</h3>
+                            <p class="caracteristicas-panel__slide-description">
+                                Además de proteger tu propiedad, el panel es ideal para decorar. Podés usar 
+                                la pantalla como marco de fotos familiares o para exhibir tus productos.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Flecha siguiente (derecha) -->
+                    <button 
+                        class="caracteristicas-panel__arrow caracteristicas-panel__arrow--next" 
+                        type="button"
+                        aria-label="Siguiente característica">
+                        ›
+                    </button>
+                </div>
+
+                <!-- Indicadores de posición (abajo) -->
+                <div class="caracteristicas-panel__indicators-wrapper">
+                    <button class="caracteristicas-panel__indicator is-active" data-slide="0" aria-label="Ir a característica 1"></button>
+                    <button class="caracteristicas-panel__indicator" data-slide="1" aria-label="Ir a característica 2"></button>
+                    <button class="caracteristicas-panel__indicator" data-slide="2" aria-label="Ir a característica 3"></button>
+                    <button class="caracteristicas-panel__indicator" data-slide="3" aria-label="Ir a característica 4"></button>
+                    <button class="caracteristicas-panel__indicator" data-slide="4" aria-label="Ir a característica 5"></button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>

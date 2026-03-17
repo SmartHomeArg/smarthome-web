@@ -212,6 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
   cargarContactateHome();
   cargarWhatsappFloat();
   cargarZonasProteccionHogar();
+  cargarCaracteristicasPanel();
 
 });
 
@@ -1347,4 +1348,169 @@ function initZonasProteccionHogar() {
   
   panel.setAttribute("aria-hidden", "false");
   render();  // Renderiza el estado inicial
+}
+
+/* =========================================================
+   CARGAR SECCIÓN: CARACTERÍSTICAS DEL PANEL
+   ========================================================= */
+
+async function cargarCaracteristicasPanel() {
+  const container = document.getElementById("caracteristicas-panel-container");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const rutaComponente = enPages
+      ? "../components/caracteristicas-panel.html"
+      : "components/caracteristicas-panel.html";
+
+    const response = await fetch(rutaComponente);
+
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el componente caracteristicas-panel.html");
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    initCaracteristicasPanel();
+  } catch (error) {
+    console.error("Error al cargar la sección características del panel:", error);
+  }
+}
+
+/* =========================================================
+   INICIALIZAR SECCIÓN: CARACTERÍSTICAS DEL PANEL
+   
+   DESCRIPCIÓN:
+   Slider automático con 5 características del panel inteligente.
+   - Auto-advance cada 5 segundos
+   - Navegación manual con flechas < >
+   - Indicadores de posición
+   
+   ========================================================= */
+
+function initCaracteristicasPanel() {
+  const section = document.querySelector(".section--caracteristicas-panel");
+  if (!section) return;
+
+  const slider = document.getElementById("caracteristicas-slider");
+  if (!slider) return;
+
+  // Elementos
+  const slides = slider.querySelectorAll(".caracteristicas-panel__slide");
+  const arrowPrev = section.querySelector(".caracteristicas-panel__arrow--prev");
+  const arrowNext = section.querySelector(".caracteristicas-panel__arrow--next");
+  const indicators = section.querySelectorAll(".caracteristicas-panel__indicator");
+
+  if (!slides.length) return;
+
+  // Estado
+  let currentSlide = 0;
+  let autoPlayInterval = null;
+
+  // ============================================================
+  // FUNCIONES PRINCIPALES
+  // ============================================================
+
+  /**
+   * Muestra un slide específico
+   */
+  function goToSlide(index) {
+    // Asegurar que el índice está dentro del rango
+    currentSlide = (index + slides.length) % slides.length;
+
+    // Actualizar slides
+    slides.forEach((slide, i) => {
+      slide.classList.toggle("is-active", i === currentSlide);
+    });
+
+    // Actualizar indicadores
+    indicators.forEach((indicator, i) => {
+      indicator.classList.toggle("is-active", i === currentSlide);
+    });
+
+    // Reiniciar autoplay
+    resetAutoPlay();
+  }
+
+  /**
+   * Ir al slide anterior
+   */
+  function prevSlide() {
+    goToSlide(currentSlide - 1);
+  }
+
+  /**
+   * Ir al siguiente slide
+   */
+  function nextSlide() {
+    goToSlide(currentSlide + 1);
+  }
+
+  /**
+   * Inicia el auto-play (avanza cada 5 segundos)
+   */
+  function startAutoPlay() {
+    autoPlayInterval = setInterval(() => {
+      nextSlide();
+    }, 5000); // 5 segundos
+  }
+
+  /**
+   * Detiene y reinicia el auto-play
+   */
+  function resetAutoPlay() {
+    clearInterval(autoPlayInterval);
+    startAutoPlay();
+  }
+
+  /**
+   * Pausa el auto-play cuando el usuario interactúa
+   */
+  function pauseAutoPlay() {
+    clearInterval(autoPlayInterval);
+  }
+
+  // ============================================================
+  // EVENT LISTENERS
+  // ============================================================
+
+  // Botón anterior
+  if (arrowPrev) {
+    arrowPrev.addEventListener("click", () => {
+      pauseAutoPlay();
+      prevSlide();
+    });
+  }
+
+  // Botón siguiente
+  if (arrowNext) {
+    arrowNext.addEventListener("click", () => {
+      pauseAutoPlay();
+      nextSlide();
+    });
+  }
+
+  // Indicadores
+  indicators.forEach((indicator, index) => {
+    indicator.addEventListener("click", () => {
+      pauseAutoPlay();
+      goToSlide(index);
+    });
+  });
+
+  // Pausar autoplay cuando el usuario mueve el mouse sobre la sección
+  section.addEventListener("mouseenter", pauseAutoPlay);
+  section.addEventListener("mouseleave", resetAutoPlay);
+
+  // ============================================================
+  // INICIALIZACIÓN
+  // ============================================================
+
+  // Mostrar primer slide
+  goToSlide(0);
+
+  // Iniciar auto-play
+  startAutoPlay();
 }
