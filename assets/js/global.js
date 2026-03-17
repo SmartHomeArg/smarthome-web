@@ -205,10 +205,17 @@ function activarMenu() {
    CARGA COMPONENTES GLOBALES (HEADER / FOOTER)
 ========================================= */
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
   cargarHeader();
   cargarFooter();
+
+  await cargarHero();
   cargarHeroForm();
+  cargarPorQueSmartHome();
+  await cargarPlanesSlide();
+  await cargarCotizar();
+  await cargarEquipamiento();
+
   cargarContactateHome();
   cargarWhatsappFloat();
   cargarZonasProteccionHogar();
@@ -293,6 +300,219 @@ function cargarFooter() {
       }
     })
     .catch(error => console.error('Error cargando footer:', error));
+}
+
+/* =========================================
+   HERO
+========================================= */
+
+async function cargarHero() {
+  const heroContainer = document.getElementById("hero");
+  if (!heroContainer) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+    const pathname = window.location.pathname.toLowerCase();
+
+    const getPageSlug = (path) => {
+      const cleanPath = String(path || "").split("?")[0].split("#")[0];
+      const lastPart = cleanPath.split("/").filter(Boolean).pop() || "index.html";
+      const slug = lastPart.endsWith(".html") ? lastPart.replace(/\.html$/, "") : lastPart;
+      return slug || "index";
+    };
+
+    const pageSlug = getPageSlug(pathname);
+
+    const heroConfig = {
+      index: {
+        title: '<span class="text-brand">Seguridad inteligente</span> para tu hogar',
+        description: "Alarmas, cámaras y monitoreo profesional para proteger tu casa con una solución moderna y confiable.",
+        origen: "index"
+      },
+      hogar: {
+        title: '<span class="text-brand">Seguridad inteligente</span> para tu hogar',
+        description: "Alarmas, cámaras y monitoreo profesional para proteger tu casa con una solución moderna y confiable.",
+        origen: "hogar"
+      },
+      negocio: {
+        title: '<span class="text-brand">Seguridad inteligente</span> para tu negocio',
+        description: "Alarmas, cámaras y monitoreo profesional para proteger tu negocio con una solución moderna y confiable.",
+        origen: "negocio"
+      }
+    };
+
+    const pageKey = heroConfig[pageSlug] ? pageSlug : "index";
+
+    const resolveHeroImagePath = async (slug) => {
+      const candidate = `${base}components/hero/hero-${slug}.jpg`;
+      try {
+        const imgCheck = await fetch(candidate, { method: "HEAD" });
+        if (imgCheck.ok) return candidate;
+      } catch (e) {
+        // Ignore and fallback below
+      }
+      return `${base}components/hero/hero-index.jpg`;
+    };
+
+    const response = await fetch(base + "components/hero/hero.html");
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar hero.html: ${response.status}`);
+    }
+
+    const heroHTML = await response.text();
+    heroContainer.innerHTML = heroHTML;
+
+    const config = heroConfig[pageKey] || heroConfig.index;
+    const heroImage = await resolveHeroImagePath(pageSlug);
+
+    const section = heroContainer.querySelector(".hero-page");
+    if (section) {
+      section.style.backgroundImage = `url('${heroImage}')`;
+    }
+
+    const titleEl = heroContainer.querySelector("#hero-title");
+    if (titleEl) {
+      titleEl.innerHTML = config.title;
+    }
+
+    const descriptionEl = heroContainer.querySelector("#hero-description");
+    if (descriptionEl) {
+      descriptionEl.textContent = config.description;
+    }
+
+    const formContainer = heroContainer.querySelector("#hero-form-container");
+    if (formContainer) {
+      formContainer.dataset.origen = config.origen;
+    }
+
+  } catch (error) {
+    console.error("Error cargando hero:", error);
+  }
+}
+
+/* =========================================
+   POR QUE SMARTHOME
+========================================= */
+
+function cargarPorQueSmartHome() {
+  const container = document.getElementById("por-que-smarthome");
+  if (!container) return;
+
+  const enPages = window.location.pathname.includes("/pages/");
+  const base = enPages ? "../" : "";
+
+  fetch(base + "components/por-que-smarthome/por-que-smarthome.html")
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`No se pudo cargar por-que-smarthome.html: ${response.status}`);
+      }
+      return response.text();
+    })
+    .then(html => {
+      container.innerHTML = html;
+    })
+    .catch(error => console.error("Error cargando por-que-smarthome:", error));
+}
+
+/* =========================================
+   PLANES SLIDE
+========================================= */
+
+async function cargarPlanesSlide() {
+  const container = document.getElementById("planes-slide");
+
+  // Si no hay placeholder, mantener compatibilidad con HTML inline
+  if (!container) {
+    initPlansHomeSlider();
+    return;
+  }
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+
+    const response = await fetch(base + "components/planes-slide/planes-slide.html");
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar planes-slide.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    if (enPages) {
+      container.querySelectorAll('img[src^="assets/"]').forEach(img => {
+        img.src = "../" + img.getAttribute("src");
+      });
+    }
+
+    initPlansHomeSlider();
+  } catch (error) {
+    console.error("Error cargando planes-slide:", error);
+  }
+}
+
+/* =========================================
+   COTIZAR
+========================================= */
+
+async function cargarCotizar() {
+  const container = document.getElementById("cotizar");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+
+    const response = await fetch(base + "components/cotizar/cotizar.html");
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar cotizar.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    const cotizarImage = container.querySelector(".cotizar-home-image");
+    if (cotizarImage) {
+      cotizarImage.src = base + "components/cotizar/cotizar.png";
+    }
+  } catch (error) {
+    console.error("Error cargando cotizar:", error);
+  }
+}
+
+/* =========================================
+   EQUIPAMIENTO
+========================================= */
+
+async function cargarEquipamiento() {
+  const container = document.getElementById("equipamiento");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+
+    const response = await fetch(base + "components/equipamiento/equipamiento.html");
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar equipamiento.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    const backImg = container.querySelector(".equipamiento-home__img-back");
+    if (backImg) {
+      backImg.src = base + "components/equipamiento/equipamiento-fondo.png";
+    }
+
+    const frontImg = container.querySelector(".equipamiento-home__img-front");
+    if (frontImg) {
+      frontImg.src = base + "components/equipamiento/equipamiento-panel.png";
+    }
+  } catch (error) {
+    console.error("Error cargando equipamiento:", error);
+  }
 }
 
 /* =========================================================
@@ -513,13 +733,15 @@ function initHeroLeadForm() {
 ========================================================= */
 
 /* =========================================================
-   SECCION PLANES HOME - SWIPER SOLO EN MOBILE
+  SECCION PLANES HOME - SWIPER SOLO EN MOBILE
 ========================================================= */
 
-(function () {
+function initPlansHomeSlider() {
   const sliderElement = document.getElementById("plansHomeSlider");
 
   if (!sliderElement || typeof Swiper === "undefined") return;
+  if (sliderElement.dataset.swiperInited === "true") return;
+  sliderElement.dataset.swiperInited = "true";
 
   let plansHomeSwiper = null;
 
@@ -563,8 +785,7 @@ function initHeroLeadForm() {
   handlePlansHomeSlider();
   window.addEventListener('resize', handlePlansHomeSlider);
   window.addEventListener('orientationchange', handlePlansHomeSlider);
-
-})();
+}
 
 /* =========================================================
    SECCION FUNCIONALIDADES HOME
