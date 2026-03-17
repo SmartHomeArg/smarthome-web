@@ -216,6 +216,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await cargarCotizar();
   await cargarEquipamiento();
   await cargarFuncionalidades();
+  await cargarTuHogarProtegido();
 
   cargarContactate();
   cargarWhatsappFloat();
@@ -550,6 +551,35 @@ async function cargarFuncionalidades() {
     initFuncionalidadesHomeSlider();
   } catch (error) {
     console.error("Error cargando funcionalidades:", error);
+  }
+}
+
+/* =========================================
+   TU HOGAR PROTEGIDO
+========================================= */
+
+async function cargarTuHogarProtegido() {
+  const container = document.getElementById("tu-hogar-protegido");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+
+    const response = await fetch(base + "components/tu-hogar-protegido/tu-hogar-protegido.html");
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar tu-hogar-protegido.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    const images = container.querySelectorAll("img");
+    if (images[0]) images[0].src = base + "components/tu-hogar-protegido/tu-hogar-protegido.png";
+    if (images[1]) images[1].src = base + "components/tu-hogar-protegido/tu-hogar-protegido-2.png";
+    if (images[2]) images[2].src = base + "components/tu-hogar-protegido/tu-hogar-protegido-3.png";
+  } catch (error) {
+    console.error("Error cargando tu-hogar-protegido:", error);
   }
 }
 
