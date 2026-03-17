@@ -1,0 +1,216 @@
+<!-- ================================================================
+     SECCIÓN: ZONAS DE PROTECCIÓN DEL HOGAR
+     ================================================================
+     
+     DESCRIPCIÓN:
+     Sistema interactivo que permite seleccionar diferentes tipos de
+     protección (Perimetral, Interior, Video, Conectividad) y mostrar
+     productos/servicios asociados con iconos flotantes posicionables.
+     
+     ESTRUCTURA:
+     1. Título principal y descripción
+     2. Pestañas para cambiar entre categorías de protección
+     3. Área visual con imagen y marcadores flotantes (iconos)
+     4. Panel lateral con detalles del producto seleccionado
+     5. Beneficios generales del sistema
+     6. Llamada a la acción (CTA)
+     
+     ICONOGRAFÍA:
+     Los iconos flotantes usan Bootstrap Icons (https://icons.getbootstrap.com/)
+     Selecciona iconos que representen el contenido de cada item.
+     
+     ================================================================ -->
+
+<section class="zonas-proteccion-hogar">
+    <div class="zonas-proteccion-hogar__inner container">
+
+        <!-- =========================================================
+             SUBSECCION: TITULO PRINCIPAL
+             ========================================================= -->
+        <div class="zonas-proteccion-hogar__header">
+            <h2 class="zonas-proteccion-hogar__title">
+                Cada rincón de tu hogar protegido
+                <span>con nuestro sistema de alarma inteligente</span>
+            </h2>
+        </div>
+
+        <!-- =========================================================
+             SUBSECCION: PESTAÑAS (TABS) DE CATEGORÍAS
+             
+             PARA AGREGAR UNA NUEVA PESTAÑA:
+             1. Copia un <button> existente
+             2. Cambia data-tab a un identificador único (ej: "smartlock")
+             3. Actualiza el texto visible
+             4. En el HTML de ITEMS, agrega una nueva sección <div 
+                data-tab="smartlock"> con los items correspondientes
+             5. En el JavaScript, agrega tu pestaña a sectionData
+             
+             ========================================================= -->
+        <div class="zonas-proteccion-hogar__tabs" role="tablist" aria-label="Zonas de protección del hogar">
+            <button class="zonas-proteccion-hogar__tab is-active" type="button" data-tab="perimetral"
+                role="tab" aria-selected="true" aria-controls="zonas-proteccion-hogar-panel">
+                Protección Perimetral
+            </button>
+
+            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="interior"
+                role="tab" aria-selected="false" aria-controls="zonas-proteccion-hogar-panel">
+                Protección Interior
+            </button>
+
+            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="video"
+                role="tab" aria-selected="false" aria-controls="zonas-proteccion-hogar-panel">
+                Video
+            </button>
+
+            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="conectividad"
+                role="tab" aria-selected="false" aria-controls="zonas-proteccion-hogar-panel">
+                Conectividad
+            </button>
+        </div>
+
+        <!-- =========================================================
+             SUBSECCION: ÁREA VISUAL CON IMAGEN Y MARCADORES
+             ========================================================= -->
+        <div class="zonas-proteccion-hogar__media">
+
+            <!-- COLUMNA IZQUIERDA: IMAGEN + MARCADORES FLOTANTES -->
+            <div class="zonas-proteccion-hogar__visual">
+                <div class="zonas-proteccion-hogar__image-wrap">
+                    <!-- Imagen de fondo del hogar -->
+                    <img src="" alt="Vista del hogar con zonas de protección"
+                        class="zonas-proteccion-hogar__main-image">
+
+                    <!-- ====================================================
+                         MARCADORES FLOTANTES (ICONOS INTERACTIVOS)
+                         
+                         CARACTERÍSTICAS:
+                         - Cada pestaña puede tener diferente cantidad de items
+                         - Los no utilizados se ocultan automáticamente con display: none
+                         - Posición se controla con top/left desde JavaScript
+                         
+                         PARA CAMBIAR EL ICONO:
+                         El icono se genera desde JavaScript (marker.textContent)
+                         No edites estos botones manualmente - la lógica está en JS
+                         
+                         PARA CAMBIAR LA POSICIÓN:
+                         En JavaScript, busca la sección "sectionData" y ajusta
+                         los valores "top" y "left" en porcentaje (ej: "23%", "9%")
+                         
+                         ==================================================== -->
+                    <button class="zonas-proteccion-hogar__marker is-active" type="button" data-slide="0"
+                        aria-label="Ver producto 1">
+                        <!-- El icono se inserta aquí desde JavaScript -->
+                    </button>
+
+                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="1"
+                        aria-label="Ver producto 2">
+                    </button>
+
+                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="2"
+                        aria-label="Ver producto 3">
+                    </button>
+
+                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="3"
+                        aria-label="Ver producto 4">
+                    </button>
+
+                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="4"
+                        aria-label="Ver producto 5">
+                    </button>
+
+                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="5"
+                        aria-label="Ver producto 6">
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: PANEL DE DETALLES DEL PRODUCTO -->
+            <div class="zonas-proteccion-hogar__panel" id="zonas-proteccion-hogar-panel" role="tabpanel"
+                aria-live="polite">
+                <!-- Botón para cerrar panel en mobile -->
+                <button class="zonas-proteccion-hogar__panel-close" type="button" aria-label="Cerrar panel">
+                    ×
+                </button>
+
+                <!-- Texto del producto: título + descripción -->
+                <div class="zonas-proteccion-hogar__panel-text">
+                    <h3 class="zonas-proteccion-hogar__panel-title">
+                        Contacto magnético exterior
+                    </h3>
+
+                    <p class="zonas-proteccion-hogar__panel-description">
+                        Detector de contacto ideal para proteger accesos exteriores, puertas,
+                        ventanas y otros puntos sensibles del perímetro del hogar.
+                    </p>
+                </div>
+
+                <!-- Slider de imágenes del producto con flechas de navegación -->
+                <div class="zonas-proteccion-hogar__panel-slider">
+                    <!-- Botón anterior -->
+                    <button class="zonas-proteccion-hogar__arrow zonas-proteccion-hogar__arrow--prev" type="button"
+                        aria-label="Anterior">
+                        ‹
+                    </button>
+
+                    <!-- Imagen del producto -->
+                    <div class="zonas-proteccion-hogar__product-image-wrap">
+                        <img src="" alt="Contacto magnético exterior"
+                            class="zonas-proteccion-hogar__product-image">
+                    </div>
+
+                    <!-- Botón siguiente -->
+                    <button class="zonas-proteccion-hogar__arrow zonas-proteccion-hogar__arrow--next" type="button"
+                        aria-label="Siguiente">
+                        ›
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             SUBSECCION: BENEFICIOS GENERALES DEL SISTEMA
+             ========================================================= -->
+        <div class="zonas-proteccion-hogar__benefits">
+            <article class="zonas-proteccion-hogar__benefit">
+                <div class="zonas-proteccion-hogar__benefit-icon">🛡️</div>
+                <p>
+                    <strong>Detección de inhibición:</strong> el sistema detecta intentos de sabotaje para mantener la
+                    protección activa.
+                </p>
+            </article>
+
+            <article class="zonas-proteccion-hogar__benefit">
+                <div class="zonas-proteccion-hogar__benefit-icon">📶</div>
+                <p>
+                    <strong>Seguridad multivía:</strong> redundancia de comunicación ante intrusión, sabotaje o
+                    inhibición.
+                </p>
+            </article>
+
+            <article class="zonas-proteccion-hogar__benefit">
+                <div class="zonas-proteccion-hogar__benefit-icon">💻</div>
+                <p>
+                    <strong>Monitoreo remoto:</strong> supervisión permanente del sistema para una respuesta más rápida.
+                </p>
+            </article>
+
+            <article class="zonas-proteccion-hogar__benefit">
+                <div class="zonas-proteccion-hogar__benefit-icon">📱</div>
+                <p>
+                    <strong>Control desde app:</strong> acceso al estado del sistema y gestión básica desde el celular.
+                </p>
+            </article>
+        </div>
+
+        <!-- =========================================================
+             SUBSECCION: LLAMADA A LA ACCIÓN (CTA)
+             ========================================================= -->
+        <div class="zonas-proteccion-hogar__cta">
+            <a href="#contacto" class="btn-principal">
+                Me interesa
+            </a>
+        </div>
+
+    </div>
+</section>

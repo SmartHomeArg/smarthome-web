@@ -3003,6 +3003,163 @@ FOOTER
 }
 
 /* =========================================================
+   SECCION SERVICIOS PARA COMERCIOS
+========================================================= */
+
+.servicios-para-comercios {
+  padding: 72px 0;
+  background: #f1f1f1;
+}
+
+.servicios-para-comercios__heading {
+  margin: 0 0 30px;
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #0058a7;
+}
+
+.servicios-para-comercios__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: 30px;
+}
+
+.servicios-para-comercios__media {
+  margin: 0;
+}
+
+.servicios-para-comercios__media img {
+  display: block;
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  object-fit: contain;
+}
+
+.servicios-para-comercios__content {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 16px;
+}
+
+.servicios-para-comercios__arrow {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #2f72bb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.servicios-para-comercios__arrow:hover {
+  color: #0058a7;
+  transform: scale(1.08);
+}
+
+.servicios-para-comercios__copy {
+  text-align: center;
+}
+
+.servicios-para-comercios__title {
+  margin: 0 0 14px;
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #0058a7;
+}
+
+.servicios-para-comercios__description {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: #333333;
+}
+
+@media (max-width: 991.98px) {
+  .servicios-para-comercios {
+    padding: 56px 0;
+  }
+
+  .servicios-para-comercios__heading {
+    margin-bottom: 22px;
+    text-align: center;
+    font-size: 1.9rem;
+  }
+
+  .servicios-para-comercios__layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .servicios-para-comercios__media img {
+    max-width: 540px;
+    margin: 0 auto;
+  }
+
+  .servicios-para-comercios__content {
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+  }
+
+  .servicios-para-comercios__title {
+    font-size: 1.7rem;
+  }
+
+  .servicios-para-comercios__description {
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .servicios-para-comercios {
+    padding: 48px 0;
+  }
+
+  .servicios-para-comercios__heading {
+    font-size: 1.55rem;
+    margin-bottom: 18px;
+  }
+
+  .servicios-para-comercios__layout {
+    gap: 14px;
+  }
+
+  .servicios-para-comercios__media img {
+    max-width: 100%;
+  }
+
+  .servicios-para-comercios__content {
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    gap: 8px;
+  }
+
+  .servicios-para-comercios__arrow {
+    width: 30px;
+    height: 30px;
+    font-size: 1.25rem;
+  }
+
+  .servicios-para-comercios__title {
+    margin-bottom: 10px;
+    font-size: 1.15rem;
+  }
+
+  .servicios-para-comercios__description {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+}
+
+/* =========================================================
    SECCION ZONAS PROTECCION HOGAR
 ========================================================= */
 

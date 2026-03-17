@@ -222,6 +222,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   cargarContactate();
   cargarWhatsappFloat();
   cargarZonasProteccionHogar();
+  cargarZonasProteccionComercio();
+  await cargarServiciosParaComercios();
   cargarCaracteristicasPanel();
   cargarComparacionCaracteristicasPlanes();
   cargarCentralMonitoreo247();
@@ -1265,6 +1267,49 @@ async function cargarZonasProteccionHogar() {
   }
 }
 
+/* =========================================
+   CARGA SECCION ZONAS PROTECCION COMERCIO
+========================================= */
+async function cargarZonasProteccionComercio() {
+  const container = document.getElementById("zonas-proteccion-comercio");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+
+    const rutasComponente = [
+      base + "components/zonas-proteccion-comercio/zonas-proteccion-comercio.html",
+      base + "components/zonas-proteccion-comercio/zonas-proteccion-hogar.html"
+    ];
+
+    let html = "";
+    let cargado = false;
+
+    for (const ruta of rutasComponente) {
+      const response = await fetch(ruta);
+      if (!response.ok) continue;
+      html = await response.text();
+      cargado = true;
+      break;
+    }
+
+    if (!cargado) {
+      throw new Error("No se pudo cargar el componente zonas-proteccion-comercio");
+    }
+
+    container.innerHTML = html;
+
+    initZonasProteccionHogar({
+      root: container,
+      componentFolder: "zonas-proteccion-comercio",
+      mainSceneImage: "escena-comercio.png"
+    });
+  } catch (error) {
+    console.error("Error al cargar la sección zonas-proteccion-comercio:", error);
+  }
+}
+
 /* =========================================================
    INICIALIZAR SECCIÓN: ZONAS DE PROTECCIÓN DEL HOGAR
    
@@ -1282,12 +1327,16 @@ async function cargarZonasProteccionHogar() {
    
    ========================================================= */
 
-function initZonasProteccionHogar() {
+function initZonasProteccionHogar(options = {}) {
+  const root = options.root || document;
+  const componentFolder = options.componentFolder || "zonas-proteccion-hogar";
+  const mainSceneImage = options.mainSceneImage || "escena-hogar.png";
+
   // ============================================================
   // PASO 1: OBTENER ELEMENTOS DEL DOM
   // ============================================================
   
-  const section = document.querySelector(".zonas-proteccion-hogar");
+  const section = root.querySelector(".zonas-proteccion-hogar, .zonas-proteccion-comercio");
   if (!section) return;
 
   // Elements para controlar las pestañas
@@ -1331,12 +1380,13 @@ function initZonasProteccionHogar() {
   const enPages = window.location.pathname.includes("/pages/");
   const imageBasePath = enPages ? "../assets/img/" : "assets/img/";
   const componentImageBasePath = enPages
-    ? "../components/zonas-proteccion-hogar/"
-    : "components/zonas-proteccion-hogar/";
+    ? `../components/${componentFolder}/`
+    : `components/${componentFolder}/`;
 
   // Imágenes que fueron movidas de assets/img a components/zonas-proteccion-hogar
   const movedImages = new Set([
     "escena-hogar.png",
+    "escena-comercio.png",
     "escena-hogar-mag.png",
     "escena-hogar-pir-mov.png"
   ]);
@@ -1368,7 +1418,7 @@ function initZonasProteccionHogar() {
   };
 
   if (mainImage) {
-    setImageSourceWithFallback(mainImage, "escena-hogar.png", true);
+    setImageSourceWithFallback(mainImage, mainSceneImage, true);
   }
 
   // ============================================================
@@ -1860,6 +1910,96 @@ async function cargarCentralMonitoreo247() {
   } catch (error) {
     console.error("Error al cargar la seccion central-monitoreo-24-7:", error);
   }
+}
+
+/* =========================================================
+   CARGAR SECCION: SERVICIOS PARA COMERCIOS
+   ========================================================= */
+
+async function cargarServiciosParaComercios() {
+  const container = document.getElementById("servicios-para-comercios");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+    const rutaComponente = enPages
+      ? "../components/servicios-para-comercios/servicios-para-comercios.html"
+      : "components/servicios-para-comercios/servicios-para-comercios.html";
+
+    const response = await fetch(rutaComponente);
+
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el componente servicios-para-comercios.html");
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    const image = container.querySelector("img[data-image]");
+    if (image) {
+      image.src = base + "components/servicios-para-comercios/servicios-para-comercios.png";
+    }
+
+    initServiciosParaComercios(container);
+  } catch (error) {
+    console.error("Error al cargar la seccion servicios-para-comercios:", error);
+  }
+}
+
+function initServiciosParaComercios(rootElement) {
+  const section = rootElement.querySelector(".servicios-para-comercios");
+  if (!section) return;
+
+  const titleEl = section.querySelector(".servicios-para-comercios__title");
+  const descriptionEl = section.querySelector(".servicios-para-comercios__description");
+  const prevButton = section.querySelector(".servicios-para-comercios__arrow--prev");
+  const nextButton = section.querySelector(".servicios-para-comercios__arrow--next");
+
+  if (!titleEl || !descriptionEl || !prevButton || !nextButton) return;
+
+  const slides = [
+    {
+      title: "Todo en uno",
+      description: "En vez de administrar tus ubicaciones de forma individual, nuestra Consola Empresarial te permite agruparlas, asignar accesos a tu equipo y ver cámaras desde un solo lugar."
+    },
+    {
+      title: "Ahorrá tiempo",
+      description: "Las notificaciones empresariales te permiten recibir alertas oportunas de varias ubicaciones a la vez, sin crear reglas individuales por cada comercio."
+    },
+    {
+      title: "Enteráte primero sin estar allí",
+      description: "Desde la web o tu aplicación móvil podrás ver un resumen del estado de todas tus ubicaciones, enterarte de aperturas y cierres fuera de horario y del estado del panel."
+    },
+    {
+      title: "Organizá tus ubicaciones como prefieras",
+      description: "Agrupá tus ubicaciones por zona geográfica, tipo de propiedad o departamento, para tener una operación ordenada y una gestión más ágil."
+    },
+    {
+      title: "Vos decidís quién sí y quién no",
+      description: "Asigná códigos de usuario a tus colaboradores para todas las ubicaciones y definí qué permisos tiene cada perfil dentro de la plataforma."
+    }
+  ];
+
+  let index = 2;
+
+  const render = () => {
+    const item = slides[index];
+    titleEl.textContent = item.title;
+    descriptionEl.textContent = item.description;
+  };
+
+  prevButton.addEventListener("click", () => {
+    index = (index - 1 + slides.length) % slides.length;
+    render();
+  });
+
+  nextButton.addEventListener("click", () => {
+    index = (index + 1) % slides.length;
+    render();
+  });
+
+  render();
 }
 
 /* =========================================================
