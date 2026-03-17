@@ -215,6 +215,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await cargarPlanesSlide();
   await cargarCotizar();
   await cargarEquipamiento();
+  await cargarFuncionalidades();
 
   cargarContactateHome();
   cargarWhatsappFloat();
@@ -515,6 +516,43 @@ async function cargarEquipamiento() {
   }
 }
 
+/* =========================================
+   FUNCIONALIDADES
+========================================= */
+
+async function cargarFuncionalidades() {
+  const container = document.getElementById("funcionalidades");
+
+  // Si no hay placeholder, mantener compatibilidad con HTML inline
+  if (!container) {
+    initFuncionalidadesHomeSlider();
+    return;
+  }
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+
+    const response = await fetch(base + "components/funcionalidades/funcionalidades.html");
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar funcionalidades.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    container.querySelectorAll(".funcionalidades-home__bg[data-bg]").forEach(bgEl => {
+      const file = bgEl.getAttribute("data-bg");
+      if (!file) return;
+      bgEl.style.backgroundImage = `url('${base}components/funcionalidades/${file}')`;
+    });
+
+    initFuncionalidadesHomeSlider();
+  } catch (error) {
+    console.error("Error cargando funcionalidades:", error);
+  }
+}
+
 /* =========================================================
    FORMULARIO GLOBAL DEL HERO
    Carga el componente hero-form.html en la página actual
@@ -788,13 +826,15 @@ function initPlansHomeSlider() {
 }
 
 /* =========================================================
-   SECCION FUNCIONALIDADES HOME
+  SECCION FUNCIONALIDADES HOME
 ========================================================= */
 
-(function () {
+function initFuncionalidadesHomeSlider() {
   const sliderElement = document.getElementById("funcionalidadesHomeSlider");
 
   if (!sliderElement || typeof Swiper === "undefined") return;
+  if (sliderElement.dataset.swiperInited === "true") return;
+  sliderElement.dataset.swiperInited = "true";
 
   const slides = sliderElement.querySelectorAll(".swiper-slide");
   const slidesCount = slides.length;
@@ -864,7 +904,7 @@ function initPlansHomeSlider() {
       funcionalidadesHomeSwiper.update();
     }
   });
-})();
+}
 
 /* =========================================
    CONTACTATE HOME
