@@ -3321,12 +3321,11 @@ FOOTER
 
   /* Sección de beneficios con transición suave */
   .zonas-proteccion-hogar__benefits {
-    display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 6px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    overflow: visible;
+    padding-bottom: 0;
     /* Transición para que se mueva cuando el panel se abre/cierra */
     transition: margin-top 0.35s ease;
     margin-top: 0;
@@ -3337,13 +3336,9 @@ FOOTER
     margin-top: -480px;
   }
 
-  .zonas-proteccion-hogar__benefits::-webkit-scrollbar {
-    display: none;
-  }
-
   .zonas-proteccion-hogar__benefit {
-    min-width: min(88vw, 330px);
-    scroll-snap-align: center;
+    min-width: 0;
+    width: 100%;
     background: #ffffff;
     border-radius: 16px;
     padding: 14px;
@@ -3643,6 +3638,253 @@ FOOTER
   .caracteristicas-panel__indicator {
     width: 8px;
     height: 8px;
+  }
+}
+
+/* =========================================================
+   SECCION COMPARADOR DE PACKS HOGAR
+========================================================= */
+
+.packs-hogar-heading {
+  padding: 64px 0 42px;
+  background: linear-gradient(135deg, #0b3b8f 0%, #0a5bc4 100%);
+}
+
+.packs-hogar-heading__title {
+  margin: 0;
+  color: #ffffff;
+  text-align: center;
+  font-size: clamp(1.7rem, 2.3vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.packs-hogar-comparador {
+  padding: 34px 0 80px;
+  background: linear-gradient(to bottom, #0a5bc4 0, #f4f7fc 140px, #f4f7fc 100%);
+}
+
+.packs-hogar-desktop {
+  display: block;
+}
+
+.packs-hogar-mobile {
+  display: none;
+}
+
+.packs-hogar-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(10, 43, 99, 0.08);
+  border: 1px solid #e4ebf7;
+  background: #ffffff;
+}
+
+.packs-hogar-table th,
+.packs-hogar-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef3fb;
+  border-right: 1px solid #eef3fb;
+  vertical-align: middle;
+}
+
+.packs-hogar-table th:last-child,
+.packs-hogar-table td:last-child {
+  border-right: 0;
+}
+
+.packs-hogar-table thead th {
+  background: #f8fbff;
+  text-align: center;
+  color: #0b3b8f;
+  font-weight: 700;
+}
+
+.packs-hogar-table thead th:first-child {
+  width: 40%;
+  text-align: left;
+}
+
+.packs-hogar-table thead th img {
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  margin: 0 auto 8px;
+}
+
+.packs-hogar-table thead th span {
+  display: block;
+}
+
+.packs-hogar-table tbody td:first-child {
+  font-size: 0.94rem;
+  line-height: 1.35;
+  color: #1a1f2a;
+}
+
+.packs-hogar-table tbody td:not(:first-child),
+.packs-hogar-table tfoot td:not(:first-child) {
+  text-align: center;
+}
+
+.packs-hogar-table tfoot td {
+  background: #ffffff;
+  border-bottom: 0;
+}
+
+.packs-hogar-table .pack-card-hogar__cta {
+  margin: 0 auto;
+  max-width: 160px;
+}
+
+.packs-hogar-table__featured-col {
+  background: #fffdf4;
+}
+
+.pack-card-hogar__header {
+  border-bottom: 1px solid #e6edf9;
+  padding: 14px;
+  text-align: center;
+  background: #ffffff;
+}
+
+.pack-card-hogar__header img {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.pack-card-hogar__header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0b3b8f;
+}
+
+.pack-card-hogar__checks li {
+  justify-content: center;
+}
+
+.estado {
+  min-width: 44px;
+  text-align: center;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.estado--si {
+  color: #0f8a45;
+  background: #e9f8ef;
+}
+
+.estado--no {
+  color: #b03a2e;
+  background: #fbeceb;
+}
+
+.pack-card-hogar__cta {
+  display: block;
+  margin: 14px;
+  border-radius: 999px;
+  background: #f8b712;
+  color: #0f2347;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 10px 16px;
+}
+
+.pack-card-hogar__cta:hover {
+  background: #e8ab10;
+  color: #0f2347;
+}
+
+.pack-card-hogar--featured {
+  transform: translateY(-8px);
+  border-color: #f8b712;
+}
+
+/* Variante mobile/tablet: cards apiladas por plan */
+.pack-mobile-hogar {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(10, 43, 99, 0.08);
+  border: 1px solid #e4ebf7;
+  overflow: hidden;
+}
+
+.pack-mobile-hogar + .pack-mobile-hogar {
+  margin-top: 18px;
+}
+
+.pack-mobile-hogar__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pack-mobile-hogar__features li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef3fb;
+}
+
+.pack-mobile-hogar__features li span:first-child {
+  font-size: 0.93rem;
+  line-height: 1.3;
+  color: #1a1f2a;
+}
+
+.pack-mobile-hogar--featured {
+  border-color: #f8b712;
+}
+
+@media (max-width: 991.98px) {
+  .packs-hogar-desktop {
+    display: none;
+  }
+
+  .packs-hogar-mobile {
+    display: block;
+  }
+
+  .pack-card-hogar__header img {
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .packs-hogar-heading {
+    padding: 52px 0 32px;
+  }
+
+  .packs-hogar-comparador {
+    padding: 26px 0 52px;
+  }
+
+  .pack-mobile-hogar__features li {
+    min-height: 54px;
+    padding: 10px 12px;
+  }
+
+  .pack-mobile-hogar__features li span:first-child {
+    font-size: 0.9rem;
   }
 }
 
