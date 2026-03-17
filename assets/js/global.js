@@ -555,8 +555,8 @@ async function cargarFuncionalidades() {
 
 /* =========================================================
    FORMULARIO GLOBAL DEL HERO
-   Carga el componente hero-form.html en la página actual
-   y asigna automáticamente el origen del lead.
+   El formulario vive dentro de components/hero/hero.html
+   y aquí solo se inicializa su lógica y origen.
 ========================================================= */
 
 async function cargarHeroForm() {
@@ -566,36 +566,16 @@ async function cargarHeroForm() {
   if (!heroFormContainer) return;
 
   try {
-    /* Detecta si estamos en index o dentro de /pages */
-    const isInPagesFolder = window.location.pathname.includes("/pages/");
-    const formPath = isInPagesFolder
-      ? "../components/hero-form.html"
-      : "components/hero-form.html";
-
-    /* Trae el HTML del formulario */
-    const response = await fetch(formPath);
-
-    if (!response.ok) {
-      throw new Error(`No se pudo cargar el formulario: ${response.status}`);
-    }
-
-    const formHTML = await response.text();
-    heroFormContainer.innerHTML = formHTML;
-
-    /* Toma el origen desde el data attribute del contenedor */
     const origen = heroFormContainer.dataset.origen || "desconocido";
-
-    /* Completa el input hidden del formulario */
     const origenInput = document.getElementById("lead-origen");
+
     if (origenInput) {
       origenInput.value = origen;
     }
 
-    /* Inicializa la lógica del formulario una vez que el HTML ya fue insertado */
     initHeroLeadForm();
-
   } catch (error) {
-    console.error("Error cargando hero-form.html:", error);
+    console.error("Error inicializando hero-form:", error);
   }
 }
 
