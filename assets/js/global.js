@@ -225,7 +225,7 @@ function cargarHeader() {
   const enPages = window.location.pathname.includes('/pages/');
   const base = enPages ? '../' : '';
 
-  fetch(base + 'components/header.html')
+  fetch(base + 'components/header/header.html')
     .then(response => response.text())
     .then(data => {
       const headerEl = document.getElementById('header');
@@ -233,7 +233,7 @@ function cargarHeader() {
 
       const logo = document.querySelector('.navbar-brand img');
       if (logo) {
-        logo.src = base + 'assets/img/logo.png';
+        logo.src = base + 'components/header/logo.png';
       }
 
       const brandLink = document.querySelector('.navbar-brand');
@@ -734,7 +734,6 @@ function initHeaderDropdownTouch() {
       };
 
       toggle.addEventListener('click', handler, false);
-      toggle.addEventListener('touchend', handler, false);
     });
 
     // Cerrar al tocar fuera
@@ -849,9 +848,17 @@ function initMobileMenuAutoClose() {
       closeMenu();
     }, false);
 
-    // Detectar scroll / gestures que indican intención de interacción fuera
-    const closeOnScrollOrTouch = () => {
-      if (isOpen()) closeMenu();
+    // Detectar scroll / gestures que indican intención de interacción fuera.
+    // Si el evento ocurre dentro del menú o en el botón toggler, no cerrar.
+    const closeOnScrollOrTouch = (e) => {
+      if (!isOpen()) return;
+
+      const target = e && e.target;
+      if (target && target.closest && (target.closest('#menuPrincipal') || target.closest('.navbar-toggler'))) {
+        return;
+      }
+
+      closeMenu();
     };
 
     window.addEventListener('scroll', closeOnScrollOrTouch, { passive: true });

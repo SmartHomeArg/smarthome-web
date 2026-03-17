@@ -391,16 +391,15 @@ main {
   color: #084298;
 }
 
-/* MOSTRAR MENU */
+/* MOSTRAR MENU (solo en dispositivos con hover real) */
+@media (hover: hover) and (pointer: fine) {
+  .como-dropdown:hover .como-menu {
+    display: block !important;
+  }
 
-.como-dropdown:hover .como-menu {
-  display: block !important;
-}
-
-/* ROTAR FLECHA */
-
-.como-dropdown:hover .arrow {
-  transform: rotate(-135deg);
+  .como-dropdown:hover .arrow {
+    transform: rotate(-135deg);
+  }
 }
 
 /* Mostrar y rotar también cuando se agrega la clase `.is-open`
