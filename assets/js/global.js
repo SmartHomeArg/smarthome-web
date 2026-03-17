@@ -282,14 +282,14 @@ function cargarFooter() {
   const enPages = window.location.pathname.includes('/pages/');
   const base = enPages ? '../' : '';
 
-  fetch(base + 'components/footer.html')
+  fetch(base + 'components/footer/footer.html')
     .then(response => response.text())
     .then(data => {
       const footerEl = document.getElementById('footer');
       if (footerEl) footerEl.innerHTML = data;
       const footerLogo = document.querySelector('.footer-brand img');
       if (footerLogo) {
-        footerLogo.src = base + 'assets/img/logo-blanco.png';
+        footerLogo.src = base + 'components/footer/logo-blanco.png';
       }
     })
     .catch(error => console.error('Error cargando footer:', error));
