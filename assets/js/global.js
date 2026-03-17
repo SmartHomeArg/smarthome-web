@@ -224,8 +224,51 @@ document.addEventListener("DOMContentLoaded", async function () {
   cargarCaracteristicasPanel();
   cargarComparacionCaracteristicasPlanes();
   cargarCentralMonitoreo247();
+  cargarApp();
 
 });
+
+let swiperResourcesPromise = null;
+
+function ensureSwiperResources() {
+  if (typeof Swiper !== "undefined") {
+    return Promise.resolve();
+  }
+
+  if (!document.querySelector('link[href*="swiper-bundle.min.css"]')) {
+    const css = document.createElement("link");
+    css.rel = "stylesheet";
+    css.href = "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css";
+    document.head.appendChild(css);
+  }
+
+  if (swiperResourcesPromise) {
+    return swiperResourcesPromise;
+  }
+
+  swiperResourcesPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector('script[src*="swiper-bundle.min.js"]');
+
+    if (existingScript) {
+      if (typeof Swiper !== "undefined") {
+        resolve();
+        return;
+      }
+
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener("error", () => reject(new Error("No se pudo cargar Swiper JS")), { once: true });
+      return;
+    }
+
+    const js = document.createElement("script");
+    js.src = "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js";
+    js.onload = () => resolve();
+    js.onerror = () => reject(new Error("No se pudo cargar Swiper JS"));
+    document.body.appendChild(js);
+  });
+
+  return swiperResourcesPromise;
+}
 
 
 /* =========================================
@@ -428,6 +471,7 @@ async function cargarPlanesSlide() {
 
   // Si no hay placeholder, mantener compatibilidad con HTML inline
   if (!container) {
+    await ensureSwiperResources();
     initPlansHomeSlider();
     return;
   }
@@ -453,6 +497,7 @@ async function cargarPlanesSlide() {
       }
     });
 
+    await ensureSwiperResources();
     initPlansHomeSlider();
   } catch (error) {
     console.error("Error cargando planes-slide:", error);
@@ -531,6 +576,7 @@ async function cargarFuncionalidades() {
 
   // Si no hay placeholder, mantener compatibilidad con HTML inline
   if (!container) {
+    await ensureSwiperResources();
     initFuncionalidadesHomeSlider();
     return;
   }
@@ -553,6 +599,7 @@ async function cargarFuncionalidades() {
       bgEl.style.backgroundImage = `url('${base}components/funcionalidades/${file}')`;
     });
 
+    await ensureSwiperResources();
     initFuncionalidadesHomeSlider();
   } catch (error) {
     console.error("Error cargando funcionalidades:", error);
@@ -1782,6 +1829,42 @@ async function cargarCentralMonitoreo247() {
     }
   } catch (error) {
     console.error("Error al cargar la seccion central-monitoreo-24-7:", error);
+  }
+}
+
+/* =========================================================
+   CARGAR SECCION: APP
+   ========================================================= */
+
+async function cargarApp() {
+  const container = document.getElementById("app");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+    const rutaComponente = enPages
+      ? "../components/app/app.html"
+      : "components/app/app.html";
+
+    const response = await fetch(rutaComponente);
+
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el componente app.html");
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    const imageBase = base + "components/app/";
+
+    container.querySelectorAll("img[data-image]").forEach((img) => {
+      const file = img.dataset.image;
+      if (!file) return;
+      img.src = imageBase + file;
+    });
+  } catch (error) {
+    console.error("Error al cargar la seccion app:", error);
   }
 }
 

@@ -4067,3 +4067,205 @@ FOOTER
   }
 }
 
+  /* =========================================
+     APP HOME SECTION
+  ========================================= */
+
+  .app-home {
+    padding: 56px 0;
+  }
+
+  .app-home__card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    align-items: center;
+    gap: 26px;
+    background: #0a5ea8;
+    border-radius: 34px;
+    padding: 28px 34px 28px 24px;
+    overflow: visible;
+  }
+
+  .app-home__phone-wrap {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .app-home__phone-image {
+    width: 190px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .app-home__content {
+    color: #ffffff;
+  }
+
+  .app-home__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 14px;
+  }
+
+  .app-home__copy {
+    max-width: 700px;
+  }
+
+  .app-home__title {
+    margin: 0;
+    font-size: clamp(1.55rem, 2.2vw, 2.2rem);
+    line-height: 1.2;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .app-home__lead {
+    margin: 10px 0 2px;
+    font-size: 1.32rem;
+    line-height: 1.35;
+    font-weight: 600;
+    color: #ffffff;
+  }
+
+  .app-home__desc {
+    margin: 0;
+    color: #e8f4ff;
+    font-size: 1.03rem;
+    line-height: 1.55;
+  }
+
+  .app-home__stores {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-top: 2px;
+  }
+
+  .app-home__stores--mobile {
+    display: none;
+  }
+
+  .app-home__store-link {
+    display: inline-flex;
+  }
+
+  .app-home__badge-image {
+    width: 180px;
+    height: auto;
+    display: block;
+  }
+
+  .app-home__features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 10px 36px;
+  }
+
+  .app-home__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .app-home__list li {
+    position: relative;
+    color: #ffffff;
+    font-size: 1.02rem;
+    line-height: 1.45;
+    padding-left: 30px;
+  }
+
+  .app-home__list li i {
+    position: absolute;
+    left: 0;
+    top: 0.1rem;
+    font-size: 1.12rem;
+    color: #ffffff;
+  }
+
+  .app-home__mobile-image {
+    display: none;
+  }
+
+  @media (max-width: 991px) {
+    .app-home {
+      padding: 46px 0;
+    }
+
+    .app-home__card {
+      grid-template-columns: 1fr;
+      border-radius: 26px;
+      gap: 16px;
+      padding: 24px 20px;
+    }
+
+    .app-home__phone-wrap {
+      display: none;
+    }
+
+    .app-home__top {
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .app-home__stores {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    .app-home__stores--desktop {
+      display: none;
+    }
+
+    .app-home__stores--mobile {
+      display: flex;
+      margin-top: 18px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .app-home__mobile-image {
+      display: block;
+      width: 175px;
+      margin: 2px auto 8px;
+    }
+
+    .app-home__features-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+  }
+
+  @media (max-width: 575px) {
+    .app-home {
+      padding: 36px 0;
+    }
+
+    .app-home__card {
+      border-radius: 20px;
+      padding: 20px 16px;
+    }
+
+    .app-home__lead {
+      font-size: 1.1rem;
+    }
+
+    .app-home__desc,
+    .app-home__list li {
+      font-size: 0.95rem;
+    }
+
+    .app-home__badge-image {
+      width: 156px;
+    }
+  }
+
