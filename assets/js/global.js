@@ -222,6 +222,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   cargarWhatsappFloat();
   cargarZonasProteccionHogar();
   cargarCaracteristicasPanel();
+  cargarComparacionCaracteristicasPlanes();
+  cargarCentralMonitoreo247();
 
 });
 
@@ -1709,6 +1711,74 @@ async function cargarCaracteristicasPanel() {
     initCaracteristicasPanel();
   } catch (error) {
     console.error("Error al cargar la sección características del panel:", error);
+  }
+}
+
+/* =========================================================
+   CARGAR SECCION: COMPARACION CARACTERISTICAS PLANES
+   ========================================================= */
+
+async function cargarComparacionCaracteristicasPlanes() {
+  const container = document.getElementById("comparacion-caracteristicas-planes");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+    const rutaComponente = enPages
+      ? "../components/comparacion-caracteristicas-planes/comparacion-caracteristicas-planes.html"
+      : "components/comparacion-caracteristicas-planes/comparacion-caracteristicas-planes.html";
+
+    const response = await fetch(rutaComponente);
+
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el componente comparacion-caracteristicas-planes.html");
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    const imageBase = base + "components/comparacion-caracteristicas-planes/";
+    container
+      .querySelectorAll(".comparacion-caracteristicas-planes__plan-image[data-image]")
+      .forEach((img) => {
+        img.src = imageBase + img.dataset.image;
+      });
+  } catch (error) {
+    console.error("Error al cargar la seccion comparacion-caracteristicas-planes:", error);
+  }
+}
+
+/* =========================================================
+   CARGAR SECCION: CENTRAL MONITOREO 24/7
+   ========================================================= */
+
+async function cargarCentralMonitoreo247() {
+  const container = document.getElementById("central-monitoreo-24-7");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+    const rutaComponente = enPages
+      ? "../components/central-monitoreo-24-7/central-monitoreo-24-7.html"
+      : "components/central-monitoreo-24-7/central-monitoreo-24-7.html";
+
+    const response = await fetch(rutaComponente);
+
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el componente central-monitoreo-24-7.html");
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    const image = container.querySelector(".central-monitoreo-24-7__image");
+    if (image) {
+      image.src = base + "components/central-monitoreo-24-7/guardia-monitoreo.jpg";
+    }
+  } catch (error) {
+    console.error("Error al cargar la seccion central-monitoreo-24-7:", error);
   }
 }
 
