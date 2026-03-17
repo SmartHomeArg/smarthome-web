@@ -1159,19 +1159,19 @@ function initMobileMenuAutoClose() {
    CARGA SECCION ZONAS PROTECCION HOGAR
 ========================================= */
 async function cargarZonasProteccionHogar() {
-  const container = document.getElementById("zonas-proteccion-hogar-container");
+  const container = document.getElementById("zonas-proteccion-hogar");
   if (!container) return;
 
   try {
     const enPages = window.location.pathname.includes("/pages/");
     const rutaComponente = enPages
-      ? "../components/zonas-proteccion-hogar.html"
-      : "components/zonas-proteccion-hogar.html";
+      ? "../components/zonas-proteccion-hogar/zonas-proteccion-hogar.html"
+      : "components/zonas-proteccion-hogar/zonas-proteccion-hogar.html";
 
     const response = await fetch(rutaComponente);
 
     if (!response.ok) {
-      throw new Error("No se pudo cargar el componente zonas-proteccion-hogar.html");
+      throw new Error("No se pudo cargar el componente zonas-proteccion-hogar/zonas-proteccion-hogar.html");
     }
 
     const html = await response.text();
@@ -1248,9 +1248,45 @@ function initZonasProteccionHogar() {
   
   const enPages = window.location.pathname.includes("/pages/");
   const imageBasePath = enPages ? "../assets/img/" : "assets/img/";
+  const componentImageBasePath = enPages
+    ? "../components/zonas-proteccion-hogar/"
+    : "components/zonas-proteccion-hogar/";
+
+  // Imágenes que fueron movidas de assets/img a components/zonas-proteccion-hogar
+  const movedImages = new Set([
+    "escena-hogar.png",
+    "escena-hogar-mag.png",
+    "escena-hogar-pir-mov.png"
+  ]);
+
+  const getImagePath = (fileName, preferComponent = false) => {
+    if (!fileName) return "";
+    if (preferComponent || movedImages.has(fileName)) {
+      return componentImageBasePath + fileName;
+    }
+    return imageBasePath + fileName;
+  };
+
+  const setImageSourceWithFallback = (imgElement, fileName, preferComponent = false) => {
+    if (!imgElement || !fileName) return;
+
+    const primarySrc = getImagePath(fileName, preferComponent);
+    const fallbackSrc = preferComponent
+      ? imageBasePath + fileName
+      : componentImageBasePath + fileName;
+
+    imgElement.onerror = function () {
+      if (imgElement.dataset.fallbackApplied === "true") return;
+      imgElement.dataset.fallbackApplied = "true";
+      imgElement.src = fallbackSrc;
+    };
+
+    imgElement.dataset.fallbackApplied = "false";
+    imgElement.src = primarySrc;
+  };
 
   if (mainImage) {
-    mainImage.src = imageBasePath + "escena-hogar.png";
+    setImageSourceWithFallback(mainImage, "escena-hogar.png", true);
   }
 
   // ============================================================
@@ -1562,7 +1598,7 @@ function initZonasProteccionHogar() {
     // ========================================================
     panelTitle.textContent = currentItem.title;
     panelDescription.textContent = currentItem.description;
-    productImage.src = imageBasePath + currentItem.image;
+    setImageSourceWithFallback(productImage, currentItem.image);
     productImage.alt = currentItem.alt;
   }
 
@@ -1646,14 +1682,15 @@ function initZonasProteccionHogar() {
    ========================================================= */
 
 async function cargarCaracteristicasPanel() {
-  const container = document.getElementById("caracteristicas-panel-container");
+  const container = document.getElementById("caracteristicas-panel");
   if (!container) return;
 
   try {
     const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
     const rutaComponente = enPages
-      ? "../components/caracteristicas-panel.html"
-      : "components/caracteristicas-panel.html";
+      ? "../components/caracteristicas-panel/caracteristicas-panel.html"
+      : "components/caracteristicas-panel/caracteristicas-panel.html";
 
     const response = await fetch(rutaComponente);
 
@@ -1663,6 +1700,11 @@ async function cargarCaracteristicasPanel() {
 
     const html = await response.text();
     container.innerHTML = html;
+
+    const panelImage = container.querySelector(".caracteristicas-panel__image");
+    if (panelImage) {
+      panelImage.src = base + "components/caracteristicas-panel/panel-inteligente.png";
+    }
 
     initCaracteristicasPanel();
   } catch (error) {
