@@ -3483,6 +3483,8 @@ FOOTER
   justify-content: center;
   transition: all 0.3s ease;
   flex-shrink: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .caracteristicas-panel__arrow:hover {
@@ -3492,6 +3494,31 @@ FOOTER
 
 .caracteristicas-panel__arrow:active {
   transform: scale(0.95);
+}
+
+/* Clase para estado touch/pressed */
+.caracteristicas-panel__arrow.is-pressed {
+  background: #0b5ed7;
+  color: #ffffff;
+}
+
+/* En dispositivos sin hover (touch), remover todos los estados visuales de foco */
+@media (hover: none) and (pointer: coarse) {
+  .caracteristicas-panel__arrow:focus,
+  .caracteristicas-panel__arrow:active {
+    background: transparent !important;
+    color: #0b5ed7 !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* En dispositivos con hover (mouse), permitir foco visual */
+@media (hover: hover) and (pointer: fine) {
+  .caracteristicas-panel__arrow:focus {
+    outline: none;
+    box-shadow: none;
+  }
 }
 
 /* Indicadores */

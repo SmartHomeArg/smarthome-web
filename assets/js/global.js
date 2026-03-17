@@ -1476,9 +1476,30 @@ function initCaracteristicasPanel() {
   // EVENT LISTENERS
   // ============================================================
 
+  // Función auxiliar para remover clase después del click
+  function handleTouchButton(button, callback) {
+    button.addEventListener("touchstart", function(e) {
+      e.preventDefault();
+      this.classList.add("is-pressed");
+    });
+    button.addEventListener("touchend", function(e) {
+      e.preventDefault();
+      this.classList.remove("is-pressed");
+      this.blur();
+      callback();
+    });
+    button.addEventListener("click", function(e) {
+      // El click en mobile ya se manejó en touchend
+      if (e.isTrusted && e.pointerType === "") {
+        return; // Es un click generado por touchend, ignorar
+      }
+      callback();
+    });
+  }
+
   // Botón anterior
   if (arrowPrev) {
-    arrowPrev.addEventListener("click", () => {
+    handleTouchButton(arrowPrev, () => {
       pauseAutoPlay();
       prevSlide();
     });
@@ -1486,7 +1507,7 @@ function initCaracteristicasPanel() {
 
   // Botón siguiente
   if (arrowNext) {
-    arrowNext.addEventListener("click", () => {
+    handleTouchButton(arrowNext, () => {
       pauseAutoPlay();
       nextSlide();
     });
@@ -1494,7 +1515,18 @@ function initCaracteristicasPanel() {
 
   // Indicadores
   indicators.forEach((indicator, index) => {
-    indicator.addEventListener("click", () => {
+    indicator.addEventListener("touchstart", function(e) {
+      e.preventDefault();
+      this.classList.add("is-pressed");
+    });
+    indicator.addEventListener("touchend", function(e) {
+      e.preventDefault();
+      this.classList.remove("is-pressed");
+      this.blur();
+      pauseAutoPlay();
+      goToSlide(index);
+    });
+    indicator.addEventListener("click", function(e) {
       pauseAutoPlay();
       goToSlide(index);
     });
