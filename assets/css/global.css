@@ -2988,6 +2988,21 @@ FOOTER
   cursor: pointer;
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   z-index: 2;
+  padding: 0;
+  overflow: visible;
+}
+
+/* Estilos para los iconos Bootstrap dentro de los marcadores */
+.zonas-proteccion-hogar__marker i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: inherit;
+  line-height: 1;
+  font-style: normal;
+  font-weight: normal;
+  font-family: "bootstrap-icons" !important;
 }
 
 .zonas-proteccion-hogar__marker:hover {
@@ -3000,6 +3015,11 @@ FOOTER
   box-shadow:
     0 0 0 7px rgba(85, 183, 231, 0.22),
     0 14px 34px rgba(11, 59, 143, 0.22);
+}
+
+/* Icono activo hereda el color blanco */
+.zonas-proteccion-hogar__marker.is-active i {
+  color: #ffffff;
 }
 
 /* Posiciones iniciales de ejemplo */
@@ -3280,9 +3300,11 @@ FOOTER
   .zonas-proteccion-hogar__panel {
     position: relative;
     width: min(90%, 360px);
-    margin: -56px auto 0;
+    margin: 16px auto 0;
     border-radius: 24px;
     padding: 42px 20px 22px;
+    /* Transición suave cuando se abre/cierra */
+    transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease, margin 0.35s ease;
   }
 
   .zonas-proteccion-hogar__panel-close {
@@ -3293,9 +3315,11 @@ FOOTER
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translateY(20px);
+    transform: translateY(-20px);
+    margin: -20px auto 0;
   }
 
+  /* Sección de beneficios con transición suave */
   .zonas-proteccion-hogar__benefits {
     display: flex;
     gap: 14px;
@@ -3303,6 +3327,14 @@ FOOTER
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 6px;
+    /* Transición para que se mueva cuando el panel se abre/cierra */
+    transition: margin-top 0.35s ease;
+    margin-top: 0;
+  }
+
+  /* Cuando el panel está colapsado, los beneficios suben */
+  .zonas-proteccion-hogar__benefits.benefits-collapsed {
+    margin-top: -480px;
   }
 
   .zonas-proteccion-hogar__benefits::-webkit-scrollbar {

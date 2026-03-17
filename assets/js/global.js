@@ -891,24 +891,51 @@ async function cargarZonasProteccionHogar() {
   }
 }
 
-/* =========================================
-   INICIALIZAR SECCION ZONAS PROTECCION HOGAR
-========================================= */
+/* =========================================================
+   INICIALIZAR SECCIÓN: ZONAS DE PROTECCIÓN DEL HOGAR
+   
+   DESCRIPCIÓN:
+   Controla un sistema interactivo de pestañas (tabs) que permite
+   cambiar entre diferentes tipos de protección. Cada pestaña 
+   muestra una serie de items (productos/servicios) con:
+   - Iconos flotantes posicionables en la imagen
+   - Panel lateral con detalles del producto seleccionado
+   - Navegación entre items con flechas
+   
+   ESTRUCTURA DE DATOS (sectionData):
+   Contiene arrays de items por cada pestaña. Cada item es un objeto
+   con título, descripción, imagen, icono y posición.
+   
+   ========================================================= */
+
 function initZonasProteccionHogar() {
+  // ============================================================
+  // PASO 1: OBTENER ELEMENTOS DEL DOM
+  // ============================================================
+  
   const section = document.querySelector(".zonas-proteccion-hogar");
   if (!section) return;
 
+  // Elements para controlar las pestañas
   const tabs = Array.from(section.querySelectorAll(".zonas-proteccion-hogar__tab"));
+  
+  // Elements para los marcadores/iconos flotantes
   const markers = Array.from(section.querySelectorAll(".zonas-proteccion-hogar__marker"));
+  
+  // Elements para el panel lateral de detalles
   const panel = section.querySelector(".zonas-proteccion-hogar__panel");
   const panelTitle = section.querySelector(".zonas-proteccion-hogar__panel-title");
   const panelDescription = section.querySelector(".zonas-proteccion-hogar__panel-description");
   const productImage = section.querySelector(".zonas-proteccion-hogar__product-image");
   const mainImage = section.querySelector(".zonas-proteccion-hogar__main-image");
+  const benefitsSection = section.querySelector(".zonas-proteccion-hogar__benefits");
+  
+  // Botones de navegación
   const prevButton = section.querySelector(".zonas-proteccion-hogar__arrow--prev");
   const nextButton = section.querySelector(".zonas-proteccion-hogar__arrow--next");
   const closeButton = section.querySelector(".zonas-proteccion-hogar__panel-close");
 
+  // Validar que todos los elementos existan
   if (
     !tabs.length ||
     !markers.length ||
@@ -919,9 +946,14 @@ function initZonasProteccionHogar() {
     !prevButton ||
     !nextButton
   ) {
+    console.error("Zonas Protección Hogar: faltan elementos DOM requeridos");
     return;
   }
 
+  // ============================================================
+  // PASO 2: CONFIGURACIÓN DE RUTAS Y VARIABLES
+  // ============================================================
+  
   const enPages = window.location.pathname.includes("/pages/");
   const imageBasePath = enPages ? "../assets/img/" : "assets/img/";
 
@@ -929,178 +961,301 @@ function initZonasProteccionHogar() {
     mainImage.src = imageBasePath + "escena-hogar.png";
   }
 
+  // ============================================================
+  // PASO 3: ESTRUCTURA DE DATOS - CONFIGURACIÓN POR PESTAÑA
+  // 
+  // GUÍA DE EDICIÓN:
+  // 
+  // Para AGREGAR un nuevo ITEM a una pestaña:
+  // 1. Copia un objeto existente dentro del array de la pestaña
+  // 2. Edita title, description, image, alt
+  // 3. Cambia los valores de marker.top y marker.left en porcentaje
+  //    (ej: "23%" significa 23% desde arriba y desde la izquierda)
+  // 4. Cambia el icon a un código de Bootstrap Icons
+  //    (ej: "lock-fill", "camera-fill", ver https://icons.getbootstrap.com/)
+  // 5. Agrega más botones <button> al HTML si necesitas más de 6 items
+  //
+  // Para QUITAR un ITEM:
+  // 1. Borra el objeto completo del array
+  // 2. No es necesario quitar el botón del HTML (se oculta automático)
+  //
+  // ============================================================
+
   const sectionData = {
+    
+    // PESTAÑA 1: PROTECCIÓN PERIMETRAL
     perimetral: [
       {
         title: "Contacto magnético exterior",
         description: "Detector de contacto ideal para proteger accesos exteriores, puertas y ventanas del perímetro del hogar.",
         image: "escena-hogar-mag.png",
         alt: "Contacto magnético exterior",
-        marker: { top: "23%", left: "9%" }
+        icon: "door-closed",  // ← CAMBIAR ICONO: busca en https://icons.getbootstrap.com/
+        marker: { top: "23%", left: "9%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Sensor PIR de movimiento",
         description: "Detecta movimiento en zonas de paso y dispara alertas cuando hay actividad no autorizada.",
         image: "escena-hogar-pir-mov.png",
         alt: "Sensor de movimiento PIR",
-        marker: { top: "36%", left: "26%" }
+        icon: "motion",  // ← CAMBIAR ICONO
+        marker: { top: "36%", left: "26%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Sirena disuasiva",
         description: "Al activarse, emite sonido y señal visual para advertir y ayudar a disuadir intrusiones.",
         image: "escena-hogar-mag.png",
         alt: "Sirena disuasiva exterior",
-        marker: { top: "69%", left: "48%" }
+        icon: "exclamation-triangle-fill",  // ← CAMBIAR ICONO
+        marker: { top: "69%", left: "48%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Refuerzo en accesos laterales",
         description: "Cobertura en zonas laterales y puntos ciegos para completar la protección perimetral.",
         image: "escena-hogar-pir-mov.png",
         alt: "Protección de accesos laterales",
-        marker: { top: "49%", left: "86%" }
+        icon: "shield-check",  // ← CAMBIAR ICONO
+        marker: { top: "49%", left: "86%" }  // ← CAMBIAR POSICIÓN
       }
     ],
+    
+    // PESTAÑA 2: PROTECCIÓN INTERIOR
     interior: [
       {
         title: "Panel inteligente",
         description: "El panel centraliza la operación y comunica el estado del sistema para una gestión simple y segura.",
         image: "equipamiento-panel.png",
         alt: "Panel inteligente de alarma",
-        marker: { top: "29%", left: "34%" }
+        icon: "cpu",  // ← CAMBIAR ICONO
+        marker: { top: "29%", left: "34%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Monitoreo de ambientes",
         description: "Control continuo de áreas internas para detectar cambios y eventos importantes en tiempo real.",
         image: "tu-hogar-protegido-2.png",
         alt: "Monitoreo de ambientes interiores",
-        marker: { top: "53%", left: "19%" }
+        icon: "eye-fill",  // ← CAMBIAR ICONO
+        marker: { top: "53%", left: "19%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Control desde celular",
         description: "Gestioná armado, desarmado y estado del sistema con acceso rápido desde la app.",
         image: "tu-hogar-protegido-3.png",
         alt: "Control del sistema desde celular",
-        marker: { top: "63%", left: "57%" }
+        icon: "phone",  // ← CAMBIAR ICONO
+        marker: { top: "63%", left: "57%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Cobertura integral interior",
         description: "Integración de dispositivos para proteger espacios internos clave de forma coordinada.",
         image: "tu-hogar-protegido.png",
         alt: "Cobertura integral interior",
-        marker: { top: "43%", left: "82%" }
+        icon: "house-fill",  // ← CAMBIAR ICONO
+        marker: { top: "43%", left: "82%" }  // ← CAMBIAR POSICIÓN
       }
     ],
+    
+    // PESTAÑA 3: VIDEO
     video: [
       {
         title: "Video inteligente",
         description: "Visualización y verificación remota para responder con más contexto ante eventos de seguridad.",
         image: "funcionalidades-video-inteligencia.jpg",
         alt: "Video inteligente",
-        marker: { top: "28%", left: "17%" }
+        icon: "camera-video",  // ← CAMBIAR ICONO
+        marker: { top: "28%", left: "17%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Smart cam interior",
         description: "Seguimiento de actividad en espacios internos con acceso desde la aplicación.",
         image: "funcionalidades-smart-cam.jpg",
         alt: "Camara inteligente interior",
-        marker: { top: "49%", left: "33%" }
+        icon: "camera-fill",  // ← CAMBIAR ICONO
+        marker: { top: "49%", left: "33%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Registro de eventos",
         description: "Historial visual para consultar eventos detectados y facilitar la toma de decisiones.",
         image: "funcionalidades-hogar-y-mascotas.jpg",
         alt: "Registro de eventos de seguridad",
-        marker: { top: "67%", left: "54%" }
+        icon: "clock-history",  // ← CAMBIAR ICONO
+        marker: { top: "67%", left: "54%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Cobertura de zonas críticas",
         description: "Distribución de cámaras para cubrir puntos de ingreso y circulación con mayor precisión.",
         image: "funcionalidades-smart-cam.jpg",
         alt: "Cobertura de zonas criticas",
-        marker: { top: "47%", left: "82%" }
+        icon: "crosshair",  // ← CAMBIAR ICONO
+        marker: { top: "47%", left: "82%" }  // ← CAMBIAR POSICIÓN
       }
     ],
+    
+    // PESTAÑA 4: CONECTIVIDAD
     conectividad: [
       {
         title: "Conectividad del sistema",
         description: "Comunicación estable entre dispositivos para sostener la protección y el monitoreo en todo momento.",
         image: "plan-home-control.jpg",
         alt: "Conectividad del sistema de seguridad",
-        marker: { top: "31%", left: "25%" }
+        icon: "wifi",  // ← CAMBIAR ICONO
+        marker: { top: "31%", left: "25%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Integracion con app",
         description: "Control unificado para visualizar estado del hogar y gestionar acciones desde cualquier lugar.",
         image: "plan-home-live.jpg",
         alt: "Integracion de la app con la alarma",
-        marker: { top: "48%", left: "42%" }
+        icon: "app",  // ← CAMBIAR ICONO
+        marker: { top: "48%", left: "42%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Automatizacion de rutinas",
         description: "Programación de acciones y notificaciones para una experiencia de seguridad más cómoda.",
         image: "plan-home-plus.jpg",
         alt: "Automatizacion del sistema",
-        marker: { top: "64%", left: "61%" }
+        icon: "gear-fill",  // ← CAMBIAR ICONO
+        marker: { top: "64%", left: "61%" }  // ← CAMBIAR POSICIÓN
       },
       {
         title: "Canales de respaldo",
         description: "Redundancia de comunicación para mantener disponibilidad ante cortes o interferencias.",
         image: "equipamiento-panel.png",
         alt: "Canales de respaldo de conectividad",
-        marker: { top: "40%", left: "84%" }
+        icon: "diagram-3-fill",  // ← CAMBIAR ICONO
+        marker: { top: "40%", left: "84%" }  // ← CAMBIAR POSICIÓN
       }
     ]
   };
 
-  let activeTab = "perimetral";
-  let activeIndex = 0;
+  // ============================================================
+  // PASO 4: VARIABLES DE ESTADO
+  // ============================================================
+  
+  let activeTab = "perimetral";      // Pestaña activa actual
+  let activeIndex = 0;               // Índice del item activo en la pestaña
 
+  // ============================================================
+  // PASO 5: FUNCIONES AUXILIARES
+  // ============================================================
+  
+  /**
+   * Detects if the viewport is mobile/tablet (max-width: 991.98px)
+   */
   const isMobileViewport = () => window.matchMedia("(max-width: 991.98px)").matches;
 
+  /**
+   * Normaliza un índice para que esté dentro del rango válido
+   * Ej: con total=4, índice -1 → 3, índice 5 → 1
+   */
   const clampIndex = (index, total) => {
     if (!total) return 0;
     return ((index % total) + total) % total;
   };
 
+  /**
+   * Abre el panel lateral (lo muestra en mobile)
+   */
   const openPanel = () => {
     panel.classList.remove("is-collapsed");
     panel.setAttribute("aria-hidden", "false");
+    // Remueve la clase que sube los beneficios (vuelven a su posición normal)
+    if (benefitsSection) {
+      benefitsSection.classList.remove("benefits-collapsed");
+    }
   };
 
+  /**
+   * Cierra el panel lateral en mobile
+   */
   const closePanel = () => {
     if (!isMobileViewport()) return;
     panel.classList.add("is-collapsed");
     panel.setAttribute("aria-hidden", "true");
+    // Agrega clase que sube los beneficios dinámicamente
+    if (benefitsSection) {
+      benefitsSection.classList.add("benefits-collapsed");
+    }
   };
 
+  /**
+   * Obtiene el array de items de la pestaña activa
+   */
   const getActiveItems = () => sectionData[activeTab] || [];
 
+  /**
+   * Renderiza el estado actual de la UI
+   * - Actualiza la clase "is-active" en las pestañas
+   * - Posiciona y muestra/oculta los marcadores
+   * - Carga el contenido del panel con el item seleccionado
+   */
   function render() {
     const items = getActiveItems();
     if (!items.length) return;
 
+    // Ajusta el índice activo si está fuera de rango
     activeIndex = clampIndex(activeIndex, items.length);
     const currentItem = items[activeIndex];
 
+    // ========================================================
+    // Actualizar estado de las pestañas
+    // ========================================================
     tabs.forEach((tab) => {
       const isActive = tab.dataset.tab === activeTab;
       tab.classList.toggle("is-active", isActive);
       tab.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
+    // ========================================================
+    // Actualizar marcadores (iconos flotantes)
+    // ========================================================
     markers.forEach((marker, index) => {
       const markerItem = items[index];
+      
       if (!markerItem) {
+        // Si no hay item para este marcador, ocúltalo
         marker.style.display = "none";
         marker.classList.remove("is-active");
         marker.removeAttribute("aria-current");
         return;
       }
 
+      // Mostrar el marcador
       marker.style.display = "inline-flex";
       marker.style.top = markerItem.marker.top;
       marker.style.left = markerItem.marker.left;
-      marker.textContent = String(index + 1);
+      
+      // Insertar el icono de Bootstrap Icons
+      // Se inserta como: <i class="bi bi-icon-name"></i>
+      // Si Bootstrap Icons no carga, usamos un símbolo Unicode como fallback
+      const iconCode = markerItem.icon;
+      
+      // Mapa de iconos a símbolos Unicode (fallback si Bootstrap Icons no carga)
+      const iconFallback = {
+        'door-closed': '🚪',
+        'motion': '⚡',
+        'exclamation-triangle-fill': '⚠️',
+        'shield-check': '🛡️',
+        'cpu': '💾',
+        'eye-fill': '👁️',
+        'phone': '📱',
+        'house-fill': '🏠',
+        'camera-video': '📹',
+        'camera-fill': '📷',
+        'clock-history': '⏰',
+        'crosshair': '🎯',
+        'wifi': '📡',
+        'app': '💻',
+        'gear-fill': '⚙️',
+        'diagram-3-fill': '🔗',
+        'lightbulb-fill': '💡',
+        'thermometer-half': '🌡️'
+      };
+      
+      const fallbackSymbol = iconFallback[iconCode] || '•';
+      marker.innerHTML = `<i class="bi bi-${iconCode}" style="display: inline-block; font-size: 1.2rem; line-height: 1;">${fallbackSymbol}</i>`;
+      
+      // Marcar como activo si corresponde
       marker.classList.toggle("is-active", index === activeIndex);
 
       if (index === activeIndex) {
@@ -1110,55 +1265,86 @@ function initZonasProteccionHogar() {
       }
     });
 
+    // ========================================================
+    // Actualizar contenido del panel lateral
+    // ========================================================
     panelTitle.textContent = currentItem.title;
     panelDescription.textContent = currentItem.description;
     productImage.src = imageBasePath + currentItem.image;
     productImage.alt = currentItem.alt;
   }
 
+  // ============================================================
+  // PASO 6: EVENT LISTENERS - INTERACTIVIDAD
+  // ============================================================
+  
+  /**
+   * Cambiar entre pestañas (tabs)
+   */
   tabs.forEach((tab) => {
     tab.addEventListener("click", function () {
       const nextTab = this.dataset.tab;
       if (!nextTab || nextTab === activeTab) return;
+      
       activeTab = nextTab;
-      activeIndex = 0;
+      activeIndex = 0;  // Resetea al primer item de la nueva pestaña
       openPanel();
       render();
     });
   });
 
+  /**
+   * Seleccionar un item por su marcador
+   */
   markers.forEach((marker, index) => {
     marker.addEventListener("click", function () {
       const total = getActiveItems().length;
       if (index >= total) return;
+      
       activeIndex = index;
       openPanel();
       render();
     });
   });
 
+  /**
+   * Botón anterior (navegación entre items)
+   */
   prevButton.addEventListener("click", function () {
     activeIndex -= 1;
     openPanel();
     render();
   });
 
+  /**
+   * Botón siguiente (navegación entre items)
+   */
   nextButton.addEventListener("click", function () {
     activeIndex += 1;
     openPanel();
     render();
   });
 
+  /**
+   * Botón cerrar panel (solo en mobile)
+   */
   if (closeButton) {
     closeButton.addEventListener("click", closePanel);
   }
 
+  /**
+   * Al cambiar el tamaño de pantalla, abre el panel en desktop
+   */
   window.addEventListener("resize", function () {
     if (!isMobileViewport()) {
       openPanel();
     }
   });
 
+  // ============================================================
+  // PASO 7: INICIALIZACIÓN FINAL
+  // ============================================================
+  
   panel.setAttribute("aria-hidden", "false");
-  render();
+  render();  // Renderiza el estado inicial
 }
