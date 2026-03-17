@@ -2834,6 +2834,175 @@ FOOTER
 }
 
 /* =========================================================
+   SECCION TU COMERCIO PROTEGIDO
+========================================================= */
+
+.tu-comercio-protegido {
+  padding: 80px 0;
+  background: #f1f1f1;
+}
+
+.tu-comercio-protegido__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 540px);
+  align-items: center;
+  gap: 44px;
+  margin-bottom: 34px;
+}
+
+.tu-comercio-protegido__content {
+  max-width: 660px;
+}
+
+.tu-comercio-protegido__title {
+  margin: 0 0 18px;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1.12;
+  font-weight: 700;
+  color: #0058a7;
+}
+
+.tu-comercio-protegido__intro {
+  margin: 0 0 18px;
+  color: #111111;
+  font-size: 1.12rem;
+  line-height: 1.45;
+}
+
+.tu-comercio-protegido__text {
+  margin: 0 0 16px;
+  color: #1f1f1f;
+  font-size: 1.04rem;
+  line-height: 1.7;
+}
+
+.tu-comercio-protegido__text:last-child {
+  margin-bottom: 0;
+}
+
+.tu-comercio-protegido__media {
+  display: flex;
+  justify-content: center;
+}
+
+.tu-comercio-protegido__media img {
+  width: 100%;
+  max-width: 540px;
+  height: auto;
+  object-fit: contain;
+}
+
+.tu-comercio-protegido__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.tu-comercio-protegido__card {
+  position: relative;
+  margin: 0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.tu-comercio-protegido__card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 6;
+  object-fit: cover;
+}
+
+.tu-comercio-protegido__card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.14));
+}
+
+.tu-comercio-protegido__card-caption {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  width: calc(100% - 28px);
+  margin: 0;
+  color: #ffffff;
+  text-align: center;
+  font-size: 0.98rem;
+  line-height: 1.32;
+}
+
+@media (max-width: 991.98px) {
+  .tu-comercio-protegido {
+    padding: 64px 0;
+  }
+
+  .tu-comercio-protegido__top {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    margin-bottom: 28px;
+  }
+
+  .tu-comercio-protegido__content {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .tu-comercio-protegido__media img {
+    max-width: 500px;
+  }
+
+  .tu-comercio-protegido__cards {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .tu-comercio-protegido {
+    padding: 48px 0;
+  }
+
+  .tu-comercio-protegido__media {
+    order: 1;
+  }
+
+  .tu-comercio-protegido__content {
+    order: 2;
+  }
+
+  .tu-comercio-protegido__title {
+    font-size: 1.8rem;
+    margin-bottom: 14px;
+  }
+
+  .tu-comercio-protegido__intro {
+    font-size: 1.02rem;
+    margin-bottom: 14px;
+  }
+
+  .tu-comercio-protegido__text {
+    font-size: 0.98rem;
+    line-height: 1.65;
+  }
+
+  .tu-comercio-protegido__card {
+    border-radius: 12px;
+  }
+
+  .tu-comercio-protegido__card img {
+    aspect-ratio: 16 / 7;
+  }
+
+  .tu-comercio-protegido__card-caption {
+    width: calc(100% - 20px);
+    font-size: 0.92rem;
+    bottom: 10px;
+  }
+}
+
+/* =========================================================
    SECCION ZONAS PROTECCION HOGAR
 ========================================================= */
 

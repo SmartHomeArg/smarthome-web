@@ -217,6 +217,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await cargarEquipamiento();
   await cargarFuncionalidades();
   await cargarTuHogarProtegido();
+  await cargarTuComercioProtegido();
 
   cargarContactate();
   cargarWhatsappFloat();
@@ -632,6 +633,35 @@ async function cargarTuHogarProtegido() {
     if (images[2]) images[2].src = base + "components/tu-hogar-protegido/tu-hogar-protegido-3.png";
   } catch (error) {
     console.error("Error cargando tu-hogar-protegido:", error);
+  }
+}
+
+/* =========================================
+   TU COMERCIO PROTEGIDO
+========================================= */
+
+async function cargarTuComercioProtegido() {
+  const container = document.getElementById("tu-comercio-protegido");
+  if (!container) return;
+
+  try {
+    const enPages = window.location.pathname.includes("/pages/");
+    const base = enPages ? "../" : "";
+
+    const response = await fetch(base + "components/tu-comercio-protegido/tu-comercio-protegido.html");
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar tu-comercio-protegido.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    const images = container.querySelectorAll("img");
+    if (images[0]) images[0].src = base + "components/tu-comercio-protegido/comercio-protegido.jpg";
+    if (images[1]) images[1].src = base + "components/tu-comercio-protegido/tu-comercio-protegido-01.jpeg";
+    if (images[2]) images[2].src = base + "components/tu-comercio-protegido/tu-comercio-protegido-02.jpeg";
+  } catch (error) {
+    console.error("Error cargando tu-comercio-protegido:", error);
   }
 }
 
