@@ -382,10 +382,10 @@ async function cargarHero() {
         description: "Alarmas, cámaras y monitoreo profesional para proteger tu casa con una solución moderna y confiable.",
         origen: "hogar"
       },
-      negocio: {
-        title: '<span class="text-brand">Seguridad inteligente</span> para tu negocio',
-        description: "Alarmas, cámaras y monitoreo profesional para proteger tu negocio con una solución moderna y confiable.",
-        origen: "negocio"
+      comercio: {
+        title: '<span class="text-brand">Seguridad inteligente</span> para tu comercio',
+        description: "Alarmas, cámaras y monitoreo profesional para proteger tu comercio con una solución moderna y confiable.",
+        origen: "comercio"
       }
     };
 
