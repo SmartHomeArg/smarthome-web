@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await cargarEquipamiento();
   await cargarFuncionalidades();
 
-  cargarContactateHome();
+  cargarContactate();
   cargarWhatsappFloat();
   cargarZonasProteccionHogar();
   cargarCaracteristicasPanel();
@@ -910,17 +910,30 @@ function initFuncionalidadesHomeSlider() {
    CONTACTATE HOME
 ========================================= */
 
-function cargarContactateHome() {
-  const placeholder = document.getElementById("contactate-home-placeholder");
+function cargarContactate() {
+  const placeholder = document.getElementById("contactate");
   if (!placeholder) return;
 
-  fetch("components/contactate-home.html")
+  const enPages = window.location.pathname.includes("/pages/");
+  const base = enPages ? "../" : "";
+
+  fetch(base + "components/contactate/contactate.html")
     .then(response => response.text())
     .then(data => {
       placeholder.innerHTML = data;
+
+      const imagen = placeholder.querySelector(".contactate-home__image img");
+      if (imagen) {
+        imagen.src = base + "components/contactate/contactate.jpg";
+      }
+
+      const cta = placeholder.querySelector(".contactate-home__button");
+      if (cta) {
+        cta.href = enPages ? "../contacto.html" : "contacto.html";
+      }
     })
     .catch(error => {
-      console.error("Error al cargar contactate-home:", error);
+      console.error("Error al cargar contactate:", error);
     });
 }
 
@@ -929,19 +942,19 @@ function cargarContactateHome() {
 ========================================= */
 
 function cargarWhatsappFloat() {
-  const contenedor = document.getElementById("whatsapp-float-container");
+  const contenedor = document.getElementById("whatsapp-float");
   if (!contenedor) return;
 
   const rutaBase = window.location.pathname.includes("/pages/") ? "../" : "./";
 
-  fetch(`${rutaBase}components/whatsapp-float.html`)
+  fetch(`${rutaBase}components/whatsapp-float/whatsapp-float.html`)
     .then(response => response.text())
     .then(data => {
       contenedor.innerHTML = data;
 
       const imagen = contenedor.querySelector("img");
       if (imagen) {
-        imagen.src = `${rutaBase}assets/img/whatsapp-logo.png`;
+        imagen.src = `${rutaBase}components/whatsapp-float/whatsapp-logo.png`;
       }
     })
     .catch(error => console.error("Error cargando botón flotante de WhatsApp:", error));
