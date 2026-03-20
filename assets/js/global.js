@@ -273,16 +273,36 @@ function ensureSwiperResources() {
   return swiperResourcesPromise;
 }
 
+let siteRootUrlCache = null;
+
+function getSiteRootUrl() {
+  if (siteRootUrlCache) {
+    return siteRootUrlCache;
+  }
+
+  const globalScript = document.querySelector('script[src*="assets/js/global.js"]');
+
+  if (globalScript) {
+    const scriptUrl = new URL(globalScript.getAttribute("src"), window.location.href);
+    siteRootUrlCache = new URL("../../", scriptUrl);
+    return siteRootUrlCache;
+  }
+
+  siteRootUrlCache = new URL("./", window.location.href);
+  return siteRootUrlCache;
+}
+
+function getSiteAssetUrl(relativePath) {
+  return new URL(relativePath, getSiteRootUrl()).toString();
+}
+
 
 /* =========================================
    HEADER
 ========================================= */
 
 function cargarHeader() {
-  const enPages = window.location.pathname.includes('/pages/');
-  const base = enPages ? '../' : '';
-
-  fetch(base + 'components/header/header.html')
+  fetch(getSiteAssetUrl('components/header/header.html'))
     .then(response => response.text())
     .then(data => {
       const headerEl = document.getElementById('header');
@@ -290,12 +310,12 @@ function cargarHeader() {
 
       const logo = document.querySelector('.navbar-brand img');
       if (logo) {
-        logo.src = base + 'components/header/logo.png';
+        logo.src = getSiteAssetUrl('components/header/logo.png');
       }
 
       const brandLink = document.querySelector('.navbar-brand');
       if (brandLink) {
-        brandLink.href = base + 'index.html';
+        brandLink.href = getSiteAssetUrl('index.html');
       }
 
       document.querySelectorAll('.menu-principal a').forEach(link => {
@@ -303,15 +323,7 @@ function cargarHeader() {
 
         if (!href || href.startsWith('#') || href.startsWith('http')) return;
 
-        if (enPages) {
-          if (href.startsWith('pages/')) {
-            link.href = '../' + href;
-          } else {
-            link.href = base + href;
-          }
-        } else {
-          link.href = href;
-        }
+        link.href = getSiteAssetUrl(href);
       });
 
       // Inicializar comportamiento táctil para dropdowns del header y auto-close del menu móvil
@@ -336,17 +348,14 @@ function cargarHeader() {
 ========================================= */
 
 function cargarFooter() {
-  const enPages = window.location.pathname.includes('/pages/');
-  const base = enPages ? '../' : '';
-
-  fetch(base + 'components/footer/footer.html')
+  fetch(getSiteAssetUrl('components/footer/footer.html'))
     .then(response => response.text())
     .then(data => {
       const footerEl = document.getElementById('footer');
       if (footerEl) footerEl.innerHTML = data;
       const footerLogo = document.querySelector('.footer-brand img');
       if (footerLogo) {
-        footerLogo.src = base + 'components/footer/logo-blanco.png';
+        footerLogo.src = getSiteAssetUrl('components/footer/logo-blanco.png');
       }
     })
     .catch(error => console.error('Error cargando footer:', error));
@@ -361,8 +370,6 @@ async function cargarHero() {
   if (!heroContainer) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
     const pathname = window.location.pathname.toLowerCase();
 
     const getPageSlug = (path) => {
@@ -395,17 +402,17 @@ async function cargarHero() {
     const pageKey = heroConfig[pageSlug] ? pageSlug : "index";
 
     const resolveHeroImagePath = async (slug) => {
-      const candidate = `${base}components/hero/hero-${slug}.jpg`;
+      const candidate = getSiteAssetUrl(`components/hero/hero-${slug}.jpg`);
       try {
         const imgCheck = await fetch(candidate, { method: "HEAD" });
         if (imgCheck.ok) return candidate;
       } catch (e) {
         // Ignore and fallback below
       }
-      return `${base}components/hero/hero-index.jpg`;
+      return getSiteAssetUrl("components/hero/hero-index.jpg");
     };
 
-    const response = await fetch(base + "components/hero/hero.html");
+    const response = await fetch(getSiteAssetUrl("components/hero/hero.html"));
     if (!response.ok) {
       throw new Error(`No se pudo cargar hero.html: ${response.status}`);
     }
@@ -449,10 +456,7 @@ function cargarPorQueSmartHome() {
   const container = document.getElementById("por-que-smarthome");
   if (!container) return;
 
-  const enPages = window.location.pathname.includes("/pages/");
-  const base = enPages ? "../" : "";
-
-  fetch(base + "components/por-que-smarthome/por-que-smarthome.html")
+  fetch(getSiteAssetUrl("components/por-que-smarthome/por-que-smarthome.html"))
     .then(response => {
       if (!response.ok) {
         throw new Error(`No se pudo cargar por-que-smarthome.html: ${response.status}`);
@@ -480,10 +484,7 @@ async function cargarPlanesSlide() {
   }
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-
-    const response = await fetch(base + "components/planes-slide/planes-slide.html");
+    const response = await fetch(getSiteAssetUrl("components/planes-slide/planes-slide.html"));
     if (!response.ok) {
       throw new Error(`No se pudo cargar planes-slide.html: ${response.status}`);
     }
@@ -491,7 +492,7 @@ async function cargarPlanesSlide() {
     const html = await response.text();
     container.innerHTML = html;
 
-    const imageBase = base + "components/planes-slide/";
+    const imageBase = getSiteAssetUrl("components/planes-slide/");
     container.querySelectorAll(".plan-home-card__image").forEach((img) => {
       const currentSrc = img.getAttribute("src") || "";
       const fileName = currentSrc.split("/").pop();
@@ -516,10 +517,7 @@ async function cargarCotizar() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-
-    const response = await fetch(base + "components/cotizar/cotizar.html");
+    const response = await fetch(getSiteAssetUrl("components/cotizar/cotizar.html"));
     if (!response.ok) {
       throw new Error(`No se pudo cargar cotizar.html: ${response.status}`);
     }
@@ -529,7 +527,7 @@ async function cargarCotizar() {
 
     const cotizarImage = container.querySelector(".cotizar-home-image");
     if (cotizarImage) {
-      cotizarImage.src = base + "components/cotizar/cotizar.png";
+      cotizarImage.src = getSiteAssetUrl("components/cotizar/cotizar.png");
     }
   } catch (error) {
     console.error("Error cargando cotizar:", error);
@@ -545,10 +543,7 @@ async function cargarEquipamiento() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-
-    const response = await fetch(base + "components/equipamiento/equipamiento.html");
+    const response = await fetch(getSiteAssetUrl("components/equipamiento/equipamiento.html"));
     if (!response.ok) {
       throw new Error(`No se pudo cargar equipamiento.html: ${response.status}`);
     }
@@ -558,12 +553,12 @@ async function cargarEquipamiento() {
 
     const backImg = container.querySelector(".equipamiento-home__img-back");
     if (backImg) {
-      backImg.src = base + "components/equipamiento/equipamiento-fondo.png";
+      backImg.src = getSiteAssetUrl("components/equipamiento/equipamiento-fondo.png");
     }
 
     const frontImg = container.querySelector(".equipamiento-home__img-front");
     if (frontImg) {
-      frontImg.src = base + "components/equipamiento/equipamiento-panel.png";
+      frontImg.src = getSiteAssetUrl("components/equipamiento/equipamiento-panel.png");
     }
   } catch (error) {
     console.error("Error cargando equipamiento:", error);
@@ -585,10 +580,7 @@ async function cargarFuncionalidades() {
   }
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-
-    const response = await fetch(base + "components/funcionalidades/funcionalidades.html");
+    const response = await fetch(getSiteAssetUrl("components/funcionalidades/funcionalidades.html"));
     if (!response.ok) {
       throw new Error(`No se pudo cargar funcionalidades.html: ${response.status}`);
     }
@@ -599,7 +591,7 @@ async function cargarFuncionalidades() {
     container.querySelectorAll(".funcionalidades-home__bg[data-bg]").forEach(bgEl => {
       const file = bgEl.getAttribute("data-bg");
       if (!file) return;
-      bgEl.style.backgroundImage = `url('${base}components/funcionalidades/${file}')`;
+      bgEl.style.backgroundImage = `url('${getSiteAssetUrl(`components/funcionalidades/${file}`)}')`;
     });
 
     await ensureSwiperResources();
@@ -618,10 +610,7 @@ async function cargarTuHogarProtegido() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-
-    const response = await fetch(base + "components/tu-hogar-protegido/tu-hogar-protegido.html");
+    const response = await fetch(getSiteAssetUrl("components/tu-hogar-protegido/tu-hogar-protegido.html"));
     if (!response.ok) {
       throw new Error(`No se pudo cargar tu-hogar-protegido.html: ${response.status}`);
     }
@@ -630,9 +619,9 @@ async function cargarTuHogarProtegido() {
     container.innerHTML = html;
 
     const images = container.querySelectorAll("img");
-    if (images[0]) images[0].src = base + "components/tu-hogar-protegido/tu-hogar-protegido.png";
-    if (images[1]) images[1].src = base + "components/tu-hogar-protegido/tu-hogar-protegido-2.png";
-    if (images[2]) images[2].src = base + "components/tu-hogar-protegido/tu-hogar-protegido-3.png";
+    if (images[0]) images[0].src = getSiteAssetUrl("components/tu-hogar-protegido/tu-hogar-protegido.png");
+    if (images[1]) images[1].src = getSiteAssetUrl("components/tu-hogar-protegido/tu-hogar-protegido-2.png");
+    if (images[2]) images[2].src = getSiteAssetUrl("components/tu-hogar-protegido/tu-hogar-protegido-3.png");
   } catch (error) {
     console.error("Error cargando tu-hogar-protegido:", error);
   }
@@ -647,10 +636,7 @@ async function cargarTuComercioProtegido() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-
-    const response = await fetch(base + "components/tu-comercio-protegido/tu-comercio-protegido.html");
+    const response = await fetch(getSiteAssetUrl("components/tu-comercio-protegido/tu-comercio-protegido.html"));
     if (!response.ok) {
       throw new Error(`No se pudo cargar tu-comercio-protegido.html: ${response.status}`);
     }
@@ -659,9 +645,9 @@ async function cargarTuComercioProtegido() {
     container.innerHTML = html;
 
     const images = container.querySelectorAll("img");
-    if (images[0]) images[0].src = base + "components/tu-comercio-protegido/comercio-protegido.jpg";
-    if (images[1]) images[1].src = base + "components/tu-comercio-protegido/tu-comercio-protegido-01.jpeg";
-    if (images[2]) images[2].src = base + "components/tu-comercio-protegido/tu-comercio-protegido-02.jpeg";
+    if (images[0]) images[0].src = getSiteAssetUrl("components/tu-comercio-protegido/comercio-protegido.jpg");
+    if (images[1]) images[1].src = getSiteAssetUrl("components/tu-comercio-protegido/tu-comercio-protegido-01.jpeg");
+    if (images[2]) images[2].src = getSiteAssetUrl("components/tu-comercio-protegido/tu-comercio-protegido-02.jpeg");
   } catch (error) {
     console.error("Error cargando tu-comercio-protegido:", error);
   }
@@ -1008,22 +994,19 @@ function cargarContactate() {
   const placeholder = document.getElementById("contactate");
   if (!placeholder) return;
 
-  const enPages = window.location.pathname.includes("/pages/");
-  const base = enPages ? "../" : "";
-
-  fetch(base + "components/contactate/contactate.html")
+  fetch(getSiteAssetUrl("components/contactate/contactate.html"))
     .then(response => response.text())
     .then(data => {
       placeholder.innerHTML = data;
 
       const imagen = placeholder.querySelector(".contactate-home__image img");
       if (imagen) {
-        imagen.src = base + "components/contactate/contactate.jpg";
+        imagen.src = getSiteAssetUrl("components/contactate/contactate.jpg");
       }
 
       const cta = placeholder.querySelector(".contactate-home__button");
       if (cta) {
-        cta.href = enPages ? "../contacto.html" : "contacto.html";
+        cta.href = getSiteAssetUrl("pages/contacto.html");
       }
     })
     .catch(error => {
@@ -1039,16 +1022,14 @@ function cargarWhatsappFloat() {
   const contenedor = document.getElementById("whatsapp-float");
   if (!contenedor) return;
 
-  const rutaBase = window.location.pathname.includes("/pages/") ? "../" : "./";
-
-  fetch(`${rutaBase}components/whatsapp-float/whatsapp-float.html`)
+  fetch(getSiteAssetUrl("components/whatsapp-float/whatsapp-float.html"))
     .then(response => response.text())
     .then(data => {
       contenedor.innerHTML = data;
 
       const imagen = contenedor.querySelector("img");
       if (imagen) {
-        imagen.src = `${rutaBase}components/whatsapp-float/whatsapp-logo.png`;
+        imagen.src = getSiteAssetUrl("components/whatsapp-float/whatsapp-logo.png");
       }
     })
     .catch(error => console.error("Error cargando botón flotante de WhatsApp:", error));
@@ -1247,12 +1228,7 @@ async function cargarZonasProteccionHogar() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const rutaComponente = enPages
-      ? "../components/zonas-proteccion-hogar/zonas-proteccion-hogar.html"
-      : "components/zonas-proteccion-hogar/zonas-proteccion-hogar.html";
-
-    const response = await fetch(rutaComponente);
+    const response = await fetch(getSiteAssetUrl("components/zonas-proteccion-hogar/zonas-proteccion-hogar.html"));
 
     if (!response.ok) {
       throw new Error("No se pudo cargar el componente zonas-proteccion-hogar/zonas-proteccion-hogar.html");
@@ -1275,12 +1251,9 @@ async function cargarZonasProteccionComercio() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-
     const rutasComponente = [
-      base + "components/zonas-proteccion-comercio/zonas-proteccion-comercio.html",
-      base + "components/zonas-proteccion-comercio/zonas-proteccion-hogar.html"
+      getSiteAssetUrl("components/zonas-proteccion-comercio/zonas-proteccion-comercio.html"),
+      getSiteAssetUrl("components/zonas-proteccion-comercio/zonas-proteccion-hogar.html")
     ];
 
     let html = "";
@@ -1377,11 +1350,8 @@ function initZonasProteccionHogar(options = {}) {
   // PASO 2: CONFIGURACIÓN DE RUTAS Y VARIABLES
   // ============================================================
   
-  const enPages = window.location.pathname.includes("/pages/");
-  const imageBasePath = enPages ? "../assets/img/" : "assets/img/";
-  const componentImageBasePath = enPages
-    ? `../components/${componentFolder}/`
-    : `components/${componentFolder}/`;
+  const imageBasePath = getSiteAssetUrl("assets/img/");
+  const componentImageBasePath = getSiteAssetUrl(`components/${componentFolder}/`);
 
   // Imágenes que fueron movidas de assets/img a components/zonas-proteccion-hogar
   const movedImages = new Set([
@@ -1818,13 +1788,7 @@ async function cargarCaracteristicasPanel() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-    const rutaComponente = enPages
-      ? "../components/caracteristicas-panel/caracteristicas-panel.html"
-      : "components/caracteristicas-panel/caracteristicas-panel.html";
-
-    const response = await fetch(rutaComponente);
+    const response = await fetch(getSiteAssetUrl("components/caracteristicas-panel/caracteristicas-panel.html"));
 
     if (!response.ok) {
       throw new Error("No se pudo cargar el componente caracteristicas-panel.html");
@@ -1835,7 +1799,7 @@ async function cargarCaracteristicasPanel() {
 
     const panelImage = container.querySelector(".caracteristicas-panel__image");
     if (panelImage) {
-      panelImage.src = base + "components/caracteristicas-panel/panel-inteligente.png";
+      panelImage.src = getSiteAssetUrl("components/caracteristicas-panel/panel-inteligente.png");
     }
 
     initCaracteristicasPanel();
@@ -1853,13 +1817,7 @@ async function cargarComparacionCaracteristicasPlanes() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-    const rutaComponente = enPages
-      ? "../components/comparacion-caracteristicas-planes/comparacion-caracteristicas-planes.html"
-      : "components/comparacion-caracteristicas-planes/comparacion-caracteristicas-planes.html";
-
-    const response = await fetch(rutaComponente);
+    const response = await fetch(getSiteAssetUrl("components/comparacion-caracteristicas-planes/comparacion-caracteristicas-planes.html"));
 
     if (!response.ok) {
       throw new Error("No se pudo cargar el componente comparacion-caracteristicas-planes.html");
@@ -1868,7 +1826,7 @@ async function cargarComparacionCaracteristicasPlanes() {
     const html = await response.text();
     container.innerHTML = html;
 
-    const imageBase = base + "components/comparacion-caracteristicas-planes/";
+    const imageBase = getSiteAssetUrl("components/comparacion-caracteristicas-planes/");
     container
       .querySelectorAll(".comparacion-caracteristicas-planes__plan-image[data-image]")
       .forEach((img) => {
@@ -1888,13 +1846,7 @@ async function cargarCentralMonitoreo247() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-    const rutaComponente = enPages
-      ? "../components/central-monitoreo-24-7/central-monitoreo-24-7.html"
-      : "components/central-monitoreo-24-7/central-monitoreo-24-7.html";
-
-    const response = await fetch(rutaComponente);
+    const response = await fetch(getSiteAssetUrl("components/central-monitoreo-24-7/central-monitoreo-24-7.html"));
 
     if (!response.ok) {
       throw new Error("No se pudo cargar el componente central-monitoreo-24-7.html");
@@ -1905,7 +1857,7 @@ async function cargarCentralMonitoreo247() {
 
     const image = container.querySelector(".central-monitoreo-24-7__image");
     if (image) {
-      image.src = base + "components/central-monitoreo-24-7/guardia-monitoreo.jpg";
+      image.src = getSiteAssetUrl("components/central-monitoreo-24-7/guardia-monitoreo.jpg");
     }
   } catch (error) {
     console.error("Error al cargar la seccion central-monitoreo-24-7:", error);
@@ -1921,13 +1873,7 @@ async function cargarServiciosParaComercios() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-    const rutaComponente = enPages
-      ? "../components/servicios-para-comercios/servicios-para-comercios.html"
-      : "components/servicios-para-comercios/servicios-para-comercios.html";
-
-    const response = await fetch(rutaComponente);
+    const response = await fetch(getSiteAssetUrl("components/servicios-para-comercios/servicios-para-comercios.html"));
 
     if (!response.ok) {
       throw new Error("No se pudo cargar el componente servicios-para-comercios.html");
@@ -1938,7 +1884,7 @@ async function cargarServiciosParaComercios() {
 
     const image = container.querySelector("img[data-image]");
     if (image) {
-      image.src = base + "components/servicios-para-comercios/servicios-para-comercios.png";
+      image.src = getSiteAssetUrl("components/servicios-para-comercios/servicios-para-comercios.png");
     }
 
     initServiciosParaComercios(container);
@@ -2011,13 +1957,7 @@ async function cargarApp() {
   if (!container) return;
 
   try {
-    const enPages = window.location.pathname.includes("/pages/");
-    const base = enPages ? "../" : "";
-    const rutaComponente = enPages
-      ? "../components/app/app.html"
-      : "components/app/app.html";
-
-    const response = await fetch(rutaComponente);
+    const response = await fetch(getSiteAssetUrl("components/app/app.html"));
 
     if (!response.ok) {
       throw new Error("No se pudo cargar el componente app.html");
@@ -2026,7 +1966,7 @@ async function cargarApp() {
     const html = await response.text();
     container.innerHTML = html;
 
-    const imageBase = base + "components/app/";
+    const imageBase = getSiteAssetUrl("components/app/");
 
     container.querySelectorAll("img[data-image]").forEach((img) => {
       const file = img.dataset.image;
