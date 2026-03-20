@@ -4591,3 +4591,76 @@ FOOTER
     }
   }
 
+  /* =========================================================
+     COMPONENTE REUTILIZABLE: PLAN QUE ES
+  ========================================================= */
+
+  .plan-que-es {
+    padding: 72px 0;
+    background: #ffffff;
+  }
+
+  .plan-que-es__card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 44px;
+  }
+
+  .plan-que-es__media {
+    width: 100%;
+  }
+
+  .plan-que-es__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 24px;
+  }
+
+  .plan-que-es__content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .plan-que-es__title {
+    margin: 0;
+    color: #0f2146;
+    font-size: clamp(1.55rem, 2.4vw, 2.2rem);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .plan-que-es__description {
+    margin: 0;
+    color: #4f5e75;
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  @media (max-width: 991.98px) {
+    .plan-que-es {
+      padding: 62px 0;
+    }
+
+    .plan-que-es__card {
+      gap: 28px;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .plan-que-es {
+      padding: 52px 0;
+    }
+
+    .plan-que-es__card {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .plan-que-es__content {
+      text-align: left;
+    }
+  }
+

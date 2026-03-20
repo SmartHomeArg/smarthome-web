@@ -228,6 +228,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   cargarComparacionCaracteristicasPlanes();
   cargarCentralMonitoreo247();
   cargarApp();
+  cargarPlanesQueEs();
 
 });
 
@@ -1976,6 +1977,67 @@ async function cargarApp() {
   } catch (error) {
     console.error("Error al cargar la seccion app:", error);
   }
+}
+
+/* =========================================================
+   CARGAR COMPONENTES: PLANES QUE ES
+   ========================================================= */
+
+async function cargarPlanesQueEs() {
+  const componentes = [
+    {
+      containerId: "plan-basic-que-es",
+      folder: "plan-basic-que-es",
+      htmlFile: "plan-basic-que-es.html"
+    },
+    {
+      containerId: "plan-plus-que-es",
+      folder: "plan-plus-que-es",
+      htmlFile: "plan-plus-que-es.html"
+    },
+    {
+      containerId: "plan-pro-que-es",
+      folder: "plan-pro-que-es",
+      htmlFile: "plan-pro-que-es.html"
+    },
+    {
+      containerId: "plan-comercial-que-es",
+      folder: "plan-comercial-que-es",
+      htmlFile: "plan-comercial-que-es.html"
+    },
+    {
+      containerId: "plan-video-que-es",
+      folder: "plan-video-que-es",
+      htmlFile: "plan-video-que-es.html"
+    }
+  ];
+
+  const tareas = componentes.map(async ({ containerId, folder, htmlFile }) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    try {
+      const response = await fetch(getSiteAssetUrl(`components/${folder}/${htmlFile}`));
+      if (!response.ok) {
+        throw new Error(`No se pudo cargar ${htmlFile}: ${response.status}`);
+      }
+
+      const html = await response.text();
+      container.innerHTML = html;
+
+      const imageBase = getSiteAssetUrl(`components/${folder}/`);
+      container.querySelectorAll("img").forEach((img) => {
+        const currentSrc = img.getAttribute("src") || "";
+        const fileName = currentSrc.split("/").pop();
+        if (!fileName) return;
+        img.src = imageBase + fileName;
+      });
+    } catch (error) {
+      console.error(`Error cargando ${containerId}:`, error);
+    }
+  });
+
+  await Promise.all(tareas);
 }
 
 /* =========================================================
