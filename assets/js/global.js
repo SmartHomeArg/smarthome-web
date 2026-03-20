@@ -230,6 +230,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   cargarApp();
   cargarPlanesQueEs();
   await cargarPlanesIncluye();
+  await cargarKitsQueIncluye();
 
 });
 
@@ -2280,6 +2281,267 @@ function initPlanIncluyeSliders(scope) {
 
     window.addEventListener("resize", () => {
       const nextPerView = getPlanIncluyeCardsPerView();
+      if (nextPerView === perView) return;
+      perView = nextPerView;
+      applyCardWidth();
+      goToLogicalIndex(logicalIndex);
+    });
+
+    applyCardWidth();
+    buildDots();
+    goToLogicalIndex(0);
+    startAutoplay();
+  });
+}
+
+/* =========================================================
+   CARGAR COMPONENTES: KITS QUE INCLUYE (SLIDER)
+   ========================================================= */
+
+async function cargarKitsQueIncluye() {
+  const componentes = [
+    {
+      containerId: "kit-smart-1-1-que-incluye",
+      folder: "kit-smart-1-1-que-incluye",
+      htmlFile: "kit-smart-1-1-que-incluye.html"
+    },
+    {
+      containerId: "kit-smart-2-2-que-incluye",
+      folder: "kit-smart-2-2-que-incluye",
+      htmlFile: "kit-smart-2-2-que-incluye.html"
+    },
+    {
+      containerId: "kit-smart-cam-2-2-que-incluye",
+      folder: "kit-smart-cam-2-2-que-incluye",
+      htmlFile: "kit-smart-cam-2-2-que-incluye.html"
+    },
+    {
+      containerId: "kit-industrial-que-incluye",
+      folder: "kit-industrial-que-incluye",
+      htmlFile: "kit-industrial-que-incluye.html"
+    },
+    {
+      containerId: "kit-cam-plus-que-incluye",
+      folder: "kit-cam-plus-que-incluye",
+      htmlFile: "kit-cam-plus-que-incluye.html"
+    }
+  ];
+
+  const tareas = componentes.map(async ({ containerId, folder, htmlFile }) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    try {
+      const response = await fetch(getSiteAssetUrl(`components/${folder}/${htmlFile}`));
+      if (!response.ok) {
+        throw new Error(`No se pudo cargar ${htmlFile}: ${response.status}`);
+      }
+
+      const html = await response.text();
+      container.innerHTML = html;
+
+      const imageBase = getSiteAssetUrl(`components/${folder}/`);
+      container.querySelectorAll("img").forEach((img) => {
+        const currentSrc = img.getAttribute("src") || "";
+        const fileName = currentSrc.split("/").pop();
+        if (!fileName) return;
+        img.src = imageBase + fileName;
+      });
+
+      initKitIncluyeSliders(container);
+    } catch (error) {
+      console.error(`Error cargando ${containerId}:`, error);
+    }
+  });
+
+  await Promise.all(tareas);
+}
+
+function getKitIncluyeCardsPerView() {
+  if (window.innerWidth <= 767.98) return 1;
+  if (window.innerWidth <= 991.98) return 2;
+  return 4;
+}
+
+function initKitIncluyeSliders(scope) {
+  const root = scope || document;
+  const sliders = root.querySelectorAll(".kit-incluye__slider");
+
+  sliders.forEach((slider) => {
+    if (slider.dataset.initialized === "true") return;
+    slider.dataset.initialized = "true";
+
+    const track = slider.querySelector(".kit-incluye__track");
+    const cards = Array.from(slider.querySelectorAll(".kit-incluye__card"));
+    const prevButton = slider.querySelector(".kit-incluye__arrow--prev");
+    const nextButton = slider.querySelector(".kit-incluye__arrow--next");
+    const dotsContainer = slider.parentElement.querySelector(".kit-incluye__dots");
+
+    if (!track || !cards.length || !prevButton || !nextButton) return;
+
+    let perView = getKitIncluyeCardsPerView();
+    let logicalIndex = 0;
+    let autoplayInterval = null;
+    let isAnimating = false;
+
+    function getTotalCards() {
+      return cards.length;
+    }
+
+    function applyCardWidth() {
+      const gap = 16;
+      const currentCards = track.querySelectorAll(".kit-incluye__card");
+      currentCards.forEach((card) => {
+        card.style.flex = `0 0 calc((100% - ${(perView - 1) * gap}px) / ${perView})`;
+      });
+    }
+
+    function getStepSize() {
+      const firstCard = track.querySelector(".kit-incluye__card");
+      if (!firstCard) return 0;
+
+      const styles = window.getComputedStyle(track);
+      const gap = parseFloat(styles.gap || styles.columnGap || "16") || 16;
+      return firstCard.getBoundingClientRect().width + gap;
+    }
+
+    function updateDots() {
+      if (!dotsContainer) return;
+      const dots = dotsContainer.querySelectorAll(".kit-incluye__dot");
+      dots.forEach((dot, index) => {
+        dot.classList.toggle("is-active", index === logicalIndex);
+      });
+    }
+
+    function buildDots() {
+      if (!dotsContainer) return;
+      const total = getTotalCards();
+      dotsContainer.innerHTML = "";
+
+      for (let i = 0; i < total; i += 1) {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "kit-incluye__dot";
+        dot.setAttribute("aria-label", `Ir a tarjeta ${i + 1}`);
+        dot.addEventListener("click", () => {
+          goToLogicalIndex(i);
+          restartAutoplay();
+        });
+        dotsContainer.appendChild(dot);
+      }
+
+      updateDots();
+    }
+
+    function goToLogicalIndex(targetIndex) {
+      const total = getTotalCards();
+      if (!total) return;
+      if (targetIndex === logicalIndex) return;
+
+      const moves = (targetIndex - logicalIndex + total) % total;
+      for (let i = 0; i < moves; i += 1) {
+        const first = track.firstElementChild;
+        if (first) track.appendChild(first);
+      }
+
+      logicalIndex = targetIndex;
+      track.style.transition = "none";
+      track.style.transform = "translateX(0)";
+      requestAnimationFrame(() => {
+        track.style.transition = "transform 0.45s ease";
+      });
+      updateDots();
+    }
+
+    function goNext() {
+      if (isAnimating) return;
+      const step = getStepSize();
+      if (!step) return;
+
+      isAnimating = true;
+      track.style.transition = "transform 0.45s ease";
+      track.style.transform = `translateX(-${step}px)`;
+
+      const onTransitionEnd = (event) => {
+        if (event.propertyName !== "transform") return;
+        track.removeEventListener("transitionend", onTransitionEnd);
+
+        const first = track.firstElementChild;
+        if (first) track.appendChild(first);
+
+        track.style.transition = "none";
+        track.style.transform = "translateX(0)";
+        void track.offsetWidth;
+        track.style.transition = "transform 0.45s ease";
+
+        logicalIndex = (logicalIndex + 1) % getTotalCards();
+        updateDots();
+        isAnimating = false;
+      };
+
+      track.addEventListener("transitionend", onTransitionEnd);
+    }
+
+    function goPrev() {
+      if (isAnimating) return;
+      const step = getStepSize();
+      if (!step) return;
+
+      const last = track.lastElementChild;
+      if (last) track.insertBefore(last, track.firstElementChild);
+
+      track.style.transition = "none";
+      track.style.transform = `translateX(-${step}px)`;
+      void track.offsetWidth;
+
+      isAnimating = true;
+      track.style.transition = "transform 0.45s ease";
+      track.style.transform = "translateX(0)";
+
+      const onTransitionEnd = (event) => {
+        if (event.propertyName !== "transform") return;
+        track.removeEventListener("transitionend", onTransitionEnd);
+
+        logicalIndex = (logicalIndex - 1 + getTotalCards()) % getTotalCards();
+        updateDots();
+        isAnimating = false;
+      };
+
+      track.addEventListener("transitionend", onTransitionEnd);
+    }
+
+    function stopAutoplay() {
+      if (autoplayInterval) {
+        clearInterval(autoplayInterval);
+        autoplayInterval = null;
+      }
+    }
+
+    function startAutoplay() {
+      stopAutoplay();
+      const delay = Number(slider.dataset.autoplay) || 5000;
+      autoplayInterval = setInterval(goNext, delay);
+    }
+
+    function restartAutoplay() {
+      startAutoplay();
+    }
+
+    prevButton.addEventListener("click", () => {
+      goPrev();
+      restartAutoplay();
+    });
+
+    nextButton.addEventListener("click", () => {
+      goNext();
+      restartAutoplay();
+    });
+
+    slider.addEventListener("mouseenter", stopAutoplay);
+    slider.addEventListener("mouseleave", startAutoplay);
+
+    window.addEventListener("resize", () => {
+      const nextPerView = getKitIncluyeCardsPerView();
       if (nextPerView === perView) return;
       perView = nextPerView;
       applyCardWidth();
