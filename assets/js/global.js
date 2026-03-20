@@ -229,6 +229,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   cargarCentralMonitoreo247();
   cargarApp();
   cargarPlanesQueEs();
+  await cargarPlanesIncluye();
 
 });
 
@@ -2038,6 +2039,258 @@ async function cargarPlanesQueEs() {
   });
 
   await Promise.all(tareas);
+}
+
+/* =========================================================
+   CARGAR COMPONENTES: PLANES QUE INCLUYE (SLIDER)
+   ========================================================= */
+
+async function cargarPlanesIncluye() {
+  const componentes = [
+    {
+      containerId: "plan-basic-incluye",
+      folder: "plan-basic-incluye",
+      htmlFile: "plan-basic-incluye.html"
+    },
+    {
+      containerId: "plan-plus-incluye",
+      folder: "plan-plus-incluye",
+      htmlFile: "plan-plus-incluye.html"
+    },
+    {
+      containerId: "plan-pro-incluye",
+      folder: "plan-pro-incluye",
+      htmlFile: "plan-pro-incluye.html"
+    },
+    {
+      containerId: "plan-comercial-incluye",
+      folder: "plan-comercial-incluye",
+      htmlFile: "plan-comercial-incluye.html"
+    },
+    {
+      containerId: "plan-video-incluye",
+      folder: "plan-video-incluye",
+      htmlFile: "plan-video-incluye.html"
+    }
+  ];
+
+  const tareas = componentes.map(async ({ containerId, folder, htmlFile }) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    try {
+      const response = await fetch(getSiteAssetUrl(`components/${folder}/${htmlFile}`));
+      if (!response.ok) {
+        throw new Error(`No se pudo cargar ${htmlFile}: ${response.status}`);
+      }
+
+      const html = await response.text();
+      container.innerHTML = html;
+      initPlanIncluyeSliders(container);
+    } catch (error) {
+      console.error(`Error cargando ${containerId}:`, error);
+    }
+  });
+
+  await Promise.all(tareas);
+}
+
+function getPlanIncluyeCardsPerView() {
+  if (window.innerWidth <= 767.98) return 1;
+  if (window.innerWidth <= 991.98) return 2;
+  return 4;
+}
+
+function initPlanIncluyeSliders(scope) {
+  const root = scope || document;
+  const sliders = root.querySelectorAll(".plan-incluye__slider");
+
+  sliders.forEach((slider) => {
+    if (slider.dataset.initialized === "true") return;
+    slider.dataset.initialized = "true";
+
+    const track = slider.querySelector(".plan-incluye__track");
+    const cards = Array.from(slider.querySelectorAll(".plan-incluye__card"));
+    const prevButton = slider.querySelector(".plan-incluye__arrow--prev");
+    const nextButton = slider.querySelector(".plan-incluye__arrow--next");
+    const dotsContainer = slider.parentElement.querySelector(".plan-incluye__dots");
+
+    if (!track || !cards.length || !prevButton || !nextButton) return;
+
+    let perView = getPlanIncluyeCardsPerView();
+    let logicalIndex = 0;
+    let autoplayInterval = null;
+    let isAnimating = false;
+
+    function getTotalCards() {
+      return cards.length;
+    }
+
+    function applyCardWidth() {
+      const gap = 16;
+      const currentCards = track.querySelectorAll(".plan-incluye__card");
+      currentCards.forEach((card) => {
+        card.style.flex = `0 0 calc((100% - ${(perView - 1) * gap}px) / ${perView})`;
+      });
+    }
+
+    function getStepSize() {
+      const firstCard = track.querySelector(".plan-incluye__card");
+      if (!firstCard) return 0;
+
+      const styles = window.getComputedStyle(track);
+      const gap = parseFloat(styles.gap || styles.columnGap || "16") || 16;
+      return firstCard.getBoundingClientRect().width + gap;
+    }
+
+    function updateDots() {
+      if (!dotsContainer) return;
+      const dots = dotsContainer.querySelectorAll(".plan-incluye__dot");
+      dots.forEach((dot, index) => {
+        dot.classList.toggle("is-active", index === logicalIndex);
+      });
+    }
+
+    function buildDots() {
+      if (!dotsContainer) return;
+      const total = getTotalCards();
+      dotsContainer.innerHTML = "";
+
+      for (let i = 0; i < total; i += 1) {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "plan-incluye__dot";
+        dot.setAttribute("aria-label", `Ir a tarjeta ${i + 1}`);
+        dot.addEventListener("click", () => {
+          goToLogicalIndex(i);
+          restartAutoplay();
+        });
+        dotsContainer.appendChild(dot);
+      }
+
+      updateDots();
+    }
+
+    function goToLogicalIndex(targetIndex) {
+      const total = getTotalCards();
+      if (!total) return;
+      if (targetIndex === logicalIndex) return;
+
+      const moves = (targetIndex - logicalIndex + total) % total;
+      for (let i = 0; i < moves; i += 1) {
+        const first = track.firstElementChild;
+        if (first) track.appendChild(first);
+      }
+
+      logicalIndex = targetIndex;
+      track.style.transition = "none";
+      track.style.transform = "translateX(0)";
+      requestAnimationFrame(() => {
+        track.style.transition = "transform 0.45s ease";
+      });
+      updateDots();
+    }
+
+    function goNext() {
+      if (isAnimating) return;
+      const step = getStepSize();
+      if (!step) return;
+
+      isAnimating = true;
+      track.style.transition = "transform 0.45s ease";
+      track.style.transform = `translateX(-${step}px)`;
+
+      const onTransitionEnd = (event) => {
+        if (event.propertyName !== "transform") return;
+        track.removeEventListener("transitionend", onTransitionEnd);
+
+        const first = track.firstElementChild;
+        if (first) track.appendChild(first);
+
+        track.style.transition = "none";
+        track.style.transform = "translateX(0)";
+        void track.offsetWidth;
+        track.style.transition = "transform 0.45s ease";
+
+        logicalIndex = (logicalIndex + 1) % getTotalCards();
+        updateDots();
+        isAnimating = false;
+      };
+
+      track.addEventListener("transitionend", onTransitionEnd);
+    }
+
+    function goPrev() {
+      if (isAnimating) return;
+      const step = getStepSize();
+      if (!step) return;
+
+      const last = track.lastElementChild;
+      if (last) track.insertBefore(last, track.firstElementChild);
+
+      track.style.transition = "none";
+      track.style.transform = `translateX(-${step}px)`;
+      void track.offsetWidth;
+
+      isAnimating = true;
+      track.style.transition = "transform 0.45s ease";
+      track.style.transform = "translateX(0)";
+
+      const onTransitionEnd = (event) => {
+        if (event.propertyName !== "transform") return;
+        track.removeEventListener("transitionend", onTransitionEnd);
+
+        logicalIndex = (logicalIndex - 1 + getTotalCards()) % getTotalCards();
+        updateDots();
+        isAnimating = false;
+      };
+
+      track.addEventListener("transitionend", onTransitionEnd);
+    }
+
+    function stopAutoplay() {
+      if (autoplayInterval) {
+        clearInterval(autoplayInterval);
+        autoplayInterval = null;
+      }
+    }
+
+    function startAutoplay() {
+      stopAutoplay();
+      const delay = Number(slider.dataset.autoplay) || 4000;
+      autoplayInterval = setInterval(goNext, delay);
+    }
+
+    function restartAutoplay() {
+      startAutoplay();
+    }
+
+    prevButton.addEventListener("click", () => {
+      goPrev();
+      restartAutoplay();
+    });
+
+    nextButton.addEventListener("click", () => {
+      goNext();
+      restartAutoplay();
+    });
+
+    slider.addEventListener("mouseenter", stopAutoplay);
+    slider.addEventListener("mouseleave", startAutoplay);
+
+    window.addEventListener("resize", () => {
+      const nextPerView = getPlanIncluyeCardsPerView();
+      if (nextPerView === perView) return;
+      perView = nextPerView;
+      applyCardWidth();
+      goToLogicalIndex(logicalIndex);
+    });
+
+    applyCardWidth();
+    buildDots();
+    goToLogicalIndex(0);
+    startAutoplay();
+  });
 }
 
 /* =========================================================

@@ -4664,3 +4664,174 @@ FOOTER
     }
   }
 
+  /* =========================================================
+     COMPONENTE REUTILIZABLE: PLAN INCLUYE (CARDS)
+  ========================================================= */
+
+  .plan-incluye {
+    padding: 72px 0;
+    background: #f3f5f8;
+  }
+
+  .plan-incluye__title {
+    margin: 0 0 34px;
+    text-align: center;
+    color: #1d2636;
+    font-size: clamp(1.45rem, 2.3vw, 2.2rem);
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  .plan-incluye__slider {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .plan-incluye__viewport {
+    overflow: hidden;
+  }
+
+  .plan-incluye__track {
+    display: flex;
+    gap: 16px;
+    transition: transform 0.45s ease;
+    will-change: transform;
+  }
+
+  .plan-incluye__card {
+    background: #ffffff;
+    border-radius: 20px;
+    min-height: 258px;
+    padding: 26px 20px;
+    box-shadow: 0 18px 38px rgba(12, 31, 62, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+  }
+
+  .plan-incluye__icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #edf4ff;
+    color: #0b5ed7;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .plan-incluye__icon i {
+    font-size: 1.8rem;
+    line-height: 1;
+  }
+
+  .plan-incluye__text {
+    margin: 0;
+    color: #2d3a4f;
+    font-size: 0.97rem;
+    line-height: 1.55;
+  }
+
+  .plan-incluye__arrow {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #0b5ed7;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 12px 28px rgba(12, 31, 62, 0.14);
+    transition: transform 0.22s ease, background 0.22s ease, color 0.22s ease;
+  }
+
+  .plan-incluye__arrow:hover {
+    transform: scale(1.05);
+    background: #0b5ed7;
+    color: #ffffff;
+  }
+
+  .plan-incluye__dots {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .plan-incluye__dot {
+    width: 34px;
+    height: 4px;
+    border: 0;
+    border-radius: 999px;
+    background: #c6cbd4;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .plan-incluye__dot.is-active {
+    background: #2ea8df;
+  }
+
+  @media (max-width: 991.98px) {
+    .plan-incluye {
+      padding: 64px 0;
+    }
+
+    .plan-incluye__slider {
+      grid-template-columns: 40px minmax(0, 1fr) 40px;
+      gap: 12px;
+    }
+
+    .plan-incluye__card {
+      min-height: 246px;
+      padding: 24px 18px;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .plan-incluye {
+      padding: 54px 0;
+    }
+
+    .plan-incluye__title {
+      margin-bottom: 22px;
+      text-align: left;
+    }
+
+    .plan-incluye__slider {
+      grid-template-columns: 36px minmax(0, 1fr) 36px;
+      gap: 8px;
+    }
+
+    .plan-incluye__card {
+      min-height: 220px;
+      padding: 22px 16px;
+    }
+
+    .plan-incluye__icon {
+      width: 62px;
+      height: 62px;
+      margin-bottom: 14px;
+    }
+
+    .plan-incluye__icon i {
+      font-size: 1.55rem;
+    }
+
+    .plan-incluye__text {
+      font-size: 0.95rem;
+    }
+
+    .plan-incluye__dot {
+      width: 28px;
+      height: 4px;
+    }
+  }
+
