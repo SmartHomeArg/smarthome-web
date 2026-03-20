@@ -231,6 +231,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   cargarPlanesQueEs();
   await cargarPlanesIncluye();
   await cargarKitsQueIncluye();
+  await cargarEnConstruccion();
 
 });
 
@@ -2553,6 +2554,32 @@ function initKitIncluyeSliders(scope) {
     goToLogicalIndex(0);
     startAutoplay();
   });
+}
+
+/* =========================================================
+   CARGAR COMPONENTE: EN CONSTRUCCION
+   ========================================================= */
+
+async function cargarEnConstruccion() {
+  const container = document.getElementById("en-construccion");
+  if (!container) return;
+
+  try {
+    const response = await fetch(getSiteAssetUrl("components/en-construccion/en-construccion.html"));
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar en-construccion.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    const cta = container.querySelector(".en-construccion__cta");
+    if (cta) {
+      cta.href = getSiteAssetUrl("index.html");
+    }
+  } catch (error) {
+    console.error("Error cargando en-construccion:", error);
+  }
 }
 
 /* =========================================================
