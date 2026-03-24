@@ -231,6 +231,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   cargarPlanesQueEs();
   await cargarPlanesIncluye();
   await cargarKitsQueIncluye();
+  await cargarBeneficiosConfianza();
   await cargarEnConstruccion();
 
 });
@@ -2554,6 +2555,77 @@ function initKitIncluyeSliders(scope) {
     goToLogicalIndex(0);
     startAutoplay();
   });
+}
+
+/* =========================================================
+   CARGAR COMPONENTE: BENEFICIOS CONFIANZA
+   ========================================================= */
+
+async function cargarBeneficiosConfianza() {
+  const container = document.getElementById("beneficios-confianza");
+  if (!container) return;
+
+  try {
+    const response = await fetch(getSiteAssetUrl("components/beneficios-confianza/beneficios-confianza.html"));
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar beneficios-confianza.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    await ensureSwiperResources();
+    initBeneficiosConfianzaSlider();
+  } catch (error) {
+    console.error("Error cargando beneficios-confianza:", error);
+  }
+}
+
+function initBeneficiosConfianzaSlider() {
+  const sliderElement = document.getElementById("beneficiosConfianzaSlider");
+
+  if (!sliderElement || typeof Swiper === "undefined") return;
+  if (sliderElement.dataset.swiperInited === "true") return;
+  sliderElement.dataset.swiperInited = "true";
+
+  let beneficiosConfianzaSwiper = null;
+
+  function enableBeneficiosConfianzaSwiper() {
+    if (beneficiosConfianzaSwiper) return;
+
+    beneficiosConfianzaSwiper = new Swiper(sliderElement, {
+      loop: true,
+      slidesPerView: 1,
+      spaceBetween: 12,
+      speed: 550,
+      grabCursor: true,
+      allowTouchMove: true,
+      autoplay: {
+        delay: 3000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true
+      }
+    });
+  }
+
+  function disableBeneficiosConfianzaSwiper() {
+    if (!beneficiosConfianzaSwiper) return;
+
+    beneficiosConfianzaSwiper.destroy(true, true);
+    beneficiosConfianzaSwiper = null;
+  }
+
+  function handleBeneficiosConfianzaSlider() {
+    if (window.innerWidth <= 767.98) {
+      enableBeneficiosConfianzaSwiper();
+    } else {
+      disableBeneficiosConfianzaSwiper();
+    }
+  }
+
+  handleBeneficiosConfianzaSlider();
+  window.addEventListener("resize", handleBeneficiosConfianzaSlider);
+  window.addEventListener("orientationchange", handleBeneficiosConfianzaSlider);
 }
 
 /* =========================================================
