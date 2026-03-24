@@ -233,6 +233,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await cargarKitsQueIncluye();
   await cargarBeneficiosConfianza();
   await cargarKitsTienda();
+  await cargarDetalleProductoKit();
   await cargarEnConstruccion();
 
 });
@@ -2650,6 +2651,283 @@ async function cargarKitsTienda() {
     initKitsTienda(container);
   } catch (error) {
     console.error("Error cargando kits-tienda:", error);
+  }
+}
+
+/* =========================================================
+   CARGAR COMPONENTE: DETALLE PRODUCTO KIT
+   ========================================================= */
+
+async function cargarDetalleProductoKit() {
+  const container = document.getElementById("kit-producto-detalle");
+  if (!container) return;
+
+  try {
+    const response = await fetch(getSiteAssetUrl("components/kit-producto-detalle/kit-producto-detalle.html"));
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar kit-producto-detalle.html: ${response.status}`);
+    }
+
+    container.innerHTML = await response.text();
+
+    const getPageSlug = (path) => {
+      const cleanPath = String(path || "").split("?")[0].split("#")[0];
+      const lastPart = cleanPath.split("/").filter(Boolean).pop() || "";
+      return lastPart.replace(/\.html$/i, "").toLowerCase();
+    };
+
+    const slug = getPageSlug(window.location.pathname);
+
+    const kitsBySlug = {
+      "kit-cam-plus": {
+        title: "Kit Cam+",
+        subtitle: "Ideal para hogares y comercios.",
+        price: "$ 89.999",
+        installments: "6 cuotas sin interes",
+        priceWithoutTax: "$ 74.379,34",
+        planList: "$ 59.900",
+        planSell: "$ 41.930",
+        planPromo: "30% de descuento por 6 meses",
+        features: [
+          "Monitoreo 24/7 con deteccion de sabotaje",
+          "Camara incluida para visualizacion en tiempo real",
+          "Arma y desarma tu alarma desde la App SmartHome",
+          "Recibe alertas y notificaciones del estado del sistema"
+        ],
+        includes: [
+          "Panel inteligente (incluye sistema)",
+          "Panel interactivo",
+          "Camara Full HD",
+          "2 detectores de movimiento",
+          "Placa disuasiva"
+        ],
+        includeFolder: "kit-cam-plus-que-incluye"
+      },
+      "kit-smart-1-1": {
+        title: "Kit Smart 1.1",
+        subtitle: "Ideal para hogares y comercios.",
+        price: "$ 108.999",
+        installments: "6 cuotas sin interes",
+        priceWithoutTax: "$ 90.081,82",
+        planList: "$ 61.900",
+        planSell: "$ 43.399",
+        planPromo: "30% de descuento por 6 meses",
+        features: [
+          "Monitoreo 24/7 con deteccion de sabotaje",
+          "Personaliza codigos de usuario para saber quien ingresa y sale",
+          "Arma y desarma tu alarma desde la App SmartHome",
+          "Recibe alertas y notificaciones del estado del sistema"
+        ],
+        includes: [
+          "Panel inteligente (incluye sistema)",
+          "Panel interactivo",
+          "1 sensor magnetico",
+          "1 detector de movimiento",
+          "Placa disuasiva"
+        ],
+        includeFolder: "kit-smart-1-1-que-incluye"
+      },
+      "kit-smart-2-2": {
+        title: "Kit Smart 2.2",
+        subtitle: "Ideal para hogares y comercios.",
+        price: "$ 126.999",
+        installments: "6 cuotas sin interes",
+        priceWithoutTax: "$ 104.957,85",
+        planList: "$ 65.900",
+        planSell: "$ 46.130",
+        planPromo: "30% de descuento por 6 meses",
+        features: [
+          "Monitoreo 24/7 con deteccion de sabotaje",
+          "Personaliza codigos de usuario para saber quien ingresa y sale",
+          "Arma y desarma tu alarma desde la App SmartHome",
+          "Recibe alertas y notificaciones del estado del sistema"
+        ],
+        includes: [
+          "Panel inteligente (incluye sistema)",
+          "Panel interactivo",
+          "2 sensores magneticos",
+          "2 detectores de movimiento",
+          "Placa disuasiva"
+        ],
+        includeFolder: "kit-smart-2-2-que-incluye"
+      },
+      "kit-smart-cam-2-2": {
+        title: "Kit Smart Cam 2.2",
+        subtitle: "Ideal para hogares y comercios.",
+        price: "$ 134.999",
+        installments: "6 cuotas sin interes",
+        priceWithoutTax: "$ 111.569,42",
+        planList: "$ 66.900",
+        planSell: "$ 46.830",
+        planPromo: "30% de descuento por 6 meses",
+        features: [
+          "Monitoreo 24/7 con deteccion de sabotaje",
+          "Incluye camara para ver eventos en vivo",
+          "Arma y desarma tu alarma desde la App SmartHome",
+          "Recibe alertas y notificaciones del estado del sistema"
+        ],
+        includes: [
+          "Panel inteligente (incluye sistema)",
+          "Panel interactivo",
+          "2 sensores magneticos",
+          "2 detectores de movimiento",
+          "Camara Full HD"
+        ],
+        includeFolder: "kit-smart-cam-2-2-que-incluye"
+      },
+      "kit-industrial": {
+        title: "Kit Industrial",
+        subtitle: "Ideal para industrias y grandes superficies.",
+        price: "$ 179.999",
+        installments: "6 cuotas sin interes",
+        priceWithoutTax: "$ 148.759,50",
+        planList: "$ 79.900",
+        planSell: "$ 55.930",
+        planPromo: "30% de descuento por 6 meses",
+        features: [
+          "Monitoreo 24/7 con deteccion de sabotaje",
+          "Cobertura ampliada para mayor superficie",
+          "Arma y desarma tu sistema desde la App SmartHome",
+          "Recibe alertas y notificaciones en tiempo real"
+        ],
+        includes: [
+          "Panel inteligente (incluye sistema)",
+          "Panel interactivo",
+          "4 sensores magneticos",
+          "4 detectores de movimiento",
+          "Sirena de alta potencia"
+        ],
+        includeFolder: "kit-industrial-que-incluye"
+      }
+    };
+
+    const kit = kitsBySlug[slug];
+    if (!kit) return;
+
+    const images = [
+      {
+        src: getSiteAssetUrl(`pages/tienda/${slug}.webp`),
+        alt: `${kit.title} - vista principal`
+      },
+      {
+        src: getSiteAssetUrl(`components/${kit.includeFolder}/tarjeta-1.png`),
+        alt: `${kit.title} - item 1`
+      },
+      {
+        src: getSiteAssetUrl(`components/${kit.includeFolder}/tarjeta-2.png`),
+        alt: `${kit.title} - item 2`
+      },
+      {
+        src: getSiteAssetUrl(`components/${kit.includeFolder}/tarjeta-3.png`),
+        alt: `${kit.title} - item 3`
+      },
+      {
+        src: getSiteAssetUrl(`components/${kit.includeFolder}/tarjeta-4.png`),
+        alt: `${kit.title} - item 4`
+      }
+    ];
+
+    const mainImage = container.querySelector("#kitProductoMainImage");
+    const thumbs = container.querySelector("#kitProductoThumbs");
+    const title = container.querySelector("#kitProductoTitle");
+    const subtitle = container.querySelector("#kitProductoSubtitle");
+    const price = container.querySelector("#kitProductoPrice");
+    const installments = container.querySelector("#kitProductoInstallments");
+    const priceWithoutTax = container.querySelector("#kitProductoPriceWithoutTax");
+    const features = container.querySelector("#kitProductoFeatures");
+    const includes = container.querySelector("#kitProductoIncludes");
+    const planList = container.querySelector("#kitProductoPlanList");
+    const planSell = container.querySelector("#kitProductoPlanSell");
+    const planPromo = container.querySelector("#kitProductoPlanPromo");
+    const qtyInput = container.querySelector("#kitProductoQtyInput");
+    const qtyMinus = container.querySelector("#kitProductoQtyMinus");
+    const qtyPlus = container.querySelector("#kitProductoQtyPlus");
+    const mainCta = container.querySelector("#kitProductoMainCta");
+    const adviceCta = container.querySelector("#kitProductoAdviceCta");
+
+    if (!mainImage || !thumbs || !title || !subtitle || !price || !installments || !priceWithoutTax || !features || !includes || !planList || !planSell || !planPromo || !qtyInput || !qtyMinus || !qtyPlus || !mainCta || !adviceCta) {
+      return;
+    }
+
+    title.textContent = kit.title;
+    subtitle.textContent = kit.subtitle;
+    price.textContent = kit.price;
+    installments.textContent = kit.installments;
+    priceWithoutTax.textContent = `Precio sin impuestos nacionales ${kit.priceWithoutTax}`;
+    planList.textContent = kit.planList;
+    planSell.textContent = kit.planSell;
+    planPromo.textContent = kit.planPromo;
+
+    features.innerHTML = kit.features
+      .map((item) => `<li><i class="bi bi-shield-check"></i><span>${String(item)}</span></li>`)
+      .join("");
+
+    includes.innerHTML = kit.includes
+      .map((item) => `<li>${String(item)}</li>`)
+      .join("");
+
+    let selectedImageIndex = 0;
+
+    function updateMainImage(index) {
+      const imageData = images[index];
+      if (!imageData) return;
+
+      selectedImageIndex = index;
+      mainImage.src = imageData.src;
+      mainImage.alt = imageData.alt;
+
+      thumbs.querySelectorAll(".kit-producto__thumb").forEach((thumb, thumbIndex) => {
+        thumb.classList.toggle("is-active", thumbIndex === selectedImageIndex);
+      });
+    }
+
+    thumbs.innerHTML = images.map((image, index) => {
+      const isActive = index === 0 ? " is-active" : "";
+      return `
+        <button class="kit-producto__thumb${isActive}" type="button" data-image-index="${index}" aria-label="Ver imagen ${index + 1}">
+          <img src="${image.src}" alt="${image.alt}" loading="lazy">
+        </button>
+      `;
+    }).join("");
+
+    updateMainImage(0);
+
+    thumbs.addEventListener("click", (event) => {
+      const thumb = event.target.closest(".kit-producto__thumb");
+      if (!thumb) return;
+
+      const index = Number(thumb.getAttribute("data-image-index"));
+      if (Number.isNaN(index)) return;
+
+      updateMainImage(index);
+    });
+
+    function normalizeQuantity(value) {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed) || parsed < 1) return 1;
+      return Math.floor(parsed);
+    }
+
+    qtyMinus.addEventListener("click", () => {
+      qtyInput.value = String(Math.max(1, normalizeQuantity(qtyInput.value) - 1));
+    });
+
+    qtyPlus.addEventListener("click", () => {
+      qtyInput.value = String(normalizeQuantity(qtyInput.value) + 1);
+    });
+
+    qtyInput.addEventListener("change", () => {
+      qtyInput.value = String(normalizeQuantity(qtyInput.value));
+    });
+
+    const baseWhatsapp = "https://api.whatsapp.com/send?phone=541134245573";
+    const mainMessage = encodeURIComponent(`Hola, quiero contratar el ${kit.title}.`);
+    const adviceMessage = encodeURIComponent(`Hola, quiero asesoramiento sobre el ${kit.title}.`);
+
+    mainCta.href = `${baseWhatsapp}&text=${mainMessage}`;
+    adviceCta.href = `${baseWhatsapp}&text=${adviceMessage}`;
+  } catch (error) {
+    console.error("Error cargando detalle de producto de kit:", error);
   }
 }
 
