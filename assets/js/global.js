@@ -232,6 +232,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await cargarPlanesIncluye();
   await cargarKitsQueIncluye();
   await cargarBeneficiosConfianza();
+  await cargarKitsTienda();
   await cargarEnConstruccion();
 
 });
@@ -2626,6 +2627,236 @@ function initBeneficiosConfianzaSlider() {
   handleBeneficiosConfianzaSlider();
   window.addEventListener("resize", handleBeneficiosConfianzaSlider);
   window.addEventListener("orientationchange", handleBeneficiosConfianzaSlider);
+}
+
+/* =========================================================
+   CARGAR COMPONENTE: KITS TIENDA
+   ========================================================= */
+
+async function cargarKitsTienda() {
+  const container = document.getElementById("kits-tienda");
+  if (!container) return;
+
+  try {
+    const response = await fetch(getSiteAssetUrl("components/kits-tienda/kits-tienda.html"));
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar kits-tienda.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    await ensureSwiperResources();
+    initKitsTienda(container);
+  } catch (error) {
+    console.error("Error cargando kits-tienda:", error);
+  }
+}
+
+function initKitsTienda(container) {
+  const sliderElement = container.querySelector("#kitsTiendaSlider");
+  const wrapper = container.querySelector("#kitsTiendaWrapper");
+  const prevButton = container.querySelector("#kitsTiendaPrev");
+  const nextButton = container.querySelector("#kitsTiendaNext");
+  const modalElement = container.querySelector("#kitsTiendaModal");
+
+  if (!sliderElement || !wrapper || !prevButton || !nextButton || !modalElement || typeof Swiper === "undefined") return;
+
+  // =========================================================
+  // DATOS DE KITS
+  // Para agregar/quitar kits, editar solo este array.
+  // El slider, modal y botones se construyen automáticamente.
+  // =========================================================
+  const kitsData = [
+    {
+      id: "kit-cam-plus",
+      name: "KIT CAM+",
+      image: "kit-cam-plus.webp",
+      slug: "kit-cam-plus",
+      description: "Ideal para hogares y comercios.",
+      price: "$ 89.999",
+      installments: "6 cuotas sin interes",
+      features: ["Monitoreo 24/7", "App SmartHome", "Recibe alertas", "Soporte tecnico"]
+    },
+    {
+      id: "kit-smart-1-1",
+      name: "KIT SMART 1.1",
+      image: "kit-smart-1-1.webp",
+      slug: "kit-smart-1-1",
+      description: "Ideal para hogares y comercios.",
+      price: "$ 108.999",
+      installments: "6 cuotas sin interes",
+      features: ["Monitoreo 24/7", "Personaliza codigos", "Arma/desarma con la App", "Recibe alertas"]
+    },
+    {
+      id: "kit-smart-2-2",
+      name: "KIT SMART 2.2",
+      image: "kit-smart-2-2.webp",
+      slug: "kit-smart-2-2",
+      description: "Ideal para hogares y comercios.",
+      price: "$ 126.999",
+      installments: "6 cuotas sin interes",
+      features: ["Monitoreo 24/7", "2 sensores + 2 controles", "Panel interactivo", "Recibe alertas"]
+    },
+    {
+      id: "kit-smart-cam-2-2",
+      name: "KIT SMART CAM 2.2",
+      image: "kit-smart-cam-2-2.webp",
+      slug: "kit-smart-cam-2-2",
+      description: "Ideal para hogares y comercios.",
+      price: "$ 134.999",
+      installments: "6 cuotas sin interes",
+      features: ["Monitoreo 24/7", "Camara incluida", "Panel interactivo", "Recibe alertas"]
+    },
+    {
+      id: "kit-industrial",
+      name: "KIT INDUSTRIAL",
+      image: "kit-industrial.webp",
+      slug: "kit-industrial",
+      description: "Ideal para industrias y grandes superficies.",
+      price: "$ 179.999",
+      installments: "6 cuotas sin interes",
+      features: ["Monitoreo 24/7", "Cobertura ampliada", "Panel interactivo", "Soporte tecnico"]
+    }
+  ];
+
+  if (!kitsData.length) return;
+
+  const getKitImageUrl = (imageName) => getSiteAssetUrl(`pages/tienda/${imageName}`);
+  const getKitPageUrl = (slug) => getSiteAssetUrl(`pages/tienda/${slug}.html`);
+
+  // La card KIT SMART 1.1 debe iniciar centrada en la carga.
+  const preferredInitialIndex = kitsData.findIndex((kit) => kit.id === "kit-smart-1-1");
+  const initialIndex = preferredInitialIndex >= 0 ? preferredInitialIndex : 0;
+
+  function renderCards() {
+    wrapper.innerHTML = kitsData.map((kit, index) => {
+      const safeName = String(kit.name || "");
+      const safeDescription = String(kit.description || "");
+      const safePrice = String(kit.price || "");
+      const safeInstallments = String(kit.installments || "");
+      const imageUrl = getKitImageUrl(kit.image);
+      const pageUrl = getKitPageUrl(kit.slug);
+
+      return `
+        <div class="swiper-slide kits-tienda__slide" data-kit-index="${index}">
+          <article class="kits-tienda__card" aria-label="${safeName}">
+            <div class="kits-tienda__card-media">
+              <img src="${imageUrl}" alt="${safeName}" loading="lazy">
+            </div>
+
+            <div class="kits-tienda__card-body">
+              <div class="kits-tienda__card-top">
+                <h3 class="kits-tienda__card-title">${safeName}</h3>
+                <button class="kits-tienda__info-btn" type="button" data-kit-index="${index}">+ Info</button>
+              </div>
+
+              <p class="kits-tienda__card-description">${safeDescription}</p>
+
+              <div class="kits-tienda__price-row">
+                <div>
+                  <p class="kits-tienda__price">${safePrice}</p>
+                  <p class="kits-tienda__price-note">Costo instalacion</p>
+                </div>
+                <span class="kits-tienda__installments">${safeInstallments}</span>
+              </div>
+
+              <a class="kits-tienda__cta" href="${pageUrl}">Lo quiero</a>
+            </div>
+          </article>
+        </div>
+      `;
+    }).join("");
+  }
+
+  renderCards();
+
+  const desktopSlides = Math.min(3, kitsData.length);
+  const shouldLoop = kitsData.length > 1;
+
+  const kitsSwiper = new Swiper(sliderElement, {
+    loop: shouldLoop,
+    centeredSlides: true,
+    slidesPerView: 1,
+    spaceBetween: 16,
+    speed: 550,
+    grabCursor: true,
+    allowTouchMove: true,
+    navigation: {
+      prevEl: prevButton,
+      nextEl: nextButton
+    },
+    breakpoints: {
+      768: {
+        slidesPerView: desktopSlides,
+        spaceBetween: 22
+      }
+    },
+    on: {
+      init: function (swiper) {
+        if (swiper.params.loop) {
+          swiper.slideToLoop(initialIndex, 0, false);
+        } else {
+          swiper.slideTo(initialIndex, 0, false);
+        }
+      }
+    }
+  });
+
+  // Reforzar posición inicial al primer render visual.
+  requestAnimationFrame(() => {
+    if (kitsSwiper.params.loop) {
+      kitsSwiper.slideToLoop(initialIndex, 0, false);
+    } else {
+      kitsSwiper.slideTo(initialIndex, 0, false);
+    }
+  });
+
+  const modalImage = container.querySelector("#kitsTiendaModalImage");
+  const modalTitle = container.querySelector("#kitsTiendaModalTitle");
+  const modalDescription = container.querySelector("#kitsTiendaModalDescription");
+  const modalPrice = container.querySelector("#kitsTiendaModalPrice");
+  const modalInstallments = container.querySelector("#kitsTiendaModalInstallments");
+  const modalFeatures = container.querySelector("#kitsTiendaModalFeatures");
+  const modalProductLink = container.querySelector("#kitsTiendaModalProductLink");
+
+  if (!modalImage || !modalTitle || !modalDescription || !modalPrice || !modalInstallments || !modalFeatures || !modalProductLink) return;
+
+  let modalInstance = null;
+  if (window.bootstrap && typeof window.bootstrap.Modal === "function") {
+    modalInstance = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+  }
+
+  function fillAndOpenModal(kitIndex) {
+    const kit = kitsData[kitIndex];
+    if (!kit) return;
+
+    modalImage.src = getKitImageUrl(kit.image);
+    modalImage.alt = kit.name;
+    modalTitle.textContent = kit.name;
+    modalDescription.textContent = kit.description;
+    modalPrice.textContent = kit.price;
+    modalInstallments.textContent = kit.installments;
+    modalProductLink.href = getKitPageUrl(kit.slug);
+
+    modalFeatures.innerHTML = kit.features
+      .map((feature) => `<li><i class="bi bi-gear"></i><span>${String(feature)}</span></li>`)
+      .join("");
+
+    if (modalInstance) {
+      modalInstance.show();
+    }
+  }
+
+  wrapper.addEventListener("click", (event) => {
+    const button = event.target.closest(".kits-tienda__info-btn");
+    if (!button) return;
+
+    const index = Number(button.getAttribute("data-kit-index"));
+    if (Number.isNaN(index)) return;
+
+    fillAndOpenModal(index);
+  });
 }
 
 /* =========================================================

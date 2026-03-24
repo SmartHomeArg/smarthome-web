@@ -1,0 +1,51 @@
+<section class="kits-tienda" aria-label="Kits de seguridad SmartHome">
+  <div class="container">
+    <header class="kits-tienda__header">
+      <h2 class="kits-tienda__title">Conoce y elegi el kit ideal para tu seguridad</h2>
+    </header>
+
+    <div class="kits-tienda__slider-wrap">
+      <button class="kits-tienda__nav kits-tienda__nav--prev" id="kitsTiendaPrev" type="button" aria-label="Kit anterior">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+
+      <div class="swiper kits-tienda__slider" id="kitsTiendaSlider">
+        <div class="swiper-wrapper" id="kitsTiendaWrapper"></div>
+      </div>
+
+      <button class="kits-tienda__nav kits-tienda__nav--next" id="kitsTiendaNext" type="button" aria-label="Kit siguiente">
+        <i class="bi bi-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="modal fade kits-tienda-modal" id="kitsTiendaModal" tabindex="-1" aria-labelledby="kitsTiendaModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-content kits-tienda-modal__content">
+        <button type="button" class="btn-close kits-tienda-modal__close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+
+        <div class="kits-tienda-modal__grid">
+          <div class="kits-tienda-modal__media d-none d-md-flex">
+            <img id="kitsTiendaModalImage" src="" alt="Kit SmartHome" loading="lazy">
+          </div>
+
+          <div class="kits-tienda-modal__info">
+            <h3 class="kits-tienda-modal__title" id="kitsTiendaModalTitle">Kit</h3>
+            <p class="kits-tienda-modal__description" id="kitsTiendaModalDescription"></p>
+
+            <div class="kits-tienda-modal__price-row">
+              <p class="kits-tienda-modal__price" id="kitsTiendaModalPrice"></p>
+              <span class="kits-tienda-modal__installments" id="kitsTiendaModalInstallments"></span>
+            </div>
+
+            <p class="kits-tienda-modal__installation">Costo instalacion</p>
+
+            <ul class="kits-tienda-modal__features" id="kitsTiendaModalFeatures"></ul>
+
+            <a class="kits-tienda-modal__cta" id="kitsTiendaModalProductLink" href="#">Ver producto</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

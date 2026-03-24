@@ -4076,6 +4076,439 @@ FOOTER
 }
 
 /* =========================================================
+   COMPONENTE KITS TIENDA
+========================================================= */
+
+.kits-tienda {
+  padding: 42px 0 56px;
+  background:
+    radial-gradient(circle at top right, rgba(11, 94, 215, 0.08), transparent 42%),
+    linear-gradient(180deg, #f7faff 0%, #ffffff 100%);
+}
+
+.kits-tienda__header {
+  margin-bottom: 18px;
+}
+
+.kits-tienda__title {
+  margin: 0;
+  color: #122a53;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.kits-tienda__slider-wrap {
+  position: relative;
+  padding: 0 54px;
+}
+
+.kits-tienda__slider {
+  overflow: hidden;
+}
+
+.kits-tienda__slide {
+  height: auto;
+}
+
+.kits-tienda__card {
+  height: 100%;
+  border: 1px solid #dce7f8;
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(15, 33, 70, 0.10);
+  display: flex;
+  flex-direction: column;
+}
+
+.kits-tienda__card-media {
+  flex: 0 0 50%;
+  aspect-ratio: 1 / 1;
+  background: #eaf1ff;
+}
+
+.kits-tienda__card-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kits-tienda__card-body {
+  flex: 1;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kits-tienda__card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kits-tienda__card-title {
+  margin: 0;
+  color: #141a22;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.kits-tienda__info-btn {
+  border: 1px solid #0b5ed7;
+  background: #ffffff;
+  color: #0b5ed7;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 8px 12px;
+  white-space: nowrap;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.kits-tienda__info-btn:hover {
+  background: #0b5ed7;
+  color: #ffffff;
+}
+
+.kits-tienda__card-description {
+  margin: 0;
+  color: #7b8492;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.kits-tienda__price-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kits-tienda__price {
+  margin: 0;
+  color: #111111;
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.kits-tienda__price-note {
+  margin: 5px 0 0;
+  color: #6f7784;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.kits-tienda__installments {
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: #fff3e7;
+  color: #ea7a15;
+  font-size: 0.72rem;
+  line-height: 1.1;
+  font-weight: 700;
+  text-align: center;
+}
+
+.kits-tienda__cta {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  border-radius: 6px;
+  text-decoration: none;
+  background: #0b5ed7;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: background-color 0.22s ease;
+}
+
+.kits-tienda__cta:hover {
+  background: #084298;
+  color: #ffffff;
+}
+
+.kits-tienda__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 33, 70, 0.15);
+  color: #0b5ed7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  z-index: 4;
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.kits-tienda__nav--prev {
+  left: 0;
+}
+
+.kits-tienda__nav--next {
+  right: 0;
+}
+
+.kits-tienda__nav:hover {
+  background: #0b5ed7;
+  color: #ffffff;
+}
+
+.kits-tienda-modal__content {
+  border: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.kits-tienda-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+}
+
+.kits-tienda-modal__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.kits-tienda-modal__media {
+  min-height: 420px;
+  background: #edf3ff;
+}
+
+.kits-tienda-modal__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kits-tienda-modal__info {
+  padding: 36px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.kits-tienda-modal__title {
+  margin: 0;
+  color: #141a22;
+  font-size: clamp(1.4rem, 1.8vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.kits-tienda-modal__description {
+  margin: 0;
+  color: #7b8492;
+  font-size: 1rem;
+}
+
+.kits-tienda-modal__price-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.kits-tienda-modal__price {
+  margin: 0;
+  color: #111111;
+  font-size: 2.2rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.kits-tienda-modal__installments {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #fff3e7;
+  color: #ea7a15;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.kits-tienda-modal__installation {
+  margin: -6px 0 0;
+  color: #6f7784;
+  font-size: 0.92rem;
+}
+
+.kits-tienda-modal__features {
+  margin: 6px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid #e5e9f2;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.kits-tienda-modal__features li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1f2732;
+  font-size: 0.92rem;
+}
+
+.kits-tienda-modal__features i {
+  color: #0b5ed7;
+}
+
+.kits-tienda-modal__cta {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border-radius: 7px;
+  border: 1px solid #0b5ed7;
+  text-decoration: none;
+  color: #0b5ed7;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.kits-tienda-modal__cta:hover {
+  background: #0b5ed7;
+  color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+  .kits-tienda {
+    padding: 34px 0 48px;
+  }
+
+  .kits-tienda__slider-wrap {
+    padding: 0 44px;
+  }
+
+  .kits-tienda__card-title {
+    font-size: 1.08rem;
+  }
+
+  .kits-tienda__price {
+    font-size: 1.62rem;
+  }
+
+  .kits-tienda-modal__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kits-tienda-modal__info {
+    padding: 34px 20px 20px;
+  }
+
+  .kits-tienda-modal__features {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .kits-tienda__slider-wrap {
+    padding: 0 36px;
+  }
+
+  .kits-tienda__card-body {
+    padding: 12px 12px 10px;
+    gap: 8px;
+  }
+
+  .kits-tienda__card-title {
+    font-size: 1rem;
+  }
+
+  .kits-tienda__info-btn {
+    font-size: 0.78rem;
+    padding: 7px 10px;
+  }
+
+  .kits-tienda__card-description {
+    font-size: 0.84rem;
+  }
+
+  .kits-tienda__price {
+    font-size: 1.45rem;
+  }
+
+  .kits-tienda__installments {
+    font-size: 0.68rem;
+    padding: 4px 6px;
+  }
+
+  .kits-tienda__price-note {
+    font-size: 0.74rem;
+  }
+
+  .kits-tienda__cta {
+    min-height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .kits-tienda__nav {
+    width: 34px;
+    height: 34px;
+    font-size: 0.95rem;
+  }
+
+  .kits-tienda-modal__info {
+    padding: 26px 16px 16px;
+    gap: 10px;
+  }
+
+  .kits-tienda-modal__title {
+    font-size: 1.45rem;
+  }
+
+  .kits-tienda-modal__description {
+    font-size: 0.93rem;
+  }
+
+  .kits-tienda-modal__price {
+    font-size: 1.7rem;
+  }
+
+  .kits-tienda-modal__installation {
+    font-size: 0.84rem;
+    margin-top: -2px;
+  }
+
+  .kits-tienda-modal__features {
+    padding-top: 12px;
+    gap: 8px;
+  }
+
+  .kits-tienda-modal__features li {
+    font-size: 0.88rem;
+  }
+
+  .kits-tienda-modal__cta {
+    min-height: 42px;
+    font-size: 0.9rem;
+  }
+}
+
+/* =========================================================
    SECCION COMPARADOR DE PACKS HOGAR
 ========================================================= */
 
