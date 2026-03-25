@@ -1162,6 +1162,236 @@ FOOTER
   gap: 22px;
 }
 
+/* =========================================================
+   PAGINA COMO FUNCIONA
+   - Estilos encapsulados en .how-
+   - Conserva el lenguaje visual del sitio
+========================================================= */
+.how-page {
+  background: #f4f7ff;
+}
+.how-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 100px 0 84px;
+  background-image: linear-gradient(120deg, rgba(7, 39, 99, 0.88), rgba(11, 59, 143, 0.74)),
+    url("../img/pages/quienes-somos/hero-quienes-somos.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.how-hero-content {
+  max-width: 760px;
+  color: #ffffff;
+}
+.how-kicker {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.how-hero h1 {
+  margin-bottom: 14px;
+  font-size: clamp(2rem, 3.8vw, 3rem);
+  line-height: 1.12;
+}
+.how-hero p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1.04rem;
+}
+.how-section {
+  padding: 70px 0;
+}
+.how-section-alt {
+  background: linear-gradient(180deg, #edf3ff 0%, #f7f9ff 100%);
+}
+.how-eyebrow {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: #0b3b8f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.how-title {
+  margin-bottom: 22px;
+  color: #0d2a63;
+  font-size: clamp(1.6rem, 2.8vw, 2.3rem);
+  line-height: 1.2;
+}
+.how-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.how-step-card {
+  padding: 22px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+  box-shadow: 0 10px 22px rgba(13, 42, 99, 0.07);
+}
+.how-step-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.how-step-number {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: #e9f0ff;
+  color: #0b3b8f;
+  font-weight: 700;
+}
+.how-step-card i {
+  color: #0b3b8f;
+  font-size: 1.2rem;
+}
+.how-step-card h3 {
+  margin-bottom: 8px;
+  color: #0d2a63;
+  font-size: 1.12rem;
+}
+.how-step-card p {
+  margin: 0;
+  color: #3b4f77;
+}
+.how-panel-card {
+  height: 100%;
+  padding: 24px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+  box-shadow: 0 12px 26px rgba(13, 42, 99, 0.08);
+}
+.how-panel-card-emphasis {
+  background: #0b3b8f;
+  border-color: rgba(11, 59, 143, 0.5);
+}
+.how-panel-title {
+  margin-bottom: 12px;
+  color: #0d2a63;
+  font-size: 1.4rem;
+}
+.how-panel-card p {
+  color: #3b4f77;
+}
+.how-panel-card-emphasis .how-panel-title,
+.how-panel-card-emphasis p {
+  color: #eaf1ff;
+}
+.how-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.how-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #3b4f77;
+}
+.how-list i {
+  color: #0b3b8f;
+  margin-top: 2px;
+}
+.how-faq-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.how-faq-item {
+  padding: 18px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+}
+.how-faq-item h3 {
+  margin-bottom: 8px;
+  color: #0d2a63;
+  font-size: 1.06rem;
+}
+.how-faq-item p {
+  margin: 0;
+  color: #3b4f77;
+}
+.how-cta-band {
+  padding: 28px 0 72px;
+}
+.how-cta-content {
+  padding: 30px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #0b3b8f, #0b5ed7);
+  box-shadow: 0 14px 32px rgba(13, 42, 99, 0.2);
+  text-align: center;
+}
+.how-cta-content h2 {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+}
+.how-cta-content p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+.how-cta-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.how-cta-actions .btn-outline-primary {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.65);
+}
+.how-cta-actions .btn-outline-primary:hover {
+  color: #0b3b8f;
+  background: #ffffff;
+  border-color: #ffffff;
+}
+@media (max-width: 991.98px) {
+  .how-hero {
+    padding: 86px 0 68px;
+  }
+  .how-section {
+    padding: 56px 0;
+  }
+  .how-steps-grid,
+  .how-faq-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 767.98px) {
+  .how-hero {
+    padding: 74px 0 56px;
+  }
+  .how-section {
+    padding: 46px 0;
+  }
+  .how-step-card,
+  .how-panel-card,
+  .how-cta-content {
+    padding: 18px;
+  }
+  .how-cta-band {
+    padding: 18px 0 48px;
+  }
+}
+
 .hero-label {
   font-size: 12px;
   margin-bottom: 12px;
