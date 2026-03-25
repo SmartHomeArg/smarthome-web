@@ -271,6 +271,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   await cargarHero();
   cargarHeroForm();
+  initContactLeadForm();
   cargarPorQueSmartHome();
   await cargarPlanesSlide();
   await cargarCotizar();
@@ -625,6 +626,12 @@ async function cargarCotizar() {
     const html = await response.text();
     container.innerHTML = html;
 
+    container.querySelectorAll('a[href]').forEach(link => {
+      const href = (link.getAttribute('href') || '').trim();
+      if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+      link.href = getSiteAssetUrl(href);
+    });
+
     const cotizarImage = container.querySelector(".cotizar-home-image");
     if (cotizarImage) {
       cotizarImage.src = getSiteAssetUrl("components/cotizar/cotizar.png");
@@ -779,11 +786,13 @@ async function cargarHeroForm() {
   }
 }
 
+const SHARED_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxkHX0fbZlJiENW5xcMq-CAkGLS3K3aI18A0vVuEySE079E1JOddCB-s6xDa3bEIasjw/exec';
+
 function initHeroLeadForm() {
   const form = document.getElementById('hero-lead-form');
   if (!form) return;
 
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbzxkHX0fbZlJiENW5xcMq-CAkGLS3K3aI18A0vVuEySE079E1JOddCB-s6xDa3bEIasjw/exec';
+  const scriptURL = SHARED_APPS_SCRIPT_URL;
 
   const nombreInput = document.getElementById('lead-nombre');
   const telefonoInput = document.getElementById('lead-telefono');
@@ -941,6 +950,416 @@ function initHeroLeadForm() {
         const original = submitButton.dataset.originalText || 'Enviar';
         submitButton.textContent = original;
         delete submitButton.dataset.originalText;
+      }
+    }
+  });
+}
+
+/* =========================================================
+   FORMULARIO PAGINA CONTACTO
+   - Validaciones reforzadas
+   - Adjuntos con limites de seguridad
+========================================================= */
+
+function initContactLeadForm() {
+  const form = document.getElementById('contact-lead-form');
+  if (!form) return;
+  if (form.dataset.initialized === 'true') return;
+  form.dataset.initialized = 'true';
+
+  const configuredScriptUrl = String(form.dataset.scriptUrl || '').trim();
+  const scriptURL = configuredScriptUrl && configuredScriptUrl !== 'PEGAR_AQUI_URL_WEBAPP_CONTACTO'
+    ? configuredScriptUrl
+    : SHARED_APPS_SCRIPT_URL;
+
+  const motivoInput = document.getElementById('contact-motivo');
+  const nombreInput = document.getElementById('contact-nombre');
+  const telefonoInput = document.getElementById('contact-telefono');
+  const emailInput = document.getElementById('contact-email');
+  const direccionInput = document.getElementById('contact-direccion');
+  const provinciaInput = document.getElementById('contact-provincia');
+  const ciudadInput = document.getElementById('contact-ciudad');
+  const comentariosInput = document.getElementById('contact-comentarios');
+  const adjuntosInput = document.getElementById('contact-adjuntos');
+  const websiteInput = document.getElementById('contactWebsite');
+  const loadedAtInput = document.getElementById('contactFormLoadedAt');
+  const submitButton = document.getElementById('contact-form-submit');
+  const messageBox = document.getElementById('contact-form-message');
+
+  if (loadedAtInput) loadedAtInput.value = Date.now();
+
+  const MAX_FILES = 3;
+  const MAX_FILE_SIZE = 4 * 1024 * 1024;
+  const MAX_TOTAL_SIZE = 8 * 1024 * 1024;
+  const ALLOWED_TYPES = [
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
+  const ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'doc', 'docx'];
+
+  const provinciasCiudades = {
+    'Buenos Aires': ['La Plata', 'Mar del Plata', 'Bahía Blanca', 'San Isidro'],
+    'CABA': ['Ciudad Autónoma de Buenos Aires'],
+    'Catamarca': ['San Fernando del Valle de Catamarca', 'Belén'],
+    'Chaco': ['Resistencia', 'Presidencia Roque Sáenz Peña'],
+    'Chubut': ['Rawson', 'Comodoro Rivadavia', 'Puerto Madryn'],
+    'Córdoba': ['Córdoba', 'Villa Carlos Paz', 'Río Cuarto'],
+    'Corrientes': ['Corrientes', 'Goya'],
+    'Entre Ríos': ['Paraná', 'Concordia', 'Gualeguaychú'],
+    'Formosa': ['Formosa', 'Clorinda'],
+    'Jujuy': ['San Salvador de Jujuy', 'Palpalá'],
+    'La Pampa': ['Santa Rosa', 'General Pico'],
+    'La Rioja': ['La Rioja', 'Chilecito'],
+    'Mendoza': ['Mendoza', 'Godoy Cruz', 'San Rafael'],
+    'Misiones': ['Posadas', 'Eldorado'],
+    'Neuquén': ['Neuquén', 'San Martín de los Andes'],
+    'Río Negro': ['Viedma', 'Bariloche', 'General Roca'],
+    'Salta': ['Salta', 'Tartagal'],
+    'San Juan': ['San Juan', 'Rivadavia', 'Rawson'],
+    'San Luis': ['San Luis', 'Villa Mercedes'],
+    'Santa Cruz': ['Río Gallegos', 'Caleta Olivia'],
+    'Santa Fe': ['Santa Fe', 'Rosario', 'Rafaela'],
+    'Santiago del Estero': ['Santiago del Estero', 'La Banda'],
+    'Tierra del Fuego': ['Ushuaia', 'Río Grande'],
+    'Tucumán': ['San Miguel de Tucumán', 'Yerba Buena']
+  };
+
+  const onlyDigits = (value) => String(value || '').replace(/\D/g, '');
+  const normalize = (value) => String(value || '').replace(/\s+/g, ' ').trim();
+  const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalize(value).toLowerCase());
+
+  const hasSuspiciousPatterns = (value) => {
+    const text = normalize(value).toLowerCase();
+    if (!text) return false;
+
+    const spamPatterns = [
+      /https?:\/\//i,
+      /www\./i,
+      /bit\.ly|tinyurl|t\.co|goo\.gl/i,
+      /whatsapp|wa\.me|telegram|t\.me/i,
+      /casino|apuesta|forex|crypto|bitcoin|viagra|porn/i,
+      /(.)\1{5,}/
+    ];
+
+    return spamPatterns.some((re) => re.test(text));
+  };
+
+  const escapeHtml = (value) => String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+  function showMessage(text, type) {
+    if (!messageBox) return;
+    messageBox.innerHTML = text;
+    messageBox.classList.remove('is-error', 'is-success');
+    if (type === 'error') messageBox.classList.add('is-error');
+    if (type === 'success') messageBox.classList.add('is-success');
+  }
+
+  function setFieldError(field, hasError) {
+    if (!field) return;
+    field.classList.toggle('is-invalid', Boolean(hasError));
+  }
+
+  function fillProvincias() {
+    if (!provinciaInput) return;
+
+    const provincias = Object.keys(provinciasCiudades).sort((a, b) => a.localeCompare(b, 'es'));
+    provinciaInput.innerHTML = '<option value="">Seleccionar</option>';
+    provincias.forEach((provincia) => {
+      const opt = document.createElement('option');
+      opt.value = provincia;
+      opt.textContent = provincia;
+      provinciaInput.appendChild(opt);
+    });
+  }
+
+  function fillCiudades(provincia) {
+    if (!ciudadInput) return;
+
+    const ciudades = provinciasCiudades[provincia] || [];
+    ciudadInput.innerHTML = '';
+
+    if (!ciudades.length) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Seleccionar provincia primero';
+      ciudadInput.appendChild(opt);
+      ciudadInput.disabled = true;
+      return;
+    }
+
+    const initial = document.createElement('option');
+    initial.value = '';
+    initial.textContent = 'Seleccionar';
+    ciudadInput.appendChild(initial);
+
+    ciudades.forEach((ciudad) => {
+      const opt = document.createElement('option');
+      opt.value = ciudad;
+      opt.textContent = ciudad;
+      ciudadInput.appendChild(opt);
+    });
+
+    ciudadInput.disabled = false;
+  }
+
+  function validateFiles(files) {
+    const list = Array.from(files || []);
+
+    if (list.length > MAX_FILES) {
+      return `Podés adjuntar hasta ${MAX_FILES} archivos.`;
+    }
+
+    const totalSize = list.reduce((acc, file) => acc + Number(file.size || 0), 0);
+    if (totalSize > MAX_TOTAL_SIZE) {
+      return 'El tamaño total de adjuntos supera el límite permitido.';
+    }
+
+    for (const file of list) {
+      const ext = String(file.name || '').split('.').pop().toLowerCase();
+      const typeOk = ALLOWED_TYPES.includes(file.type);
+      const extOk = ALLOWED_EXTENSIONS.includes(ext);
+
+      if (!typeOk && !extOk) {
+        return `El archivo ${file.name} no tiene un formato permitido.`;
+      }
+
+      if (Number(file.size || 0) > MAX_FILE_SIZE) {
+        return `El archivo ${file.name} supera el tamaño máximo permitido.`;
+      }
+    }
+
+    return '';
+  }
+
+  function validateForm() {
+    const errors = [];
+
+    [
+      motivoInput,
+      nombreInput,
+      telefonoInput,
+      emailInput,
+      direccionInput,
+      provinciaInput,
+      ciudadInput,
+      comentariosInput,
+      adjuntosInput
+    ].forEach((field) => setFieldError(field, false));
+
+    const motivo = normalize(motivoInput?.value);
+    const nombre = normalize(nombreInput?.value);
+    const telefono = onlyDigits(telefonoInput?.value);
+    const mail = normalize(emailInput?.value).toLowerCase();
+    const direccion = normalize(direccionInput?.value);
+    const provincia = normalize(provinciaInput?.value);
+    const ciudad = normalize(ciudadInput?.value);
+    const comentarios = normalize(comentariosInput?.value);
+
+    if (!motivo) {
+      setFieldError(motivoInput, true);
+      errors.push('Seleccioná el motivo de consulta.');
+    }
+
+    if (nombre.length < 3 || hasSuspiciousPatterns(nombre)) {
+      setFieldError(nombreInput, true);
+      errors.push('Nombre y apellido inválido.');
+    }
+
+    if (telefono.length !== 10) {
+      setFieldError(telefonoInput, true);
+      errors.push('El teléfono debe tener 10 dígitos.');
+    }
+
+    if (!isValidEmail(mail) || hasSuspiciousPatterns(mail)) {
+      setFieldError(emailInput, true);
+      errors.push('Mail inválido.');
+    }
+
+    if (direccion.length < 6 || hasSuspiciousPatterns(direccion)) {
+      setFieldError(direccionInput, true);
+      errors.push('Dirección inválida.');
+    }
+
+    if (!provincia) {
+      setFieldError(provinciaInput, true);
+      errors.push('Seleccioná la provincia.');
+    }
+
+    if (!ciudad) {
+      setFieldError(ciudadInput, true);
+      errors.push('Seleccioná la ciudad.');
+    }
+
+    if (comentarios.length < 10 || comentarios.length > 1200 || hasSuspiciousPatterns(comentarios)) {
+      setFieldError(comentariosInput, true);
+      errors.push('Comentarios inválidos o sospechosos.');
+    }
+
+    const filesError = validateFiles(adjuntosInput?.files);
+    if (filesError) {
+      setFieldError(adjuntosInput, true);
+      errors.push(filesError);
+    }
+
+    if (errors.length) {
+      showMessage(escapeHtml(errors[0]), 'error');
+      return false;
+    }
+
+    showMessage('', '');
+    return true;
+  }
+
+  async function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || '');
+        const parts = result.split(',');
+        resolve(parts.length > 1 ? parts[1] : '');
+      };
+      reader.onerror = () => reject(new Error('No se pudo leer el archivo adjunto'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function getFilePayload(files) {
+    const list = Array.from(files || []);
+    return Promise.all(list.map(async (file) => {
+      const base64 = await fileToBase64(file);
+      return {
+        name: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        size: Number(file.size || 0),
+        contentBase64: base64
+      };
+    }));
+  }
+
+  if (telefonoInput) {
+    telefonoInput.addEventListener('input', function () {
+      this.value = onlyDigits(this.value).slice(0, 10);
+    });
+  }
+
+  if (provinciaInput) {
+    provinciaInput.addEventListener('change', function () {
+      fillCiudades(this.value);
+      setFieldError(ciudadInput, false);
+    });
+  }
+
+  fillProvincias();
+  fillCiudades('');
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    if (!scriptURL) {
+      showMessage('No hay URL de Apps Script configurada para el formulario.', 'error');
+      return;
+    }
+
+    if (!validateForm()) return;
+
+    const honeypot = normalize(websiteInput?.value);
+    const loadedAt = Number(loadedAtInput?.value || Date.now());
+    const tiempoSegundos = Math.floor((Date.now() - loadedAt) / 1000);
+
+    if (honeypot) {
+      showMessage('No se pudo enviar la consulta.', 'error');
+      return;
+    }
+
+    if (tiempoSegundos > 0 && tiempoSegundos < 4) {
+      showMessage('Esperá unos segundos antes de enviar el formulario.', 'error');
+      return;
+    }
+
+    const originalText = submitButton ? submitButton.textContent.trim() : 'Enviar consulta';
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Enviando...';
+    }
+
+    showMessage('', '');
+
+    try {
+      if (submitButton) {
+        submitButton.textContent = 'Procesando adjuntos...';
+      }
+
+      const files = await getFilePayload(adjuntosInput?.files);
+
+      if (submitButton) {
+        submitButton.textContent = 'Enviando...';
+      }
+
+      const payload = {
+        formType: 'contact',
+        motivoConsulta: normalize(motivoInput?.value),
+        nombreApellido: normalize(nombreInput?.value),
+        telefono: onlyDigits(telefonoInput?.value),
+        mail: normalize(emailInput?.value).toLowerCase(),
+        direccion: normalize(direccionInput?.value),
+        provincia: normalize(provinciaInput?.value),
+        ciudad: normalize(ciudadInput?.value),
+        comentarios: normalize(comentariosInput?.value),
+        website: honeypot,
+        tiempoSegundos: tiempoSegundos,
+        pagina: document.title || 'Contacto',
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        archivos: files
+      };
+
+      const response = await fetch(scriptURL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        showMessage('Consulta enviada correctamente. Redirigiendo...', 'success');
+        setTimeout(function () {
+          const successURL = window.location.pathname.includes('/pages/')
+            ? '../gracias.html'
+            : 'gracias.html';
+
+          window.location.href = successURL;
+        }, 500);
+      } else {
+        const backendError =
+          (Array.isArray(result.errors) && result.errors.length ? result.errors[0] : '') ||
+          result.detail ||
+          result.message ||
+          'No se pudo enviar la consulta. Verificá tus datos e intentá nuevamente.';
+
+        showMessage(backendError, 'error');
+        console.error('Respuesta backend contacto:', result);
+      }
+    } catch (error) {
+      showMessage('Ocurrió un error durante el envío. Intentá nuevamente en unos minutos.', 'error');
+      console.error('Error enviando contacto:', error);
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText || 'Enviar consulta';
       }
     }
   });
