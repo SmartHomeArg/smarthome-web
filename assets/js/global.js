@@ -234,6 +234,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await cargarBeneficiosConfianza();
   await cargarKitsTienda();
   await cargarContrata4Pasos();
+  await cargarPorQueElegir();
   await cargarDetalleProductoKit();
   await cargarEnConstruccion();
 
@@ -2724,6 +2725,27 @@ function initContrata4PasosSlider() {
   handleContrataPasosSlider();
   window.addEventListener("resize", handleContrataPasosSlider);
   window.addEventListener("orientationchange", handleContrataPasosSlider);
+}
+
+/* =========================================================
+   CARGAR COMPONENTE: POR QUE ELEGIR
+   ========================================================= */
+
+async function cargarPorQueElegir() {
+  const container = document.getElementById("por-que-elegir");
+  if (!container) return;
+
+  try {
+    const response = await fetch(getSiteAssetUrl("components/por-que-elegir/por-que-elegir.html"));
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar por-que-elegir.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+  } catch (error) {
+    console.error("Error cargando por-que-elegir:", error);
+  }
 }
 
 /* =========================================================

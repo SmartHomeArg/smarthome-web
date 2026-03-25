@@ -4188,6 +4188,118 @@ FOOTER
 }
 
 /* =========================================================
+   COMPONENTE POR QUE ELEGIR
+========================================================= */
+
+.por-que-elegir {
+  padding: 16px 0 44px;
+  background: #f2f2f2;
+}
+
+.por-que-elegir__header {
+  margin-bottom: 14px;
+}
+
+.por-que-elegir__title {
+  margin: 0;
+  text-align: center;
+  color: #111111;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.por-que-elegir__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.por-que-elegir__card {
+  min-height: 116px;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  background: #f2f2f2;
+  display: grid;
+  grid-template-columns: 116px 1fr;
+  align-items: stretch;
+}
+
+.por-que-elegir__icon {
+  border-right: 1px solid #d9d9d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f28c28;
+}
+
+.por-que-elegir__icon i {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.por-que-elegir__content {
+  padding: 16px 16px 14px;
+}
+
+.por-que-elegir__content h3 {
+  margin: 0 0 8px;
+  color: #0b5ed7;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.por-que-elegir__content p {
+  margin: 0;
+  color: #4c4c4c;
+  font-size: 0.94rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 991.98px) {
+  .por-que-elegir__card {
+    grid-template-columns: 96px 1fr;
+  }
+
+  .por-que-elegir__icon i {
+    font-size: 2.6rem;
+  }
+
+  .por-que-elegir__content {
+    padding: 14px 14px 12px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .por-que-elegir {
+    padding: 10px 0 32px;
+  }
+
+  .por-que-elegir__grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .por-que-elegir__card {
+    min-height: 108px;
+    grid-template-columns: 84px 1fr;
+  }
+
+  .por-que-elegir__icon i {
+    font-size: 2.2rem;
+  }
+
+  .por-que-elegir__content h3 {
+    font-size: 1rem;
+  }
+
+  .por-que-elegir__content p {
+    font-size: 0.9rem;
+  }
+}
+
+/* =========================================================
    COMPONENTE KITS TIENDA
 ========================================================= */
 
