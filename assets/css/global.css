@@ -1023,6 +1023,269 @@ FOOTER
 }
 
 /* =========================================================
+   PAGINA CERCOS ELECTRICOS
+   - Estilos encapsulados con prefijo .fence-
+   - No afecta otras paginas
+========================================================= */
+
+.fence-page {
+  background: #f4f7ff;
+}
+
+.fence-hero {
+  padding: 92px 0 68px;
+}
+
+.fence-hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.fence-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e8f0ff;
+  color: #0b3b8f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fence-hero-copy h1 {
+  margin-bottom: 14px;
+  color: #0d2a63;
+  font-size: clamp(2rem, 3.8vw, 2.9rem);
+  line-height: 1.15;
+}
+
+.fence-hero-copy p {
+  margin: 0;
+  color: #2d3f66;
+}
+
+.fence-hero-actions {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fence-hero-media img {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 16px 34px rgba(13, 42, 99, 0.14);
+}
+
+.fence-section {
+  padding: 64px 0;
+}
+
+.fence-section-alt {
+  background: linear-gradient(180deg, #edf3ff 0%, #f7f9ff 100%);
+}
+
+.fence-eyebrow {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0b3b8f;
+}
+
+.fence-title {
+  margin-bottom: 20px;
+  color: #0d2a63;
+  font-size: clamp(1.6rem, 2.8vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.fence-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.fence-benefit-card {
+  padding: 22px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+  box-shadow: 0 10px 22px rgba(13, 42, 99, 0.07);
+}
+
+.fence-benefit-card i {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #e9f0ff;
+  color: #0b3b8f;
+  font-size: 1.2rem;
+}
+
+.fence-benefit-card h3 {
+  margin-bottom: 8px;
+  color: #0d2a63;
+  font-size: 1.12rem;
+}
+
+.fence-benefit-card p {
+  margin: 0;
+  color: #3b4f77;
+}
+
+.fence-rounded-image {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 16px 34px rgba(13, 42, 99, 0.14);
+}
+
+.fence-feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.fence-feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #3b4f77;
+}
+
+.fence-feature-list i {
+  color: #0b3b8f;
+  margin-top: 2px;
+}
+
+.fence-process-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.fence-process-step {
+  padding: 20px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+}
+
+.fence-process-step span {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 10px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #e9f0ff;
+  color: #0b3b8f;
+  font-weight: 700;
+}
+
+.fence-process-step h3 {
+  margin-bottom: 8px;
+  color: #0d2a63;
+  font-size: 1.08rem;
+}
+
+.fence-process-step p {
+  margin: 0;
+  color: #3b4f77;
+}
+
+.fence-cta-band {
+  padding: 10px 0 74px;
+}
+
+.fence-cta-box {
+  padding: 30px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #0b3b8f, #0b5ed7);
+  box-shadow: 0 14px 30px rgba(13, 42, 99, 0.2);
+  text-align: center;
+}
+
+.fence-cta-box h2 {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+}
+
+.fence-cta-box p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.fence-cta-actions {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.fence-cta-actions .btn-outline-primary {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.fence-cta-actions .btn-outline-primary:hover {
+  color: #0b3b8f;
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+  .fence-hero {
+    padding: 78px 0 54px;
+  }
+
+  .fence-hero-grid,
+  .fence-benefits-grid,
+  .fence-process-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fence-section {
+    padding: 52px 0;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .fence-hero {
+    padding: 64px 0 44px;
+  }
+
+  .fence-section {
+    padding: 44px 0;
+  }
+
+  .fence-benefit-card,
+  .fence-process-step,
+  .fence-cta-box {
+    padding: 18px;
+  }
+
+  .fence-cta-band {
+    padding: 6px 0 46px;
+  }
+}
+
+/* =========================================================
    HERO PRINCIPAL
    - Estructura global reutilizable
    - Imagen de fondo con recorte automático
