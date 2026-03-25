@@ -233,6 +233,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await cargarKitsQueIncluye();
   await cargarBeneficiosConfianza();
   await cargarKitsTienda();
+  await cargarContrata4Pasos();
   await cargarDetalleProductoKit();
   await cargarEnConstruccion();
 
@@ -2652,6 +2653,77 @@ async function cargarKitsTienda() {
   } catch (error) {
     console.error("Error cargando kits-tienda:", error);
   }
+}
+
+/* =========================================================
+   CARGAR COMPONENTE: CONTRATA EN 4 PASOS
+   ========================================================= */
+
+async function cargarContrata4Pasos() {
+  const container = document.getElementById("contrata-4-pasos");
+  if (!container) return;
+
+  try {
+    const response = await fetch(getSiteAssetUrl("components/contrata-4-pasos/contrata-4-pasos.html"));
+    if (!response.ok) {
+      throw new Error(`No se pudo cargar contrata-4-pasos.html: ${response.status}`);
+    }
+
+    const html = await response.text();
+    container.innerHTML = html;
+
+    await ensureSwiperResources();
+    initContrata4PasosSlider();
+  } catch (error) {
+    console.error("Error cargando contrata-4-pasos:", error);
+  }
+}
+
+function initContrata4PasosSlider() {
+  const sliderElement = document.getElementById("contrataPasosSlider");
+
+  if (!sliderElement || typeof Swiper === "undefined") return;
+  if (sliderElement.dataset.swiperInited === "true") return;
+  sliderElement.dataset.swiperInited = "true";
+
+  let contrataPasosSwiper = null;
+
+  function enableContrataPasosSwiper() {
+    if (contrataPasosSwiper) return;
+
+    contrataPasosSwiper = new Swiper(sliderElement, {
+      loop: true,
+      slidesPerView: 2,
+      spaceBetween: 12,
+      speed: 550,
+      grabCursor: true,
+      allowTouchMove: true,
+      autoplay: {
+        delay: 2800,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true
+      }
+    });
+  }
+
+  function disableContrataPasosSwiper() {
+    if (!contrataPasosSwiper) return;
+
+    contrataPasosSwiper.destroy(true, true);
+    contrataPasosSwiper = null;
+  }
+
+  function handleContrataPasosSlider() {
+    if (window.innerWidth <= 767.98) {
+      enableContrataPasosSwiper();
+    } else {
+      disableContrataPasosSwiper();
+    }
+  }
+
+  handleContrataPasosSlider();
+  window.addEventListener("resize", handleContrataPasosSlider);
+  window.addEventListener("orientationchange", handleContrataPasosSlider);
 }
 
 /* =========================================================
