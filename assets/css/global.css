@@ -203,7 +203,7 @@ main {
 
 /* Asegurar que la línea también aparezca en foco/activo y cuando
    el item está abierto por JS (.is-open) — útil en touch devices */
-.menu-principal .nav-link:focus::before,
+.menu-principal .nav-link:focus-visible::before,
 .menu-principal .nav-link:active::before,
 .menu-principal .nav-item.is-open > .nav-link::before,
 .como-dropdown.is-open > .nav-link::before {
@@ -215,6 +215,21 @@ main {
 
   color: var(--color-primario-hover);
 
+}
+
+.menu-principal .nav-link.active {
+  color: var(--color-primario-hover);
+  font-weight: 700;
+}
+
+.menu-principal .nav-link.active::before {
+  width: 100%;
+}
+
+.menu-principal .nav-link:focus-visible,
+.menu-principal .dropdown-item:focus-visible {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 2px;
 }
 
 
@@ -389,6 +404,12 @@ main {
 .como-menu .dropdown-item:hover {
   background: #f4f7ff;
   color: #084298;
+}
+
+.como-menu .dropdown-item.active {
+  background: #f4f7ff;
+  color: #084298;
+  font-weight: 700;
 }
 
 /* MOSTRAR MENU (solo en dispositivos con hover real) */
@@ -1207,7 +1228,7 @@ FOOTER
 .navbar .menu-principal .nav-link {
   color: var(--color-primario);
   font-weight: 500;
-  padding: 18px 16px;
+  padding: 20px 16px 14px;
   position: relative;
   transition: all 0.25s ease;
 }
@@ -1218,7 +1239,7 @@ FOOTER
   }
 
   .navbar .menu-principal .nav-link {
-    padding: 10px 0;
+    padding: 14px 0 10px;
   }
 
   .navbar-collapse {
@@ -1321,7 +1342,26 @@ FOOTER
   .menu-principal .nav-link {
     display: block;
     width: 100%;
-    padding: 12px 0;
+    padding: 14px 0 10px;
+  }
+
+  /* En mobile, feedback uniforme: links activos (madre e hija) en negrita */
+  .menu-principal .nav-link.active,
+  .menu-principal .como-link.active,
+  .menu-principal .como-menu .dropdown-item.active {
+    font-weight: 700;
+  }
+
+  /* En mobile no mostrar línea azul fija de feedback activo */
+  .menu-principal .nav-link.active::before,
+  .menu-principal .nav-item.is-open > .nav-link::before,
+  .como-dropdown.is-open > .nav-link::before {
+    width: 0;
+  }
+
+  .menu-principal .nav-link.active:hover::before,
+  .menu-principal .nav-link.active:focus-visible::before {
+    width: 100%;
   }
 }
 
