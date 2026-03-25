@@ -1,16 +1,25 @@
-<footer class="site-footer">
+<footer class="site-footer" role="contentinfo">
 
   <div class="container footer-container">
 
     <div class="footer-col footer-brand">
-      <img src="logo-blanco.png">
-      <p>
+      <!-- Logo principal del footer: cambia src/href segun tu ruta final -->
+      <a class="footer-logo-link" href="index.html" aria-label="Ir al inicio de SmartHome">
+        <img src="logo-blanco.png" alt="SmartHome">
+      </a>
+
+      <!-- Mensaje corto de marca: mantenlo en 1-2 lineas para no cargar el bloque -->
+      <p class="footer-description">
         Sistemas de seguridad inteligentes para hogares,
         comercios y comunidades.
       </p>
+
+      <!-- CTA simple de cierre: puedes cambiar texto, destino o eliminarlo si no lo necesitas -->
+      <a class="footer-cta" href="#">Solicitar asesoramiento</a>
     </div>
 
-    <div class="footer-col">
+    <!-- Navegacion de servicios: ideal para accesibilidad y SEO semantico -->
+    <nav class="footer-col" aria-label="Navegacion de servicios">
       <h4>Servicios</h4>
       <ul>
         <li><a href="pages/hogar.html">Alarmas para hogar</a></li>
@@ -18,32 +27,51 @@
         <li><a href="pages/camaras.html">Cámaras de seguridad</a></li>
         <li><a href="pages/monitoreo.html">Monitoreo 24/7</a></li>
       </ul>
-    </div>
+    </nav>
 
-    <div class="footer-col">
+    <!-- Navegacion institucional: puedes sumar aqui FAQ, soporte o blog -->
+    <nav class="footer-col" aria-label="Navegacion institucional">
       <h4>Empresa</h4>
       <ul>
         <li><a href="pages/quienes-somos.html">Quiénes somos</a></li>
         <li><a href="pages/como-funciona.html">Cómo funciona</a></li>
         <li><a href="pages/contacto.html">Contacto</a></li>
       </ul>
-    </div>
+    </nav>
 
     <div class="footer-col">
       <h4>Contacto</h4>
       <ul class="footer-contact">
-        <li>San Juan, Argentina</li>
-        <li>+54 264 630 4866</li>
-        <li>contacto.smarthome.ar@gmail.com</li>
+        <!-- Ubicacion: texto simple, sin link -->
+        <li><span class="footer-contact-label">Ubicación:</span> San Juan, Argentina</li>
+
+        <!-- Telefono clickeable para mobile -->
+        <li>
+          <span class="footer-contact-label">Tel:</span>
+          <a href="tel:+542646304866">+542646304866</a>
+        </li>
+
+        <!-- Email clickeable para abrir cliente de correo -->
+        <li>
+          <span class="footer-contact-label">Email:</span>
+          <a href="mailto:contacto.smarthome.ar@gmail.com">contacto.smarthome.ar@gmail.com</a>
+        </li>
       </ul>
     </div>
 
   </div>
 
   <div class="footer-bottom">
-    <p>
-      © 2026 SmartHome. Todos los derechos reservados.
-    </p>
+    <div class="container footer-bottom-container">
+      <!-- Copyright: puedes actualizar ano o automatizarlo luego con JS -->
+      <p class="footer-copy">© 2026 SmartHome. Todos los derechos reservados.</p>
+
+      <!-- Bloque legal minimo recomendado en webs profesionales -->
+      <ul class="footer-legal" aria-label="Enlaces legales">
+        <li><a href="#">Política de privacidad</a></li>
+        <li><a href="#">Términos y condiciones</a></li>
+      </ul>
+    </div>
   </div>
 
 </footer>

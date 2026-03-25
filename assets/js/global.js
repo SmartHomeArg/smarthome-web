@@ -441,6 +441,18 @@ function cargarFooter() {
     .then(data => {
       const footerEl = document.getElementById('footer');
       if (footerEl) footerEl.innerHTML = data;
+
+      const footerLinks = document.querySelectorAll('.site-footer a');
+      footerLinks.forEach(link => {
+        const href = (link.getAttribute('href') || '').trim();
+
+        if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+          return;
+        }
+
+        link.href = getSiteAssetUrl(href);
+      });
+
       const footerLogo = document.querySelector('.footer-brand img');
       if (footerLogo) {
         footerLogo.src = getSiteAssetUrl('components/footer/logo-blanco.png');

@@ -447,6 +447,12 @@ FOOTER
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 40px;
+  align-items: start;
+}
+
+/* Enlace del logo: mantiene area clickeable limpia */
+.footer-logo-link {
+  display: inline-block;
 }
 
 .footer-col h4 {
@@ -471,6 +477,13 @@ FOOTER
   transition: color .2s;
 }
 
+/* Estado de foco visible para navegacion con teclado */
+.site-footer a:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 .footer-col ul li a:hover {
   color: #ffffff;
 }
@@ -488,13 +501,76 @@ FOOTER
   margin: 0;
 }
 
+/* Nombre explicito para facilitar futuras ediciones */
+.footer-description {
+  max-width: 280px;
+}
+
+/* CTA discreto, alineado con un footer simple y profesional */
+.footer-cta {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color .2s, border-color .2s;
+}
+
+.footer-cta:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+/* Contacto con labels visuales sutiles */
+.footer-contact li {
+  color: #d6e1ff;
+}
+
+.footer-contact-label {
+  color: #ffffff;
+  font-weight: 600;
+}
+
 .footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   margin-top: 40px;
   padding: 20px 0;
-  text-align: center;
   font-size: 14px;
   color: #d6e1ff;
+}
+
+/* Subfooter en dos zonas: copy + enlaces legales */
+.footer-bottom-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.footer-copy {
+  margin: 0;
+}
+
+.footer-legal {
+  list-style: none;
+  display: flex;
+  gap: 18px;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-legal a {
+  color: #d6e1ff;
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.footer-legal a:hover {
+  color: #ffffff;
 }
 
 /* TABLET */
@@ -525,10 +601,220 @@ FOOTER
     font-size: 17px;
   }
 
+  .footer-description {
+    max-width: none;
+  }
+
+  /* En mobile apilamos para mantener lectura clara */
+  .footer-bottom-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .footer-legal {
+    flex-wrap: wrap;
+    gap: 12px 16px;
+  }
+
   .footer-bottom {
     margin-top: 28px;
     padding: 16px 0;
     font-size: 13px;
+  }
+}
+
+/* =========================================================
+   QUIENES SOMOS PAGE
+   - Estilos encapsulados con prefijo .about-
+   - No afecta otras paginas del sitio
+========================================================= */
+
+.about-page {
+  background: #f4f7ff;
+}
+
+.about-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 110px 0 90px;
+  background-image: linear-gradient(120deg, rgba(7, 39, 99, 0.84), rgba(11, 59, 143, 0.72)),
+    url("../img/pages/quienes-somos/hero-quienes-somos.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.about-hero-content {
+  max-width: 700px;
+  color: #ffffff;
+}
+
+.about-kicker {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about-hero h1 {
+  margin-bottom: 16px;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.1;
+}
+
+.about-hero p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1.05rem;
+}
+
+.about-section {
+  padding: 72px 0;
+}
+
+.about-section-alt {
+  background: linear-gradient(180deg, #edf3ff 0%, #f7f9ff 100%);
+}
+
+.about-eyebrow {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0b3b8f;
+}
+
+.about-title {
+  margin-bottom: 16px;
+  color: #0d2a63;
+  font-size: clamp(1.6rem, 2.8vw, 2.3rem);
+  line-height: 1.2;
+}
+
+.about-section p {
+  color: #2d3f66;
+}
+
+.about-rounded-image {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 18px 38px rgba(13, 42, 99, 0.14);
+}
+
+.about-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.about-stat-card {
+  padding: 24px 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+  text-align: center;
+}
+
+.about-stat-number {
+  margin: 0 0 6px;
+  color: #0b3b8f;
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 700;
+}
+
+.about-stat-label {
+  margin: 0;
+  color: #41567f;
+}
+
+.about-pillar-card {
+  height: 100%;
+  padding: 22px 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+  box-shadow: 0 10px 22px rgba(13, 42, 99, 0.07);
+}
+
+.about-pillar-card i {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  background: #e9f0ff;
+  color: #0b3b8f;
+  font-size: 1.25rem;
+}
+
+.about-pillar-card h3 {
+  margin-bottom: 10px;
+  color: #0d2a63;
+  font-size: 1.2rem;
+}
+
+.about-pillar-card p {
+  margin: 0;
+  color: #41567f;
+}
+
+.about-cta-band {
+  background: #eaf1ff;
+}
+
+.about-cta-text {
+  margin-bottom: 22px;
+}
+
+.about-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 991.98px) {
+  .about-hero {
+    padding: 90px 0 70px;
+  }
+
+  .about-section {
+    padding: 58px 0;
+  }
+
+  .about-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .about-hero {
+    padding: 78px 0 60px;
+  }
+
+  .about-kicker {
+    margin-bottom: 10px;
+  }
+
+  .about-section {
+    padding: 46px 0;
+  }
+
+  .about-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-pillar-card {
+    padding: 18px;
   }
 }
 
