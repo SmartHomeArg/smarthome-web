@@ -265,7 +265,341 @@ function activarMenu() {
    CARGA COMPONENTES GLOBALES (HEADER / FOOTER)
 ========================================= */
 
+function getCurrentPageKey() {
+  let path = (window.location.pathname || "/").replace(/\/+$/, "");
+
+  if (!path || path === "/") {
+    return "index.html";
+  }
+
+  const marker = "/smarthome-web/";
+  const lowerPath = path.toLowerCase();
+  const markerIndex = lowerPath.indexOf(marker);
+  if (markerIndex >= 0) {
+    path = path.slice(markerIndex + marker.length);
+  }
+
+  path = path.replace(/^\/+/, "");
+
+  if (!path.endsWith(".html")) {
+    path += ".html";
+  }
+
+  return path;
+}
+
+function createJsonLdScript(data) {
+  const script = document.createElement("script");
+  script.type = "application/ld+json";
+  script.setAttribute("data-smarthome-schema", "1");
+  script.text = JSON.stringify(data);
+  return script;
+}
+
+function buildBreadcrumbItems(baseUrl, pageKey, pageName) {
+  const items = [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Inicio",
+      item: `${baseUrl}/`
+    }
+  ];
+
+  if (pageKey.startsWith("pages/planes/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Planes", item: `${baseUrl}/pages/como-funciona.html` });
+    items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+  } else if (pageKey.startsWith("pages/tienda/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Tienda", item: `${baseUrl}/pages/tienda.html` });
+    items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+  } else if (pageKey.startsWith("pages/soluciones-a-medida/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Soluciones a Medida", item: `${baseUrl}/pages/comercio.html` });
+    items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+  } else if (pageKey !== "index.html") {
+    items.push({ "@type": "ListItem", position: 2, name: pageName, item: `${baseUrl}/${pageKey}` });
+  }
+
+  return items;
+}
+
+function injectStructuredData() {
+  const pageKey = getCurrentPageKey();
+
+  const catalogKits = [
+    { name: "Kit Cam Plus", sku: "kit-cam-plus", price: 89999, url: "pages/tienda/kit-cam-plus.html", image: "pages/tienda/kit-cam-plus.webp" },
+    { name: "Kit Smart 1.1", sku: "kit-smart-1-1", price: 108999, url: "pages/tienda/kit-smart-1-1.html", image: "pages/tienda/kit-smart-1-1.webp" },
+    { name: "Kit Smart 2.2", sku: "kit-smart-2-2", price: 126999, url: "pages/tienda/kit-smart-2-2.html", image: "pages/tienda/kit-smart-2-2.webp" },
+    { name: "Kit Smart Cam 2.2", sku: "kit-smart-cam-2-2", price: 134999, url: "pages/tienda/kit-smart-cam-2-2.html", image: "pages/tienda/kit-smart-cam-2-2.webp" },
+    { name: "Kit Industrial", sku: "kit-industrial", price: 179999, url: "pages/tienda/kit-industrial.html", image: "pages/tienda/kit-industrial.webp" }
+  ];
+
+  const pageMap = {
+    "index.html": { kind: "home", name: "Inicio", image: "assets/img/tienda-hero-pc.webp" },
+    "pages/hogar.html": {
+      kind: "service",
+      name: "Seguridad para Hogar",
+      category: "Hogar",
+      image: "assets/img/tienda-hero-pc.webp",
+      faq: [
+        { q: "Seguridad para Hogar con Monitoreo 24/7 | SmartHome", a: "Protege tu hogar con alarma inteligente, camaras, app movil y respuesta profesional las 24 horas." },
+        { q: "TU HOGAR PROTEGIDO", a: "Protege tu hogar con alarma inteligente, camaras, app movil y respuesta profesional las 24 horas." }
+      ]
+    },
+    "pages/comercio.html": {
+      kind: "service",
+      name: "Seguridad para Comercio",
+      category: "Comercio",
+      image: "assets/img/tienda-hero-pc.webp",
+      faq: [
+        { q: "Seguridad para Comercio con Monitoreo 24/7 | SmartHome", a: "Protege tu comercio con alarmas, camaras y control remoto desde app, con monitoreo activo todo el dia." },
+        { q: "TU COMERCIO PROTEGIDO", a: "Protege tu comercio con alarmas, camaras y control remoto desde app, con monitoreo activo todo el dia." }
+      ]
+    },
+    "pages/tienda.html": {
+      kind: "store",
+      name: "Tienda SmartHome",
+      image: "assets/img/tienda-hero-pc.webp",
+      faq: [
+        { q: "Kits de Alarmas y Camaras para Hogar y Comercio | SmartHome", a: "Conoce los kits de seguridad SmartHome y elige la opcion ideal para proteger hogar o comercio." },
+        { q: "Mensaje destacado SmartHome", a: "En SmartHome brindamos un servicio de proteccion integral las 24 horas con tecnologia inteligente y monitoreamos la correcta operacion de los sistemas de deteccion de intrusos de nuestros clientes." }
+      ]
+    },
+    "pages/como-funciona.html": {
+      kind: "service",
+      name: "Como Funciona",
+      category: "Proceso de servicio",
+      image: "assets/img/tienda-hero-pc.webp",
+      faq: [
+        { q: "Sirve para hogar y comercio?", a: "Si. Adaptamos la solucion al tipo de propiedad, cantidad de accesos y nivel de riesgo." },
+        { q: "Puedo controlar todo desde el celular?", a: "Si. Podes armar y desarmar, ver eventos y recibir alertas en tiempo real desde la app." },
+        { q: "Que pasa si necesito soporte?", a: "Contas con asistencia postventa y seguimiento tecnico para resolver ajustes o incidencias." }
+      ]
+    },
+    "pages/contacto.html": {
+      kind: "contact",
+      name: "Contacto",
+      image: "assets/img/pages/contacto/contacto-hero.jpg",
+      faq: [
+        { q: "Estamos para ayudarte con cualquier consulta", a: "Completá el formulario y nuestro equipo te contactará a la brevedad. Si necesitás, podés adjuntar archivos para que entendamos mejor tu caso." },
+        { q: "Canales de atención", a: "Este formulario está pensado para centralizar consultas comerciales, técnicas y administrativas en una sola vía de contacto." }
+      ]
+    },
+    "pages/quienes-somos.html": { kind: "about", name: "Quienes Somos", image: "assets/img/pages/quienes-somos/hero-quienes-somos.jpg" },
+    "pages/planes/plan-basic.html": { kind: "plan", name: "Plan Basic", image: "assets/img/tienda-hero-pc.webp" },
+    "pages/planes/plan-comercial.html": { kind: "plan", name: "Plan Comercial", image: "assets/img/tienda-hero-pc.webp" },
+    "pages/planes/plan-plus.html": { kind: "plan", name: "Plan Plus", image: "assets/img/tienda-hero-pc.webp" },
+    "pages/planes/plan-pro.html": { kind: "plan", name: "Plan Pro", image: "assets/img/tienda-hero-pc.webp" },
+    "pages/planes/plan-video.html": { kind: "plan", name: "Plan Video", image: "assets/img/tienda-hero-pc.webp" },
+    "pages/tienda/kit-cam-plus.html": {
+      kind: "product",
+      name: "Kit Cam Plus",
+      sku: "kit-cam-plus",
+      price: 89999,
+      image: "pages/tienda/kit-cam-plus.webp",
+      schemaDescription: "Ideal para hogares y comercios. Monitoreo 24/7 con deteccion de sabotaje. Camara incluida para visualizacion en tiempo real."
+    },
+    "pages/tienda/kit-industrial.html": {
+      kind: "product",
+      name: "Kit Industrial",
+      sku: "kit-industrial",
+      price: 179999,
+      image: "pages/tienda/kit-industrial.webp",
+      schemaDescription: "Ideal para industrias y grandes superficies. Monitoreo 24/7 con deteccion de sabotaje. Cobertura ampliada para mayor superficie."
+    },
+    "pages/tienda/kit-smart-1-1.html": {
+      kind: "product",
+      name: "Kit Smart 1.1",
+      sku: "kit-smart-1-1",
+      price: 108999,
+      image: "pages/tienda/kit-smart-1-1.webp",
+      schemaDescription: "Ideal para hogares y comercios. Monitoreo 24/7 con deteccion de sabotaje. Personaliza codigos de usuario para saber quien ingresa y sale."
+    },
+    "pages/tienda/kit-smart-2-2.html": {
+      kind: "product",
+      name: "Kit Smart 2.2",
+      sku: "kit-smart-2-2",
+      price: 126999,
+      image: "pages/tienda/kit-smart-2-2.webp",
+      schemaDescription: "Ideal para hogares y comercios. Monitoreo 24/7 con deteccion de sabotaje. Personaliza codigos de usuario para saber quien ingresa y sale."
+    },
+    "pages/tienda/kit-smart-cam-2-2.html": {
+      kind: "product",
+      name: "Kit Smart Cam 2.2",
+      sku: "kit-smart-cam-2-2",
+      price: 134999,
+      image: "pages/tienda/kit-smart-cam-2-2.webp",
+      schemaDescription: "Ideal para hogares y comercios. Monitoreo 24/7 con deteccion de sabotaje. Incluye camara para ver eventos en vivo."
+    },
+    "pages/soluciones-a-medida/cerco-electrico.html": { kind: "service", name: "Cerco Electrico Inteligente", category: "Soluciones a medida", image: "assets/img/pages/cercos-electricos/hero-cercos.jpg" },
+    "pages/soluciones-a-medida/domotica.html": { kind: "service", name: "Domotica", category: "Soluciones a medida", image: "assets/img/tienda-hero-pc.webp" },
+    "pages/soluciones-a-medida/seguridad-comunitaria.html": { kind: "service", name: "Seguridad Comunitaria", category: "Soluciones a medida", image: "assets/img/tienda-hero-pc.webp" },
+    "pages/soluciones-a-medida/sistemas-de-camaras.html": { kind: "service", name: "Sistemas de Camaras", category: "Soluciones a medida", image: "assets/img/tienda-hero-pc.webp" },
+    "gracias.html": { kind: "thanks", name: "Consulta Enviada", image: "assets/img/tienda-hero-pc.webp" }
+  };
+
+  const pageCfg = pageMap[pageKey];
+  if (!pageCfg) return;
+
+  document.querySelectorAll('script[data-smarthome-schema="1"]').forEach(node => node.remove());
+
+  const canonicalEl = document.querySelector('link[rel="canonical"]');
+  const canonicalUrl = canonicalEl ? canonicalEl.href : window.location.href;
+  const baseUrl = new URL(canonicalUrl).origin;
+  const pageUrl = pageKey === "index.html" ? `${baseUrl}/` : `${baseUrl}/${pageKey}`;
+
+  const title = (document.querySelector("title")?.textContent || pageCfg.name || "SmartHome").trim();
+  const description = (document.querySelector('meta[name="description"]')?.getAttribute("content") || "").trim();
+
+  const organizationId = `${baseUrl}/#organization`;
+  const websiteId = `${baseUrl}/#website`;
+  const imageUrl = `${baseUrl}/${pageCfg.image}`;
+
+  const organization = {
+    "@type": "Organization",
+    "@id": organizationId,
+    name: "SmartHome",
+    url: `${baseUrl}/`,
+    logo: {
+      "@type": "ImageObject",
+      url: `${baseUrl}/assets/img/favicon.png`
+    },
+    image: imageUrl
+  };
+
+  const website = {
+    "@type": "WebSite",
+    "@id": websiteId,
+    url: `${baseUrl}/`,
+    name: "SmartHome",
+    inLanguage: "es-AR",
+    publisher: { "@id": organizationId }
+  };
+
+  const pageType = pageCfg.kind === "contact"
+    ? "ContactPage"
+    : pageCfg.kind === "about"
+      ? "AboutPage"
+      : (pageCfg.kind === "store" || pageCfg.kind === "service")
+        ? "CollectionPage"
+        : "WebPage";
+
+  const webPage = {
+    "@type": pageType,
+    "@id": `${pageUrl}#webpage`,
+    url: pageUrl,
+    name: title,
+    description,
+    inLanguage: "es-AR",
+    isPartOf: { "@id": websiteId },
+    about: { "@id": organizationId },
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      url: imageUrl
+    }
+  };
+
+  const graphItems = [organization, website, webPage];
+
+  if (pageCfg.kind === "product") {
+    const productDescription = pageCfg.schemaDescription || description;
+
+    graphItems.push({
+      "@type": "Product",
+      "@id": `${pageUrl}#product`,
+      name: pageCfg.name,
+      sku: pageCfg.sku,
+      image: [imageUrl],
+      description: productDescription,
+      brand: {
+        "@type": "Brand",
+        name: "SmartHome"
+      },
+      offers: {
+        "@type": "Offer",
+        price: pageCfg.price,
+        priceCurrency: "ARS",
+        availability: "https://schema.org/InStock",
+        url: pageUrl,
+        seller: { "@id": organizationId }
+      }
+    });
+  }
+
+  if (pageCfg.kind === "service" || pageCfg.kind === "plan") {
+    graphItems.push({
+      "@type": "Service",
+      "@id": `${pageUrl}#service`,
+      name: pageCfg.name,
+      description,
+      serviceType: pageCfg.kind === "plan" ? "Plan de seguridad inteligente" : pageCfg.category,
+      provider: { "@id": organizationId },
+      areaServed: {
+        "@type": "Country",
+        name: "Argentina"
+      },
+      url: pageUrl
+    });
+  }
+
+  if (pageCfg.kind === "store") {
+    graphItems.push({
+      "@type": "OfferCatalog",
+      "@id": `${pageUrl}#offer-catalog`,
+      name: "Catalogo de Kits SmartHome",
+      url: pageUrl,
+      itemListElement: catalogKits.map((kit, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Offer",
+          url: `${baseUrl}/${kit.url}`,
+          price: kit.price,
+          priceCurrency: "ARS",
+          availability: "https://schema.org/InStock",
+          itemOffered: {
+            "@type": "Product",
+            name: kit.name,
+            sku: kit.sku,
+            image: `${baseUrl}/${kit.image}`
+          }
+        }
+      }))
+    });
+  }
+
+  if (Array.isArray(pageCfg.faq) && pageCfg.faq.length > 0) {
+    graphItems.push({
+      "@type": "FAQPage",
+      "@id": `${pageUrl}#faq`,
+      mainEntity: pageCfg.faq.map(item => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.a
+        }
+      }))
+    });
+  }
+
+  const graphSchema = {
+    "@context": "https://schema.org",
+    "@graph": graphItems
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: buildBreadcrumbItems(baseUrl, pageKey, pageCfg.name)
+  };
+
+  document.head.appendChild(createJsonLdScript(graphSchema));
+  document.head.appendChild(createJsonLdScript(breadcrumbSchema));
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
+  injectStructuredData();
+
   cargarHeader();
   cargarFooter();
 
