@@ -4300,6 +4300,62 @@ FOOTER
 }
 
 /* =========================================================
+   BLOQUE TEXTO DESTACADO - PAGINA TIENDA
+========================================================= */
+
+.tienda-mensaje-destacado {
+  padding: 0 0 34px;
+  background: #f2f2f2;
+}
+
+.tienda-mensaje-destacado__box {
+  background: #0b78da;
+  border-radius: 8px;
+  padding: 34px 42px;
+}
+
+.tienda-mensaje-destacado__box p {
+  margin: 0;
+  color: #ffffff;
+  font-size: 2rem;
+  font-size: clamp(1.2rem, 1.55vw, 1.9rem);
+  line-height: 1.45;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.tienda-mensaje-destacado__box strong {
+  font-weight: 700;
+}
+
+@media (max-width: 991.98px) {
+  .tienda-mensaje-destacado {
+    padding: 0 0 28px;
+  }
+
+  .tienda-mensaje-destacado__box {
+    padding: 28px 26px;
+  }
+
+  .tienda-mensaje-destacado__box p {
+    font-size: clamp(1.05rem, 3.2vw, 1.28rem);
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .tienda-mensaje-destacado__box {
+    border-radius: 7px;
+    padding: 22px 16px;
+  }
+
+  .tienda-mensaje-destacado__box p {
+    font-size: 1rem;
+    line-height: 1.48;
+  }
+}
+
+/* =========================================================
    COMPONENTE KITS TIENDA
 ========================================================= */
 
