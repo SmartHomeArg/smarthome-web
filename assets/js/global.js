@@ -1001,6 +1001,11 @@ function initContactLeadForm() {
   ];
   const ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'doc', 'docx'];
 
+  const IMAGE_COMPRESS_TYPES = ['image/jpeg', 'image/webp'];
+  const IMAGE_COMPRESS_MIN_SIZE = 2 * 1024 * 1024;
+  const IMAGE_MAX_DIMENSION = 1600;
+  const IMAGE_COMPRESS_QUALITY = 0.8;
+
   const provinciasCiudades = {
     'Buenos Aires': ['La Plata', 'Mar del Plata', 'Bahía Blanca', 'San Isidro'],
     'CABA': ['Ciudad Autónoma de Buenos Aires'],
@@ -1232,14 +1237,82 @@ function initContactLeadForm() {
     });
   }
 
+  async function readAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadImageElement(dataURL) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('No se pudo procesar la imagen'));
+      img.src = dataURL;
+    });
+  }
+
+  async function canvasToBlob(canvas, mimeType, quality) {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), mimeType, quality);
+    });
+  }
+
+  async function optimizeFileForUpload(file) {
+    const isCompressibleImage = IMAGE_COMPRESS_TYPES.includes(file?.type);
+    const originalSize = Number(file?.size || 0);
+
+    if (!isCompressibleImage || originalSize < IMAGE_COMPRESS_MIN_SIZE) {
+      return file;
+    }
+
+    try {
+      const dataURL = await readAsDataURL(file);
+      const image = await loadImageElement(dataURL);
+
+      const width = Number(image.naturalWidth || 0);
+      const height = Number(image.naturalHeight || 0);
+      if (!width || !height) return file;
+
+      const ratio = Math.min(1, IMAGE_MAX_DIMENSION / Math.max(width, height));
+      const targetWidth = Math.max(1, Math.round(width * ratio));
+      const targetHeight = Math.max(1, Math.round(height * ratio));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return file;
+
+      ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+      const optimizedBlob = await canvasToBlob(canvas, file.type, IMAGE_COMPRESS_QUALITY);
+
+      if (!optimizedBlob || optimizedBlob.size >= originalSize) {
+        return file;
+      }
+
+      return new File([optimizedBlob], file.name, {
+        type: file.type,
+        lastModified: Date.now()
+      });
+    } catch (_error) {
+      return file;
+    }
+  }
+
   async function getFilePayload(files) {
     const list = Array.from(files || []);
     return Promise.all(list.map(async (file) => {
-      const base64 = await fileToBase64(file);
+      const optimizedFile = await optimizeFileForUpload(file);
+      const base64 = await fileToBase64(optimizedFile);
       return {
-        name: file.name,
-        mimeType: file.type || 'application/octet-stream',
-        size: Number(file.size || 0),
+        name: optimizedFile.name,
+        mimeType: optimizedFile.type || 'application/octet-stream',
+        size: Number(optimizedFile.size || 0),
         contentBase64: base64
       };
     }));

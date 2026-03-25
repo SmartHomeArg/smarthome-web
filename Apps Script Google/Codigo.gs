@@ -8,9 +8,12 @@ const CONTACT_MAX_FILE_SIZE = 4 * 1024 * 1024;
 const CONTACT_MAX_TOTAL_SIZE = 8 * 1024 * 1024;
 
 function doPost(e) {
+  const lock = LockService.getScriptLock();
+  let lockAcquired = false;
+
   try {
-    const lock = LockService.getScriptLock();
-    lock.waitLock(10000);
+    // Evita esperas largas (hasta 10s) cuando el lock está ocupado.
+    lockAcquired = lock.tryLock(500);
 
     const data = getRequestData_(e);
     const formType = detectFormType_(data);
@@ -30,6 +33,13 @@ function doPost(e) {
       message: errorMessage || 'Error interno',
       detail: errorStack || errorMessage
     });
+  } finally {
+    if (lockAcquired) {
+      try {
+        lock.releaseLock();
+      } catch (_err) {
+      }
+    }
   }
 }
 
