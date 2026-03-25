@@ -1286,6 +1286,631 @@ FOOTER
 }
 
 /* =========================================================
+   PAGINA SISTEMAS DE CAMARAS
+   - Estilos encapsulados con prefijo .camera-
+   - No afecta otras paginas
+========================================================= */
+
+.camera-page {
+  background: #f4f7ff;
+}
+
+.camera-hero {
+  padding: 92px 0 68px;
+}
+
+.camera-hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.camera-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e8f0ff;
+  color: #0b3b8f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.camera-hero-copy h1 {
+  margin-bottom: 14px;
+  color: #0d2a63;
+  font-size: clamp(2rem, 3.8vw, 2.9rem);
+  line-height: 1.12;
+}
+
+.camera-hero-copy p {
+  margin: 0;
+  color: #2d3f66;
+}
+
+.camera-hero-highlights {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.camera-hero-highlights span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+  color: #23406f;
+  font-size: 0.95rem;
+}
+
+.camera-hero-highlights i {
+  color: #0b5ed7;
+}
+
+.camera-hero-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.camera-hero-media img {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 16px 34px rgba(13, 42, 99, 0.14);
+}
+
+.camera-section {
+  padding: 64px 0;
+}
+
+.camera-section-alt {
+  background: linear-gradient(180deg, #edf3ff 0%, #f7f9ff 100%);
+}
+
+.camera-section-soft {
+  background: #eef4ff;
+}
+
+.camera-eyebrow {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0b3b8f;
+}
+
+.camera-title {
+  margin-bottom: 20px;
+  color: #0d2a63;
+  font-size: clamp(1.6rem, 2.8vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.camera-benefits-grid,
+.camera-cases-grid,
+.camera-process-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.camera-benefits-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.camera-cases-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.camera-process-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.camera-benefit-card,
+.camera-case-card,
+.camera-process-step {
+  height: 100%;
+  padding: 22px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+  box-shadow: 0 10px 22px rgba(13, 42, 99, 0.07);
+}
+
+.camera-benefit-card i {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #e9f0ff;
+  color: #0b3b8f;
+  font-size: 1.2rem;
+}
+
+.camera-benefit-card h3,
+.camera-case-card h3,
+.camera-process-step h3 {
+  margin-bottom: 8px;
+  color: #0d2a63;
+  font-size: 1.12rem;
+}
+
+.camera-benefit-card p,
+.camera-case-card p,
+.camera-process-step p {
+  margin: 0;
+  color: #41567f;
+}
+
+.camera-rounded-image {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 18px 38px rgba(13, 42, 99, 0.14);
+}
+
+.camera-feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.camera-feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #2d3f66;
+}
+
+.camera-feature-list i {
+  margin-top: 2px;
+  color: #0b5ed7;
+}
+
+.camera-process-step span {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 14px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e8f0ff;
+  color: #0b3b8f;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.camera-cta-band {
+  padding: 0 0 76px;
+}
+
+.camera-cta-box {
+  padding: 34px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #0b3b8f 0%, #0b5ed7 100%);
+  color: #ffffff;
+  box-shadow: 0 18px 38px rgba(13, 42, 99, 0.16);
+}
+
+.camera-cta-box h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.65rem, 3vw, 2.3rem);
+  line-height: 1.2;
+}
+
+.camera-cta-box p {
+  margin: 0;
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.camera-cta-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.camera-cta-box .btn-outline-primary {
+  border-color: rgba(255, 255, 255, 0.75);
+  color: #ffffff;
+}
+
+.camera-cta-box .btn-outline-primary:hover {
+  background: #ffffff;
+  color: #0b3b8f;
+  border-color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+  .camera-hero {
+    padding: 76px 0 52px;
+  }
+
+  .camera-hero-grid,
+  .camera-cases-grid,
+  .camera-process-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .camera-section {
+    padding: 56px 0;
+  }
+
+  .camera-cta-band {
+    padding-bottom: 60px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .camera-hero {
+    padding: 62px 0 40px;
+  }
+
+  .camera-section {
+    padding: 46px 0;
+  }
+
+  .camera-benefits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .camera-benefit-card,
+  .camera-case-card,
+  .camera-process-step {
+    padding: 18px;
+  }
+
+  .camera-hero-highlights span {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .camera-cta-box {
+    padding: 28px 20px;
+  }
+}
+
+/* =========================================================
+   PAGINA DOMOTICA
+   - Estilos encapsulados con prefijo .domotics-
+   - No afecta otras paginas
+========================================================= */
+
+.domotics-page {
+  background: #f4f7ff;
+}
+
+.domotics-hero {
+  padding: 92px 0 68px;
+}
+
+.domotics-hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.domotics-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e8f0ff;
+  color: #0b3b8f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.domotics-hero-copy h1 {
+  margin-bottom: 14px;
+  color: #0d2a63;
+  font-size: clamp(2rem, 3.8vw, 2.9rem);
+  line-height: 1.12;
+}
+
+.domotics-hero-copy p {
+  margin: 0;
+  color: #2d3f66;
+}
+
+.domotics-hero-highlights {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.domotics-hero-highlights span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+  color: #23406f;
+  font-size: 0.95rem;
+}
+
+.domotics-hero-highlights i {
+  color: #0b5ed7;
+}
+
+.domotics-hero-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.domotics-hero-media img {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 16px 34px rgba(13, 42, 99, 0.14);
+}
+
+.domotics-section {
+  padding: 64px 0;
+}
+
+.domotics-section-alt {
+  background: linear-gradient(180deg, #edf3ff 0%, #f7f9ff 100%);
+}
+
+.domotics-section-soft {
+  background: #eef4ff;
+}
+
+.domotics-eyebrow {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0b3b8f;
+}
+
+.domotics-title {
+  margin-bottom: 20px;
+  color: #0d2a63;
+  font-size: clamp(1.6rem, 2.8vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.domotics-benefits-grid,
+.domotics-cases-grid,
+.domotics-process-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.domotics-benefits-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.domotics-cases-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.domotics-process-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.domotics-benefit-card,
+.domotics-case-card,
+.domotics-process-step,
+.domotics-download-card {
+  height: 100%;
+  padding: 22px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 143, 0.1);
+  box-shadow: 0 10px 22px rgba(13, 42, 99, 0.07);
+}
+
+.domotics-benefit-card i {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #e9f0ff;
+  color: #0b3b8f;
+  font-size: 1.2rem;
+}
+
+.domotics-benefit-card h3,
+.domotics-case-card h3,
+.domotics-process-step h3 {
+  margin-bottom: 8px;
+  color: #0d2a63;
+  font-size: 1.12rem;
+}
+
+.domotics-benefit-card p,
+.domotics-case-card p,
+.domotics-process-step p,
+.domotics-download-card p {
+  margin: 0;
+  color: #41567f;
+}
+
+.domotics-rounded-image {
+  width: 100%;
+  border-radius: 20px;
+  box-shadow: 0 18px 38px rgba(13, 42, 99, 0.14);
+}
+
+.domotics-feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.domotics-feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #2d3f66;
+}
+
+.domotics-feature-list i {
+  margin-top: 2px;
+  color: #0b5ed7;
+}
+
+.domotics-process-step span {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 14px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e8f0ff;
+  color: #0b3b8f;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.domotics-download-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.domotics-download-copy {
+  max-width: 720px;
+}
+
+.domotics-download-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.domotics-cta-band {
+  padding: 0 0 76px;
+}
+
+.domotics-cta-box {
+  padding: 34px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #0b3b8f 0%, #0b5ed7 100%);
+  color: #ffffff;
+  box-shadow: 0 18px 38px rgba(13, 42, 99, 0.16);
+}
+
+.domotics-cta-box h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.65rem, 3vw, 2.3rem);
+  line-height: 1.2;
+}
+
+.domotics-cta-box p {
+  margin: 0;
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.domotics-cta-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.domotics-cta-box .btn-outline-primary {
+  border-color: rgba(255, 255, 255, 0.75);
+  color: #ffffff;
+}
+
+.domotics-cta-box .btn-outline-primary:hover {
+  background: #ffffff;
+  color: #0b3b8f;
+  border-color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+  .domotics-hero {
+    padding: 76px 0 52px;
+  }
+
+  .domotics-hero-grid,
+  .domotics-cases-grid,
+  .domotics-process-grid,
+  .domotics-download-card {
+    grid-template-columns: 1fr;
+  }
+
+  .domotics-download-card {
+    display: grid;
+  }
+
+  .domotics-section {
+    padding: 56px 0;
+  }
+
+  .domotics-cta-band {
+    padding-bottom: 60px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .domotics-hero {
+    padding: 62px 0 40px;
+  }
+
+  .domotics-section {
+    padding: 46px 0;
+  }
+
+  .domotics-benefits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .domotics-benefit-card,
+  .domotics-case-card,
+  .domotics-process-step,
+  .domotics-download-card {
+    padding: 18px;
+  }
+
+  .domotics-hero-highlights span {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .domotics-cta-box {
+    padding: 28px 20px;
+  }
+}
+
+/* =========================================================
    HERO PRINCIPAL
    - Estructura global reutilizable
    - Imagen de fondo con recorte automático
