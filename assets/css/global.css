@@ -1,4 +1,4 @@
-/* ================================================= */
+﻿/* ================================================= */
 /* RESET CSS */
 /* ================================================= */
 
@@ -137,7 +137,7 @@ main {
 .header-spacer {
   flex: 0 0 auto;
   width: 140px;
-  /* ajustar según el ancho visual del logo */
+  /* ajustar segÃºn el ancho visual del logo */
 }
 
 @media (max-width: 991.98px) {
@@ -201,8 +201,8 @@ main {
 
 }
 
-/* Asegurar que la línea también aparezca en foco/activo y cuando
-   el item está abierto por JS (.is-open) — útil en touch devices */
+/* Asegurar que la lÃ­nea tambiÃ©n aparezca en foco/activo y cuando
+   el item estÃ¡ abierto por JS (.is-open) â€” Ãºtil en touch devices */
 .menu-principal .nav-link:focus-visible::before,
 .menu-principal .nav-link:active::before,
 .menu-principal .nav-item.is-open > .nav-link::before,
@@ -423,8 +423,8 @@ main {
   }
 }
 
-/* Mostrar y rotar también cuando se agrega la clase `.is-open`
-   (usada por la lógica táctil para toggle por touch/click) */
+/* Mostrar y rotar tambiÃ©n cuando se agrega la clase `.is-open`
+   (usada por la lÃ³gica tÃ¡ctil para toggle por touch/click) */
 .como-dropdown.is-open .como-menu {
   display: block !important;
 }
@@ -2220,7 +2220,7 @@ FOOTER
 /* =========================================================
    HERO PRINCIPAL
    - Estructura global reutilizable
-   - Imagen de fondo con recorte automático
+   - Imagen de fondo con recorte automÃ¡tico
    - Texto a la izquierda
    - Caja a la derecha
 ========================================================= */
@@ -2713,7 +2713,7 @@ FOOTER
 }
 
 /* Ajustes para que el formulario (azul + blanco) rellene todo el
-   rectángulo del contenedor y no deje el área "transparente" visible. */
+   rectÃ¡ngulo del contenedor y no deje el Ã¡rea "transparente" visible. */
 .hero-form-box {
   /* movemos el espaciado adentro de la tarjeta: */
   padding: 0;
@@ -2974,8 +2974,8 @@ FOOTER
   line-height: 1.35;
 }
 
-/* Centrar y ampliar el mensaje de éxito dentro de la tarjeta del hero
-   para que quede alineado con el botón del formulario. */
+/* Centrar y ampliar el mensaje de Ã©xito dentro de la tarjeta del hero
+   para que quede alineado con el botÃ³n del formulario. */
 .hero-form-body .form-message.is-success {
   display: block;
   width: 100%;
@@ -3301,7 +3301,7 @@ FOOTER
     font-weight: 700;
   }
 
-  /* En mobile no mostrar línea azul fija de feedback activo */
+  /* En mobile no mostrar lÃ­nea azul fija de feedback activo */
   .menu-principal .nav-link.active::before,
   .menu-principal .nav-item.is-open > .nav-link::before,
   .como-dropdown.is-open > .nav-link::before {
@@ -3721,7 +3721,7 @@ FOOTER
 }
 
 /* =========================================================
-   SECCIÓN: COTIZAR HOME
+   SECCIÃ“N: COTIZAR HOME
 ========================================================= */
 
 .cotizar-home-section {
@@ -3880,7 +3880,7 @@ FOOTER
 .equipamiento-home {
   padding: 90px 0;
   background-color: #f5f5f5;
-  /* cambialo o quitálo si no querés fondo gris */
+  /* cambialo o quitÃ¡lo si no querÃ©s fondo gris */
 }
 
 .equipamiento-home__intro {
@@ -4577,7 +4577,7 @@ FOOTER
   display: block;
 }
 
-/* Aparición al cargar */
+/* ApariciÃ³n al cargar */
 @keyframes whatsappEntrance {
   to {
     opacity: 1;
@@ -4585,7 +4585,7 @@ FOOTER
   }
 }
 
-/* Pequeño salto cada algunos segundos */
+/* PequeÃ±o salto cada algunos segundos */
 @keyframes whatsappBounce {
   0%, 85%, 100% {
     transform: translateY(0) scale(1);
@@ -4625,9 +4625,9 @@ FOOTER
 }
 
 /* =========================================================
-   Suavizar la apertura/cierre del collapse del menú en mobile
+   Suavizar la apertura/cierre del collapse del menÃº en mobile
    - Aplica solo en anchos <= 991.98px para no interferir en desktop
-   - Usa transición de max-height para un cierre más fluido
+   - Usa transiciÃ³n de max-height para un cierre mÃ¡s fluido
 ========================================================= */
 @media (max-width: 991.98px) {
   .navbar-collapse.collapse {
@@ -4637,7 +4637,7 @@ FOOTER
   }
 
   .navbar-collapse.collapse.show {
-    /* valor suficientemente alto para contener el menú; no debe cortar contenido */
+    /* valor suficientemente alto para contener el menÃº; no debe cortar contenido */
     max-height: 1200px;
   }
 }
@@ -5190,9 +5190,22 @@ FOOTER
   color: #111111;
 }
 
+.zonas-proteccion-hogar__title-line {
+  display: block;
+  font-weight: 400 !important;
+}
+
 .zonas-proteccion-hogar__title span {
   display: block;
   font-weight: 700;
+}
+
+.zonas-proteccion-hogar__lead {
+  max-width: 760px;
+  margin: 18px auto 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #4d5b75;
 }
 
 /* =========================
@@ -5304,6 +5317,7 @@ FOOTER
     0 0 0 4px rgba(85, 183, 231, 0.18),
     0 10px 26px rgba(11, 59, 143, 0.18);
   cursor: pointer;
+  transform: translate(-50%, -50%);
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   z-index: 2;
   padding: 0;
@@ -5318,13 +5332,10 @@ FOOTER
   font-size: 1.2rem;
   color: inherit;
   line-height: 1;
-  font-style: normal;
-  font-weight: normal;
-  font-family: "bootstrap-icons" !important;
 }
 
 .zonas-proteccion-hogar__marker:hover {
-  transform: scale(1.08);
+  transform: translate(-50%, -50%) scale(1.08);
 }
 
 .zonas-proteccion-hogar__marker.is-active {
@@ -5338,27 +5349,6 @@ FOOTER
 /* Icono activo hereda el color blanco */
 .zonas-proteccion-hogar__marker.is-active i {
   color: #ffffff;
-}
-
-/* Posiciones iniciales de ejemplo */
-.zonas-proteccion-hogar__marker[data-slide="0"] {
-  top: 23%;
-  left: 9%;
-}
-
-.zonas-proteccion-hogar__marker[data-slide="1"] {
-  top: 36%;
-  left: 26%;
-}
-
-.zonas-proteccion-hogar__marker[data-slide="2"] {
-  top: 69%;
-  left: 48%;
-}
-
-.zonas-proteccion-hogar__marker[data-slide="3"] {
-  top: 49%;
-  right: 12%;
 }
 
 /* Columna derecha */
@@ -5395,6 +5385,15 @@ FOOTER
   padding-right: 16px;
 }
 
+.zonas-proteccion-hogar__panel-kicker {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #55b7e7;
+}
+
 .zonas-proteccion-hogar__panel-title {
   margin: 0 0 14px;
   font-size: 1.45rem;
@@ -5408,6 +5407,20 @@ FOOTER
   font-size: 0.98rem;
   line-height: 1.65;
   color: #444444;
+}
+
+.zonas-proteccion-hogar__panel-points {
+  margin: 18px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+  color: #24324b;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.zonas-proteccion-hogar__panel-points[hidden] {
+  display: none;
 }
 
 .zonas-proteccion-hogar__panel-slider {
@@ -5482,6 +5495,10 @@ FOOTER
   font-size: 1.1rem;
 }
 
+.zonas-proteccion-hogar__benefit-icon i {
+  line-height: 1;
+}
+
 .zonas-proteccion-hogar__benefit p {
   margin: 0;
   font-size: 0.95rem;
@@ -5530,6 +5547,10 @@ FOOTER
 
   .zonas-proteccion-hogar__title {
     font-size: 1.8rem;
+  }
+
+  .zonas-proteccion-hogar__lead {
+    font-size: 0.96rem;
   }
 
   .zonas-proteccion-hogar__tabs {
@@ -5590,6 +5611,12 @@ FOOTER
     line-height: 1.3;
   }
 
+  .zonas-proteccion-hogar__lead {
+    margin-top: 14px;
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
   .zonas-proteccion-hogar__tabs {
     max-width: 280px;
     gap: 14px;
@@ -5621,7 +5648,7 @@ FOOTER
     margin: 16px auto 0;
     border-radius: 24px;
     padding: 42px 20px 22px;
-    /* Transición suave cuando se abre/cierra */
+    /* TransiciÃ³n suave cuando se abre/cierra */
     transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease, margin 0.35s ease;
   }
 
@@ -5637,19 +5664,19 @@ FOOTER
     margin: -20px auto 0;
   }
 
-  /* Sección de beneficios con transición suave */
+  /* SecciÃ³n de beneficios con transiciÃ³n suave */
   .zonas-proteccion-hogar__benefits {
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
     overflow: visible;
     padding-bottom: 0;
-    /* Transición para que se mueva cuando el panel se abre/cierra */
+    /* TransiciÃ³n para que se mueva cuando el panel se abre/cierra */
     transition: margin-top 0.35s ease;
     margin-top: 0;
   }
 
-  /* Cuando el panel está colapsado, los beneficios suben */
+  /* Cuando el panel estÃ¡ colapsado, los beneficios suben */
   .zonas-proteccion-hogar__benefits.benefits-collapsed {
     margin-top: -480px;
   }
@@ -5666,7 +5693,7 @@ FOOTER
 }
 
 /* ================================================= */
-/* SECCIÓN: CARACTERÍSTICAS DEL PANEL INTELIGENTE */
+/* SECCIÃ“N: CARACTERÃSTICAS DEL PANEL INTELIGENTE */
 /* ================================================= */
 
 .section--caracteristicas-panel {
@@ -5781,7 +5808,7 @@ FOOTER
   width: 100% !important;
 }
 
-/* Flechas de navegación */
+/* Flechas de navegaciÃ³n */
 .caracteristicas-panel__arrow {
   width: 44px;
   height: 44px;
@@ -8374,4 +8401,5 @@ FOOTER
       font-size: 1.8rem;
     }
   }
+
 

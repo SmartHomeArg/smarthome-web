@@ -1,18 +1,18 @@
-/**
+﻿/**
  * =========================================================
  * SmartHome Web - Global JavaScript
  * Archivo: assets/js/global.js
  *
- * Este archivo contiene toda la lógica JavaScript global
+ * Este archivo contiene toda la lÃ³gica JavaScript global
  * del sitio institucional SmartHome.
  *
  * Principios:
- * - Código simple
- * - Código claro
- * - Código mantenible
+ * - CÃ³digo simple
+ * - CÃ³digo claro
+ * - CÃ³digo mantenible
  * - Sin dependencias innecesarias
  *
- * Toda la lógica está encapsulada para evitar contaminar
+ * Toda la lÃ³gica estÃ¡ encapsulada para evitar contaminar
  * el scope global del navegador.
  * =========================================================
  */
@@ -23,7 +23,7 @@
 
 
   /* =========================================================
-     CONFIGURACIÓN DEL SITIO
+     CONFIGURACIÃ“N DEL SITIO
      ========================================================= */
 
   const SITE_CONFIG = {
@@ -53,7 +53,7 @@
   }
 
   /**
-   * Selecciona múltiples elementos
+   * Selecciona mÃºltiples elementos
    */
   function $$(selector) {
     return document.querySelectorAll(selector);
@@ -69,14 +69,14 @@
 
 
   /* =========================================================
-     INICIALIZACIÓN DEL SITIO
+     INICIALIZACIÃ“N DEL SITIO
      ========================================================= */
 
   document.addEventListener("DOMContentLoaded", initSite);
 
 
   /**
-   * Función principal de inicialización
+   * FunciÃ³n principal de inicializaciÃ³n
    */
 
   function initSite() {
@@ -114,7 +114,7 @@
 
 
   /* =========================================================
-     LAZY LOADING DE IMÁGENES
+     LAZY LOADING DE IMÃGENES
      ========================================================= */
 
   function initLazyLoading() {
@@ -226,7 +226,7 @@ function activarMenu() {
 
   });
 
-  // Si una página pertenece a un dropdown, marcar activo el texto padre
+  // Si una pÃ¡gina pertenece a un dropdown, marcar activo el texto padre
   const parentDropdowns = document.querySelectorAll(".menu-principal .como-dropdown");
 
   parentDropdowns.forEach(dropdown => {
@@ -381,8 +381,8 @@ function injectStructuredData() {
       name: "Contacto",
       image: "assets/img/pages/contacto/contacto-hero.jpg",
       faq: [
-        { q: "Estamos para ayudarte con cualquier consulta", a: "Completá el formulario y nuestro equipo te contactará a la brevedad. Si necesitás, podés adjuntar archivos para que entendamos mejor tu caso." },
-        { q: "Canales de atención", a: "Este formulario está pensado para centralizar consultas comerciales, técnicas y administrativas en una sola vía de contacto." }
+        { q: "Estamos para ayudarte con cualquier consulta", a: "CompletÃ¡ el formulario y nuestro equipo te contactarÃ¡ a la brevedad. Si necesitÃ¡s, podÃ©s adjuntar archivos para que entendamos mejor tu caso." },
+        { q: "Canales de atenciÃ³n", a: "Este formulario estÃ¡ pensado para centralizar consultas comerciales, tÃ©cnicas y administrativas en una sola vÃ­a de contacto." }
       ]
     },
     "pages/quienes-somos.html": { kind: "about", name: "Quienes Somos", image: "assets/img/pages/quienes-somos/hero-quienes-somos.jpg" },
@@ -732,7 +732,7 @@ function cargarHeader() {
       });
 
       // En links externos con target=_blank, quitar foco luego del click
-      // para evitar feedback visual persistente en la página actual.
+      // para evitar feedback visual persistente en la pÃ¡gina actual.
       document.querySelectorAll('.menu-principal a[target="_blank"]').forEach(link => {
         if (link.dataset.blurOnClickInit === 'true') return;
         link.dataset.blurOnClickInit = 'true';
@@ -750,7 +750,7 @@ function cargarHeader() {
         // fail silently if function not available
       }
 
-      // Inicializar comportamiento táctil para dropdowns del header y auto-close del menu móvil
+      // Inicializar comportamiento tÃ¡ctil para dropdowns del header y auto-close del menu mÃ³vil
       try {
         initHeaderDropdownTouch();
       } catch (e) {
@@ -819,50 +819,50 @@ async function cargarHero() {
 
     const heroConfig = {
       index: {
-        title: '<span class="text-brand">Protegé lo que más querés</span> con seguridad inteligente',
-        description: "Descubrí alarmas, cámaras y monitoreo profesional para vivir con más tranquilidad todos los días.",
+        title: '<span class="text-brand">ProtegÃ© lo que mÃ¡s querÃ©s</span> con seguridad inteligente',
+        description: "DescubrÃ­ alarmas, cÃ¡maras y monitoreo profesional para vivir con mÃ¡s tranquilidad todos los dÃ­as.",
         origen: "index",
         image: "components/hero/hero-index.jpg"
       },
       hogar: {
         title: '<span class="text-brand">Seguridad inteligente</span> para tu hogar',
-        description: "Alarmas, cámaras y monitoreo profesional para proteger tu casa con una solución moderna y confiable.",
+        description: "Alarmas, cÃ¡maras y monitoreo profesional para proteger tu casa con una soluciÃ³n moderna y confiable.",
         origen: "hogar",
         image: "components/hero/hero-hogar.jpg"
       },
       comercio: {
         title: '<span class="text-brand">Seguridad inteligente</span> para tu comercio',
-        description: "Alarmas, cámaras y monitoreo profesional para proteger tu comercio con una solución moderna y confiable.",
+        description: "Alarmas, cÃ¡maras y monitoreo profesional para proteger tu comercio con una soluciÃ³n moderna y confiable.",
         origen: "comercio",
         image: "components/hero/hero-comercio.jpg"
       },
       "plan-basic": {
         title: '<span class="text-brand">Plan Basic</span> para empezar a proteger tu hogar',
-        description: "Una solución simple y efectiva para dar el primer paso en seguridad con respaldo profesional.",
+        description: "Una soluciÃ³n simple y efectiva para dar el primer paso en seguridad con respaldo profesional.",
         origen: "plan-basic",
         image: "components/hero/hero-plan-basic.jpg"
       },
       "plan-comercial": {
         title: '<span class="text-brand">Plan Comercial</span> pensado para tu negocio',
-        description: "Protección integral para tu local con monitoreo activo, alertas rápidas y soporte especializado.",
+        description: "ProtecciÃ³n integral para tu local con monitoreo activo, alertas rÃ¡pidas y soporte especializado.",
         origen: "plan-comercial",
         image: "components/hero/hero-plan-comercial.jpg"
       },
       "plan-plus": {
         title: '<span class="text-brand">Plan Plus</span> con mayor cobertura y control',
-        description: "Ideal para quienes buscan más funcionalidades y una experiencia de seguridad más completa.",
+        description: "Ideal para quienes buscan mÃ¡s funcionalidades y una experiencia de seguridad mÃ¡s completa.",
         origen: "plan-plus",
         image: "components/hero/hero-plan-plus.jpg"
       },
       "plan-pro": {
         title: '<span class="text-brand">Plan Pro</span> para operaciones exigentes',
-        description: "Máximo nivel de protección y gestión para comercios con mayor dinámica y necesidades avanzadas.",
+        description: "MÃ¡ximo nivel de protecciÃ³n y gestiÃ³n para comercios con mayor dinÃ¡mica y necesidades avanzadas.",
         origen: "plan-pro",
         image: "components/hero/hero-plan-pro.jpg"
       },
       "plan-video": {
         title: '<span class="text-brand">Plan Video</span> con vigilancia en tiempo real',
-        description: "Visualizá tus espacios desde donde estés y complementá tu seguridad con monitoreo profesional.",
+        description: "VisualizÃ¡ tus espacios desde donde estÃ©s y complementÃ¡ tu seguridad con monitoreo profesional.",
         origen: "plan-video",
         image: "components/hero/hero-plan-video.jpg"
       }
@@ -1135,13 +1135,13 @@ async function cargarTuComercioProtegido() {
 /* =========================================================
    FORMULARIO GLOBAL DEL HERO
    El formulario vive dentro de components/hero/hero.html
-   y aquí solo se inicializa su lógica y origen.
+   y aquÃ­ solo se inicializa su lÃ³gica y origen.
 ========================================================= */
 
 async function cargarHeroForm() {
   const heroFormContainer = document.getElementById("hero-form-container");
 
-  /* Si la página no tiene contenedor, no hacemos nada */
+  /* Si la pÃ¡gina no tiene contenedor, no hacemos nada */
   if (!heroFormContainer) return;
 
   try {
@@ -1180,7 +1180,7 @@ function initHeroLeadForm() {
   form.dataset.initialized = 'true';
 
   if (origenInput && !origenInput.value) {
-    origenInput.value = document.title || 'Página sin título';
+    origenInput.value = document.title || 'PÃ¡gina sin tÃ­tulo';
   }
 
   if (formLoadedAtInput) {
@@ -1269,28 +1269,28 @@ function initHeroLeadForm() {
     const email = emailInput ? emailInput.value.trim() : '';
 
     if (nombre.length < 3) {
-      setFieldError(nombreInput, 'Ingresá nombre y apellido (mínimo 3 caracteres).');
+      setFieldError(nombreInput, 'IngresÃ¡ nombre y apellido (mÃ­nimo 3 caracteres).');
       isValid = false;
     }
 
-    // Ahora requerimos exactamente 10 dígitos para teléfono
+    // Ahora requerimos exactamente 10 dÃ­gitos para telÃ©fono
     if (telefono.length !== 10) {
-      setFieldError(telefonoInput, 'Ingresá 10 dígitos, sin 0 y sin 15.');
+      setFieldError(telefonoInput, 'IngresÃ¡ 10 dÃ­gitos, sin 0 y sin 15.');
       isValid = false;
     }
 
     if (!provincia) {
-      setFieldError(provinciaInput, 'Seleccioná una provincia.');
+      setFieldError(provinciaInput, 'SeleccionÃ¡ una provincia.');
       isValid = false;
     }
 
     if (!emailIsValid(email)) {
-      setFieldError(emailInput, 'Ingresá un mail válido (ejemplo: nombre@dominio.com).');
+      setFieldError(emailInput, 'IngresÃ¡ un mail vÃ¡lido (ejemplo: nombre@dominio.com).');
       isValid = false;
     }
 
     if (!isValid) {
-      showMessage('Revisá los campos marcados antes de enviar.', 'error');
+      showMessage('RevisÃ¡ los campos marcados antes de enviar.', 'error');
     }
 
     return isValid;
@@ -1303,7 +1303,7 @@ function initHeroLeadForm() {
 
     if (!validateForm()) return;
 
-    // Cambiar texto del botón a 'Enviando...' y deshabilitarlo
+    // Cambiar texto del botÃ³n a 'Enviando...' y deshabilitarlo
     const originalButtonText = submitButton ? submitButton.textContent.trim() : '';
     if (submitButton) {
       submitButton.disabled = true;
@@ -1323,7 +1323,7 @@ function initHeroLeadForm() {
       mail: emailInput ? emailInput.value.trim() : '',
       website: websiteInput ? websiteInput.value.trim() : '',
       tiempoSegundos: tiempoSegundos,
-      pagina: origenInput ? origenInput.value : (document.title || 'Página sin título'),
+      pagina: origenInput ? origenInput.value : (document.title || 'PÃ¡gina sin tÃ­tulo'),
       url: window.location.href,
       userAgent: navigator.userAgent
     };
@@ -1340,7 +1340,7 @@ function initHeroLeadForm() {
       const result = await response.json();
 
       if (result.ok) {
-        // Mostrar mensaje de éxito centrado antes de redirigir
+        // Mostrar mensaje de Ã©xito centrado antes de redirigir
         showMessage('Datos enviados correctamente. Redirigiendo...', 'success');
 
         setTimeout(function () {
@@ -1351,17 +1351,17 @@ function initHeroLeadForm() {
           window.location.href = successURL;
         }, 700);
       } else {
-        showMessage('No se pudo enviar el formulario. Revisá los datos e intentá nuevamente.', 'error');
+        showMessage('No se pudo enviar el formulario. RevisÃ¡ los datos e intentÃ¡ nuevamente.', 'error');
         console.error('Respuesta del backend:', result);
       }
     } catch (error) {
-      showMessage('Ocurrió un error al enviar. Intentá nuevamente en unos minutos.', 'error');
+      showMessage('OcurriÃ³ un error al enviar. IntentÃ¡ nuevamente en unos minutos.', 'error');
       console.error('Error enviando formulario:', error);
     } finally {
-      // Restaurar texto y estado del botón si no se redirige
+      // Restaurar texto y estado del botÃ³n si no se redirige
       if (submitButton) {
         submitButton.disabled = false;
-        // Restaurar texto original después de un pequeño retraso para que el usuario vea el cambio
+        // Restaurar texto original despuÃ©s de un pequeÃ±o retraso para que el usuario vea el cambio
         const original = submitButton.dataset.originalText || 'Enviar';
         submitButton.textContent = original;
         delete submitButton.dataset.originalText;
@@ -1422,30 +1422,30 @@ function initContactLeadForm() {
   const IMAGE_COMPRESS_QUALITY = 0.8;
 
   const provinciasCiudades = {
-    'Buenos Aires': ['La Plata', 'Mar del Plata', 'Bahía Blanca', 'San Isidro'],
-    'CABA': ['Ciudad Autónoma de Buenos Aires'],
-    'Catamarca': ['San Fernando del Valle de Catamarca', 'Belén'],
-    'Chaco': ['Resistencia', 'Presidencia Roque Sáenz Peña'],
+    'Buenos Aires': ['La Plata', 'Mar del Plata', 'BahÃ­a Blanca', 'San Isidro'],
+    'CABA': ['Ciudad AutÃ³noma de Buenos Aires'],
+    'Catamarca': ['San Fernando del Valle de Catamarca', 'BelÃ©n'],
+    'Chaco': ['Resistencia', 'Presidencia Roque SÃ¡enz PeÃ±a'],
     'Chubut': ['Rawson', 'Comodoro Rivadavia', 'Puerto Madryn'],
-    'Córdoba': ['Córdoba', 'Villa Carlos Paz', 'Río Cuarto'],
+    'CÃ³rdoba': ['CÃ³rdoba', 'Villa Carlos Paz', 'RÃ­o Cuarto'],
     'Corrientes': ['Corrientes', 'Goya'],
-    'Entre Ríos': ['Paraná', 'Concordia', 'Gualeguaychú'],
+    'Entre RÃ­os': ['ParanÃ¡', 'Concordia', 'GualeguaychÃº'],
     'Formosa': ['Formosa', 'Clorinda'],
-    'Jujuy': ['San Salvador de Jujuy', 'Palpalá'],
+    'Jujuy': ['San Salvador de Jujuy', 'PalpalÃ¡'],
     'La Pampa': ['Santa Rosa', 'General Pico'],
     'La Rioja': ['La Rioja', 'Chilecito'],
     'Mendoza': ['Mendoza', 'Godoy Cruz', 'San Rafael'],
     'Misiones': ['Posadas', 'Eldorado'],
-    'Neuquén': ['Neuquén', 'San Martín de los Andes'],
-    'Río Negro': ['Viedma', 'Bariloche', 'General Roca'],
+    'NeuquÃ©n': ['NeuquÃ©n', 'San MartÃ­n de los Andes'],
+    'RÃ­o Negro': ['Viedma', 'Bariloche', 'General Roca'],
     'Salta': ['Salta', 'Tartagal'],
     'San Juan': ['San Juan', 'Rivadavia', 'Rawson'],
     'San Luis': ['San Luis', 'Villa Mercedes'],
-    'Santa Cruz': ['Río Gallegos', 'Caleta Olivia'],
+    'Santa Cruz': ['RÃ­o Gallegos', 'Caleta Olivia'],
     'Santa Fe': ['Santa Fe', 'Rosario', 'Rafaela'],
     'Santiago del Estero': ['Santiago del Estero', 'La Banda'],
-    'Tierra del Fuego': ['Ushuaia', 'Río Grande'],
-    'Tucumán': ['San Miguel de Tucumán', 'Yerba Buena']
+    'Tierra del Fuego': ['Ushuaia', 'RÃ­o Grande'],
+    'TucumÃ¡n': ['San Miguel de TucumÃ¡n', 'Yerba Buena']
   };
 
   const onlyDigits = (value) => String(value || '').replace(/\D/g, '');
@@ -1574,12 +1574,12 @@ function initContactLeadForm() {
     const list = Array.from(files || []);
 
     if (list.length > MAX_FILES) {
-      return `Podés adjuntar hasta ${MAX_FILES} archivos.`;
+      return `PodÃ©s adjuntar hasta ${MAX_FILES} archivos.`;
     }
 
     const totalSize = list.reduce((acc, file) => acc + Number(file.size || 0), 0);
     if (totalSize > MAX_TOTAL_SIZE) {
-      return 'El tamaño total de adjuntos supera el límite permitido.';
+      return 'El tamaÃ±o total de adjuntos supera el lÃ­mite permitido.';
     }
 
     for (const file of list) {
@@ -1592,7 +1592,7 @@ function initContactLeadForm() {
       }
 
       if (Number(file.size || 0) > MAX_FILE_SIZE) {
-        return `El archivo ${file.name} supera el tamaño máximo permitido.`;
+        return `El archivo ${file.name} supera el tamaÃ±o mÃ¡ximo permitido.`;
       }
     }
 
@@ -1628,49 +1628,49 @@ function initContactLeadForm() {
 
     if (!motivo) {
       setFieldError(motivoInput, true);
-      setFieldErrorMessage(motivoInput, 'Seleccioná el motivo de consulta.');
+      setFieldErrorMessage(motivoInput, 'SeleccionÃ¡ el motivo de consulta.');
       hasErrors = true;
     }
 
     if (nombre.length < 3 || hasSuspiciousPatterns(nombre)) {
       setFieldError(nombreInput, true);
-      setFieldErrorMessage(nombreInput, 'Ingresá nombre y apellido real (mínimo 3 caracteres, sin links).');
+      setFieldErrorMessage(nombreInput, 'IngresÃ¡ nombre y apellido real (mÃ­nimo 3 caracteres, sin links).');
       hasErrors = true;
     }
 
     if (telefono.length !== 10) {
       setFieldError(telefonoInput, true);
-      setFieldErrorMessage(telefonoInput, 'Ingresá 10 dígitos, sin 0 y sin 15.');
+      setFieldErrorMessage(telefonoInput, 'IngresÃ¡ 10 dÃ­gitos, sin 0 y sin 15.');
       hasErrors = true;
     }
 
     if (!isValidEmail(mail) || hasSuspiciousPatterns(mail)) {
       setFieldError(emailInput, true);
-      setFieldErrorMessage(emailInput, 'Ingresá un mail válido (ejemplo: nombre@dominio.com).');
+      setFieldErrorMessage(emailInput, 'IngresÃ¡ un mail vÃ¡lido (ejemplo: nombre@dominio.com).');
       hasErrors = true;
     }
 
     if (direccion.length < 6 || hasSuspiciousPatterns(direccion)) {
       setFieldError(direccionInput, true);
-      setFieldErrorMessage(direccionInput, 'Ingresá una dirección válida (mínimo 6 caracteres, sin links).');
+      setFieldErrorMessage(direccionInput, 'IngresÃ¡ una direcciÃ³n vÃ¡lida (mÃ­nimo 6 caracteres, sin links).');
       hasErrors = true;
     }
 
     if (!provincia) {
       setFieldError(provinciaInput, true);
-      setFieldErrorMessage(provinciaInput, 'Seleccioná una provincia.');
+      setFieldErrorMessage(provinciaInput, 'SeleccionÃ¡ una provincia.');
       hasErrors = true;
     }
 
     if (!ciudad) {
       setFieldError(ciudadInput, true);
-      setFieldErrorMessage(ciudadInput, 'Seleccioná una ciudad.');
+      setFieldErrorMessage(ciudadInput, 'SeleccionÃ¡ una ciudad.');
       hasErrors = true;
     }
 
     if (comentarios.length < 10 || comentarios.length > 1200 || hasSuspiciousPatterns(comentarios)) {
       setFieldError(comentariosInput, true);
-      setFieldErrorMessage(comentariosInput, 'Escribí entre 10 y 1200 caracteres, sin links o texto sospechoso.');
+      setFieldErrorMessage(comentariosInput, 'EscribÃ­ entre 10 y 1200 caracteres, sin links o texto sospechoso.');
       hasErrors = true;
     }
 
@@ -1682,7 +1682,7 @@ function initContactLeadForm() {
     }
 
     if (hasErrors) {
-      showMessage('Revisá los campos marcados antes de enviar.', 'error');
+      showMessage('RevisÃ¡ los campos marcados antes de enviar.', 'error');
       return false;
     }
 
@@ -1857,7 +1857,7 @@ function initContactLeadForm() {
     }
 
     if (tiempoSegundos > 0 && tiempoSegundos < 4) {
-      showMessage('Esperá unos segundos antes de enviar el formulario.', 'error');
+      showMessage('EsperÃ¡ unos segundos antes de enviar el formulario.', 'error');
       return;
     }
 
@@ -1922,13 +1922,13 @@ function initContactLeadForm() {
           (Array.isArray(result.errors) && result.errors.length ? result.errors[0] : '') ||
           result.detail ||
           result.message ||
-          'No se pudo enviar la consulta. Verificá tus datos e intentá nuevamente.';
+          'No se pudo enviar la consulta. VerificÃ¡ tus datos e intentÃ¡ nuevamente.';
 
         showMessage(backendError, 'error');
         console.error('Respuesta backend contacto:', result);
       }
     } catch (error) {
-      showMessage('Ocurrió un error durante el envío. Intentá nuevamente en unos minutos.', 'error');
+      showMessage('OcurriÃ³ un error durante el envÃ­o. IntentÃ¡ nuevamente en unos minutos.', 'error');
       console.error('Error enviando contacto:', error);
     } finally {
       if (submitButton) {
@@ -2072,8 +2072,8 @@ function initFuncionalidadesHomeSlider() {
   });
 
   /*
-    Si por alguna razón cambiás slides manualmente
-    más adelante, esto ayuda a refrescar.
+    Si por alguna razÃ³n cambiÃ¡s slides manualmente
+    mÃ¡s adelante, esto ayuda a refrescar.
   */
   window.addEventListener("resize", function () {
     if (funcionalidadesHomeSwiper) {
@@ -2128,19 +2128,19 @@ function cargarWhatsappFloat() {
         imagen.src = getSiteAssetUrl("components/whatsapp-float/whatsapp-logo.png");
       }
     })
-    .catch(error => console.error("Error cargando botón flotante de WhatsApp:", error));
+    .catch(error => console.error("Error cargando botÃ³n flotante de WhatsApp:", error));
 }
 
 
 /* =========================================
-   Inicializar dropdowns del header para dispositivos táctiles
+   Inicializar dropdowns del header para dispositivos tÃ¡ctiles
    - Detecta dispositivos touch y agrega click handlers que
      hacen toggle de la clase `is-open` en `.como-dropdown`.
    - Cierra dropdowns al tocar fuera.
 ========================================= */
 function initHeaderDropdownTouch() {
   try {
-    // Activar en touch o en anchos móviles (para asegurar funcionamiento en tablets/emulación táctil)
+    // Activar en touch o en anchos mÃ³viles (para asegurar funcionamiento en tablets/emulaciÃ³n tÃ¡ctil)
     const shouldInit = ('ontouchstart' in window) || window.innerWidth < 992 || window.matchMedia('(hover: none)').matches;
     if (!shouldInit) return;
 
@@ -2160,7 +2160,7 @@ function initHeaderDropdownTouch() {
       toggle.dataset.touchInit = 'true';
 
       const handler = function (e) {
-        // Evitar navegación si el link es sólo para abrir el menú
+        // Evitar navegaciÃ³n si el link es sÃ³lo para abrir el menÃº
         const href = this.getAttribute('href') || '';
         if (href === '#' || href.startsWith('#')) {
           e.preventDefault();
@@ -2233,10 +2233,10 @@ function initHeaderDropdownTouch() {
 
 
 /* =========================================
-   Auto-close del menú mobile/tablet
-   - Cierra el collapse `#menuPrincipal` cuando está abierto
+   Auto-close del menÃº mobile/tablet
+   - Cierra el collapse `#menuPrincipal` cuando estÃ¡ abierto
      al tocar fuera, al hacer scroll o al hacer touchmove.
-   - Usa la API de Bootstrap si está disponible.
+   - Usa la API de Bootstrap si estÃ¡ disponible.
 ========================================= */
 function initMobileMenuAutoClose() {
   try {
@@ -2259,7 +2259,7 @@ function initMobileMenuAutoClose() {
       // altura actual del contenido
       const height = el.scrollHeight;
 
-      // preparar la animación
+      // preparar la animaciÃ³n
       el.style.maxHeight = height + 'px';
       el.style.overflow = 'hidden';
       // forzar reflow
@@ -2288,7 +2288,7 @@ function initMobileMenuAutoClose() {
       };
 
       el.addEventListener('transitionend', onEnd);
-      // Fallback: si transitionend no se dispara, limpiar después de 600ms
+      // Fallback: si transitionend no se dispara, limpiar despuÃ©s de 600ms
       const fallbackTimer = setTimeout(() => {
         try { cleanup(); } catch (e) { /* silent */ }
       }, 600);
@@ -2317,22 +2317,22 @@ function initMobileMenuAutoClose() {
           } catch (e) { /* fallback abajo */ }
         }
 
-        // Fallback: animación manual y limpieza garantizada
+        // Fallback: animaciÃ³n manual y limpieza garantizada
         smoothClose(menu);
       } catch (err) {
         console.error('closeMenu error:', err);
       }
     };
 
-    // Click fuera del menú
+    // Click fuera del menÃº
     document.addEventListener('click', function (e) {
       if (!isOpen()) return;
       if (e.target.closest && (e.target.closest('#menuPrincipal') || e.target.closest('.navbar-toggler'))) return;
       closeMenu();
     }, false);
 
-    // Detectar scroll / gestures que indican intención de interacción fuera.
-    // Si el evento ocurre dentro del menú o en el botón toggler, no cerrar.
+    // Detectar scroll / gestures que indican intenciÃ³n de interacciÃ³n fuera.
+    // Si el evento ocurre dentro del menÃº o en el botÃ³n toggler, no cerrar.
     const closeOnScrollOrTouch = (e) => {
       if (!isOpen()) return;
 
@@ -2373,7 +2373,7 @@ async function cargarZonasProteccionHogar() {
 
     initZonasProteccionHogar();
   } catch (error) {
-    console.error("Error al cargar la sección zonas-proteccion-hogar:", error);
+    console.error("Error al cargar la secciÃ³n zonas-proteccion-hogar:", error);
   }
 }
 
@@ -2409,98 +2409,62 @@ async function cargarZonasProteccionComercio() {
 
     initZonasProteccionHogar({
       root: container,
-      componentFolder: "zonas-proteccion-comercio",
-      mainSceneImage: "escena-comercio.png"
+      componentFolder: "zonas-proteccion-comercio"
     });
   } catch (error) {
-    console.error("Error al cargar la sección zonas-proteccion-comercio:", error);
+    console.error("Error al cargar la secciÃ³n zonas-proteccion-comercio:", error);
   }
 }
 
 /* =========================================================
-   INICIALIZAR SECCIÓN: ZONAS DE PROTECCIÓN DEL HOGAR
-   
-   DESCRIPCIÓN:
-   Controla un sistema interactivo de pestañas (tabs) que permite
-   cambiar entre diferentes tipos de protección. Cada pestaña 
-   muestra una serie de items (productos/servicios) con:
-   - Iconos flotantes posicionables en la imagen
-   - Panel lateral con detalles del producto seleccionado
-   - Navegación entre items con flechas
-   
-   ESTRUCTURA DE DATOS (sectionData):
-   Contiene arrays de items por cada pestaña. Cada item es un objeto
-   con título, descripción, imagen, icono y posición.
-   
+   INICIALIZAR SECCION: ZONAS DE PROTECCION
+
+   La logica es compartida entre hogar y comercio.
+   El contenido se lee desde un bloque JSON embebido dentro del
+   componente HTML para que textos, imagenes, tabs, beneficios e
+   iconos flotantes se puedan editar sin tocar este archivo.
+
+   Cada item admite:
+   - title / description / image / alt
+   - icon (Bootstrap Icons)
+   - marker.x / marker.y para ubicar el circulo celeste
+   - highlights para completar el panel lateral
    ========================================================= */
 
 function initZonasProteccionHogar(options = {}) {
   const root = options.root || document;
-  const componentFolder = options.componentFolder || "zonas-proteccion-hogar";
-  const mainSceneImage = options.mainSceneImage || "escena-hogar.png";
-
-  // ============================================================
-  // PASO 1: OBTENER ELEMENTOS DEL DOM
-  // ============================================================
-  
   const section = root.querySelector(".zonas-proteccion-hogar, .zonas-proteccion-comercio");
   if (!section) return;
 
-  // Elements para controlar las pestañas
-  const tabs = Array.from(section.querySelectorAll(".zonas-proteccion-hogar__tab"));
-  
-  // Elements para los marcadores/iconos flotantes
-  const markers = Array.from(section.querySelectorAll(".zonas-proteccion-hogar__marker"));
-  
-  // Elements para el panel lateral de detalles
-  const panel = section.querySelector(".zonas-proteccion-hogar__panel");
-  const panelTitle = section.querySelector(".zonas-proteccion-hogar__panel-title");
-  const panelDescription = section.querySelector(".zonas-proteccion-hogar__panel-description");
-  const productImage = section.querySelector(".zonas-proteccion-hogar__product-image");
-  const mainImage = section.querySelector(".zonas-proteccion-hogar__main-image");
-  const benefitsSection = section.querySelector(".zonas-proteccion-hogar__benefits");
-  
-  // Botones de navegación
-  const prevButton = section.querySelector(".zonas-proteccion-hogar__arrow--prev");
-  const nextButton = section.querySelector(".zonas-proteccion-hogar__arrow--next");
-  const closeButton = section.querySelector(".zonas-proteccion-hogar__panel-close");
-
-  // Validar que todos los elementos existan
-  if (
-    !tabs.length ||
-    !markers.length ||
-    !panel ||
-    !panelTitle ||
-    !panelDescription ||
-    !productImage ||
-    !prevButton ||
-    !nextButton
-  ) {
-    console.error("Zonas Protección Hogar: faltan elementos DOM requeridos");
+  const configNode = section.querySelector(".zonas-proteccion-hogar__config");
+  if (!configNode) {
+    console.error("Zonas Proteccion: falta el bloque de configuracion JSON");
     return;
   }
 
-  // ============================================================
-  // PASO 2: CONFIGURACIÓN DE RUTAS Y VARIABLES
-  // ============================================================
-  
+  let componentConfig;
+
+  try {
+    componentConfig = JSON.parse(configNode.textContent);
+  } catch (error) {
+    console.error("Zonas Proteccion: no se pudo interpretar la configuracion JSON", error);
+    return;
+  }
+
+  const componentFolder = options.componentFolder || componentConfig.componentFolder || "zonas-proteccion-hogar";
+  const mainSceneImage = options.mainSceneImage || componentConfig.mainSceneImage || "";
+  const tabsConfig = Array.isArray(componentConfig.tabs) ? componentConfig.tabs : [];
+
+  if (!tabsConfig.length) {
+    console.error("Zonas Proteccion: la configuracion no tiene tabs");
+    return;
+  }
+
   const imageBasePath = getSiteAssetUrl("assets/img/");
   const componentImageBasePath = getSiteAssetUrl(`components/${componentFolder}/`);
-
-  // Imágenes que fueron movidas de assets/img a components/zonas-proteccion-hogar
-  const movedImages = new Set([
-    "escena-hogar.png",
-    "escena-comercio.png",
-    "escena-hogar-mag.png",
-    "escena-hogar-pir-mov.png"
-  ]);
-
   const getImagePath = (fileName, preferComponent = false) => {
     if (!fileName) return "";
-    if (preferComponent || movedImages.has(fileName)) {
-      return componentImageBasePath + fileName;
-    }
-    return imageBasePath + fileName;
+    return preferComponent ? componentImageBasePath + fileName : imageBasePath + fileName;
   };
 
   const setImageSourceWithFallback = (imgElement, fileName, preferComponent = false) => {
@@ -2521,305 +2485,160 @@ function initZonasProteccionHogar(options = {}) {
     imgElement.src = primarySrc;
   };
 
-  if (mainImage) {
-    setImageSourceWithFallback(mainImage, mainSceneImage, true);
+  const titleMain = section.querySelector("[data-title-main]");
+  const titleAccent = section.querySelector("[data-title-accent]");
+  const lead = section.querySelector(".zonas-proteccion-hogar__lead");
+  const tabsContainer = section.querySelector(".zonas-proteccion-hogar__tabs");
+  const imageWrap = section.querySelector(".zonas-proteccion-hogar__image-wrap");
+  const panel = section.querySelector(".zonas-proteccion-hogar__panel");
+  const panelKicker = section.querySelector(".zonas-proteccion-hogar__panel-kicker");
+  const panelTitle = section.querySelector(".zonas-proteccion-hogar__panel-title");
+  const panelDescription = section.querySelector(".zonas-proteccion-hogar__panel-description");
+  const panelPoints = section.querySelector(".zonas-proteccion-hogar__panel-points");
+  const productImage = section.querySelector(".zonas-proteccion-hogar__product-image");
+  const mainImage = section.querySelector(".zonas-proteccion-hogar__main-image");
+  const benefitsSection = section.querySelector(".zonas-proteccion-hogar__benefits");
+  const ctaLink = section.querySelector(".zonas-proteccion-hogar__cta .btn-principal");
+  const prevButton = section.querySelector(".zonas-proteccion-hogar__arrow--prev");
+  const nextButton = section.querySelector(".zonas-proteccion-hogar__arrow--next");
+  const closeButton = section.querySelector(".zonas-proteccion-hogar__panel-close");
+
+  if (
+    !tabsContainer ||
+    !imageWrap ||
+    !panel ||
+    !panelTitle ||
+    !panelDescription ||
+    !productImage ||
+    !mainImage ||
+    !prevButton ||
+    !nextButton
+  ) {
+    console.error("Zonas Proteccion: faltan elementos DOM requeridos");
+    return;
   }
 
-  // ============================================================
-  // PASO 3: ESTRUCTURA DE DATOS - CONFIGURACIÓN POR PESTAÑA
-  // 
-  // GUÍA DE EDICIÓN:
-  // 
-  // Para AGREGAR un nuevo ITEM a una pestaña:
-  // 1. Copia un objeto existente dentro del array de la pestaña
-  // 2. Edita title, description, image, alt
-  // 3. Cambia los valores de marker.top y marker.left en porcentaje
-  //    (ej: "23%" significa 23% desde arriba y desde la izquierda)
-  // 4. Cambia el icon a un código de Bootstrap Icons
-  //    (ej: "lock-fill", "camera-fill", ver https://icons.getbootstrap.com/)
-  // 5. Agrega más botones <button> al HTML si necesitas más de 6 items
-  //
-  // Para QUITAR un ITEM:
-  // 1. Borra el objeto completo del array
-  // 2. No es necesario quitar el botón del HTML (se oculta automático)
-  //
-  // ============================================================
+  if (titleMain) titleMain.textContent = componentConfig.title || "";
+  if (titleAccent) titleAccent.textContent = componentConfig.titleAccent || "";
+  if (lead) lead.textContent = componentConfig.lead || "";
+  tabsContainer.setAttribute("aria-label", componentConfig.tabsAriaLabel || "Zonas de proteccion");
 
-  const sectionData = {
-    
-    // PESTAÑA 1: PROTECCIÓN PERIMETRAL
-    perimetral: [
-      {
-        title: "Contacto magnético exterior",
-        description: "Detector de contacto ideal para proteger accesos exteriores, puertas y ventanas del perímetro del hogar.",
-        image: "escena-hogar-mag.png",
-        alt: "Contacto magnético exterior",
-        icon: "door-closed",  // ← CAMBIAR ICONO: busca en https://icons.getbootstrap.com/
-        marker: { top: "23%", left: "9%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Sensor PIR de movimiento",
-        description: "Detecta movimiento en zonas de paso y dispara alertas cuando hay actividad no autorizada.",
-        image: "escena-hogar-pir-mov.png",
-        alt: "Sensor de movimiento PIR",
-        icon: "motion",  // ← CAMBIAR ICONO
-        marker: { top: "36%", left: "26%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Sirena disuasiva",
-        description: "Al activarse, emite sonido y señal visual para advertir y ayudar a disuadir intrusiones.",
-        image: "escena-hogar-mag.png",
-        alt: "Sirena disuasiva exterior",
-        icon: "exclamation-triangle-fill",  // ← CAMBIAR ICONO
-        marker: { top: "69%", left: "48%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Refuerzo en accesos laterales",
-        description: "Cobertura en zonas laterales y puntos ciegos para completar la protección perimetral.",
-        image: "escena-hogar-pir-mov.png",
-        alt: "Protección de accesos laterales",
-        icon: "shield-check",  // ← CAMBIAR ICONO
-        marker: { top: "49%", left: "86%" }  // ← CAMBIAR POSICIÓN
-      }
-    ],
-    
-    // PESTAÑA 2: PROTECCIÓN INTERIOR
-    interior: [
-      {
-        title: "Panel inteligente",
-        description: "El panel centraliza la operación y comunica el estado del sistema para una gestión simple y segura.",
-        image: "equipamiento-panel.png",
-        alt: "Panel inteligente de alarma",
-        icon: "cpu",  // ← CAMBIAR ICONO
-        marker: { top: "29%", left: "34%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Monitoreo de ambientes",
-        description: "Control continuo de áreas internas para detectar cambios y eventos importantes en tiempo real.",
-        image: "tu-hogar-protegido-2.png",
-        alt: "Monitoreo de ambientes interiores",
-        icon: "eye-fill",  // ← CAMBIAR ICONO
-        marker: { top: "53%", left: "19%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Control desde celular",
-        description: "Gestioná armado, desarmado y estado del sistema con acceso rápido desde la app.",
-        image: "tu-hogar-protegido-3.png",
-        alt: "Control del sistema desde celular",
-        icon: "phone",  // ← CAMBIAR ICONO
-        marker: { top: "63%", left: "57%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Cobertura integral interior",
-        description: "Integración de dispositivos para proteger espacios internos clave de forma coordinada.",
-        image: "tu-hogar-protegido.png",
-        alt: "Cobertura integral interior",
-        icon: "house-fill",  // ← CAMBIAR ICONO
-        marker: { top: "43%", left: "82%" }  // ← CAMBIAR POSICIÓN
-      }
-    ],
-    
-    // PESTAÑA 3: VIDEO
-    video: [
-      {
-        title: "Video inteligente",
-        description: "Visualización y verificación remota para responder con más contexto ante eventos de seguridad.",
-        image: "funcionalidades-video-vivo-grabacion-nube.jpg",
-        alt: "Video inteligente",
-        icon: "camera-video",  // ← CAMBIAR ICONO
-        marker: { top: "28%", left: "17%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Smart cam interior",
-        description: "Seguimiento de actividad en espacios internos con acceso desde la aplicación.",
-        image: "funcionalidades-smart-cam.jpg",
-        alt: "Camara inteligente interior",
-        icon: "camera-fill",  // ← CAMBIAR ICONO
-        marker: { top: "49%", left: "33%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Registro de eventos",
-        description: "Historial visual para consultar eventos detectados y facilitar la toma de decisiones.",
-        image: "funcionalidades-compatible-mascotas.jpg",
-        alt: "Registro de eventos de seguridad",
-        icon: "clock-history",  // ← CAMBIAR ICONO
-        marker: { top: "67%", left: "54%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Cobertura de zonas críticas",
-        description: "Distribución de cámaras para cubrir puntos de ingreso y circulación con mayor precisión.",
-        image: "funcionalidades-smart-cam.jpg",
-        alt: "Cobertura de zonas criticas",
-        icon: "crosshair",  // ← CAMBIAR ICONO
-        marker: { top: "47%", left: "82%" }  // ← CAMBIAR POSICIÓN
-      }
-    ],
-    
-    // PESTAÑA 4: CONECTIVIDAD
-    conectividad: [
-      {
-        title: "Conectividad del sistema",
-        description: "Comunicación estable entre dispositivos para sostener la protección y el monitoreo en todo momento.",
-        image: "plan-home-control.jpg",
-        alt: "Conectividad del sistema de seguridad",
-        icon: "wifi",  // ← CAMBIAR ICONO
-        marker: { top: "31%", left: "25%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Integracion con app",
-        description: "Control unificado para visualizar estado del hogar y gestionar acciones desde cualquier lugar.",
-        image: "plan-home-live.jpg",
-        alt: "Integracion de la app con la alarma",
-        icon: "app",  // ← CAMBIAR ICONO
-        marker: { top: "48%", left: "42%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Automatizacion de rutinas",
-        description: "Programación de acciones y notificaciones para una experiencia de seguridad más cómoda.",
-        image: "plan-home-plus.jpg",
-        alt: "Automatizacion del sistema",
-        icon: "gear-fill",  // ← CAMBIAR ICONO
-        marker: { top: "64%", left: "61%" }  // ← CAMBIAR POSICIÓN
-      },
-      {
-        title: "Canales de respaldo",
-        description: "Redundancia de comunicación para mantener disponibilidad ante cortes o interferencias.",
-        image: "equipamiento-panel.png",
-        alt: "Canales de respaldo de conectividad",
-        icon: "diagram-3-fill",  // ← CAMBIAR ICONO
-        marker: { top: "40%", left: "84%" }  // ← CAMBIAR POSICIÓN
-      }
-    ]
+  if (mainImage) {
+    setImageSourceWithFallback(mainImage, mainSceneImage, true);
+    mainImage.alt = componentConfig.mainSceneAlt || "Escena principal de la seccion";
+  }
+
+  tabsContainer.innerHTML = tabsConfig.map((tab, index) => `
+    <button
+      class="zonas-proteccion-hogar__tab${index === 0 ? " is-active" : ""}"
+      type="button"
+      data-tab="${tab.id}"
+      role="tab"
+      aria-selected="${index === 0 ? "true" : "false"}"
+      aria-controls="${panel.id || ""}">
+      ${tab.label}
+    </button>
+  `).join("");
+
+  const maxMarkers = Math.max(...tabsConfig.map((tab) => (Array.isArray(tab.items) ? tab.items.length : 0)), 0);
+  imageWrap.querySelectorAll(".zonas-proteccion-hogar__marker").forEach((marker) => marker.remove());
+
+  for (let index = 0; index < maxMarkers; index += 1) {
+    const marker = document.createElement("button");
+    marker.className = `zonas-proteccion-hogar__marker${index === 0 ? " is-active" : ""}`;
+    marker.type = "button";
+    marker.dataset.slide = `${index}`;
+    marker.setAttribute("aria-label", `Ver punto ${index + 1}`);
+    imageWrap.appendChild(marker);
+  }
+
+  if (benefitsSection) {
+    const benefits = Array.isArray(componentConfig.benefits) ? componentConfig.benefits : [];
+    benefitsSection.innerHTML = benefits.map((benefit) => `
+      <article class="zonas-proteccion-hogar__benefit">
+        <div class="zonas-proteccion-hogar__benefit-icon">
+          <i class="bi bi-${benefit.icon || "shield-check"}" aria-hidden="true"></i>
+        </div>
+        <p>
+          <strong>${benefit.title || ""}:</strong> ${benefit.description || ""}
+        </p>
+      </article>
+    `).join("");
+  }
+
+  if (ctaLink && componentConfig.cta) {
+    ctaLink.textContent = componentConfig.cta.label || ctaLink.textContent;
+    ctaLink.setAttribute("href", componentConfig.cta.href || "#cotizar");
+  }
+
+  const tabs = Array.from(section.querySelectorAll(".zonas-proteccion-hogar__tab"));
+  const markers = Array.from(section.querySelectorAll(".zonas-proteccion-hogar__marker"));
+  const sectionData = Object.fromEntries(tabsConfig.map((tab) => [tab.id, Array.isArray(tab.items) ? tab.items : []]));
+  const tabLabelMap = new Map(tabsConfig.map((tab) => [tab.id, tab.label]));
+  const normalizeCoordinate = (value) => {
+    if (typeof value === "number") return `${value}%`;
+    if (typeof value === "string") return value;
+    return "50%";
   };
 
-  // ============================================================
-  // PASO 4: VARIABLES DE ESTADO
-  // ============================================================
-  
-  let activeTab = "perimetral";      // Pestaña activa actual
-  let activeIndex = 0;               // Índice del item activo en la pestaña
+  let activeTab = tabsConfig[0].id;
+  let activeIndex = 0;
 
-  // ============================================================
-  // PASO 5: FUNCIONES AUXILIARES
-  // ============================================================
-  
-  /**
-   * Detects if the viewport is mobile/tablet (max-width: 991.98px)
-   */
   const isMobileViewport = () => window.matchMedia("(max-width: 991.98px)").matches;
 
-  /**
-   * Normaliza un índice para que esté dentro del rango válido
-   * Ej: con total=4, índice -1 → 3, índice 5 → 1
-   */
   const clampIndex = (index, total) => {
     if (!total) return 0;
     return ((index % total) + total) % total;
   };
 
-  /**
-   * Abre el panel lateral (lo muestra en mobile)
-   */
   const openPanel = () => {
     panel.classList.remove("is-collapsed");
     panel.setAttribute("aria-hidden", "false");
-    // Remueve la clase que sube los beneficios (vuelven a su posición normal)
     if (benefitsSection) {
       benefitsSection.classList.remove("benefits-collapsed");
     }
   };
 
-  /**
-   * Cierra el panel lateral en mobile
-   */
   const closePanel = () => {
     if (!isMobileViewport()) return;
     panel.classList.add("is-collapsed");
     panel.setAttribute("aria-hidden", "true");
-    // Agrega clase que sube los beneficios dinámicamente
     if (benefitsSection) {
       benefitsSection.classList.add("benefits-collapsed");
     }
   };
 
-  /**
-   * Obtiene el array de items de la pestaña activa
-   */
   const getActiveItems = () => sectionData[activeTab] || [];
 
-  /**
-   * Renderiza el estado actual de la UI
-   * - Actualiza la clase "is-active" en las pestañas
-   * - Posiciona y muestra/oculta los marcadores
-   * - Carga el contenido del panel con el item seleccionado
-   */
   function render() {
     const items = getActiveItems();
     if (!items.length) return;
 
-    // Ajusta el índice activo si está fuera de rango
     activeIndex = clampIndex(activeIndex, items.length);
     const currentItem = items[activeIndex];
 
-    // ========================================================
-    // Actualizar estado de las pestañas
-    // ========================================================
     tabs.forEach((tab) => {
       const isActive = tab.dataset.tab === activeTab;
       tab.classList.toggle("is-active", isActive);
       tab.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
-    // ========================================================
-    // Actualizar marcadores (iconos flotantes)
-    // ========================================================
     markers.forEach((marker, index) => {
       const markerItem = items[index];
-      
+
       if (!markerItem) {
-        // Si no hay item para este marcador, ocúltalo
         marker.style.display = "none";
         marker.classList.remove("is-active");
         marker.removeAttribute("aria-current");
         return;
       }
 
-      // Mostrar el marcador
       marker.style.display = "inline-flex";
-      marker.style.top = markerItem.marker.top;
-      marker.style.left = markerItem.marker.left;
-      
-      // Insertar el icono de Bootstrap Icons
-      // Se inserta como: <i class="bi bi-icon-name"></i>
-      // Si Bootstrap Icons no carga, usamos un símbolo Unicode como fallback
-      const iconCode = markerItem.icon;
-      
-      // Mapa de iconos a símbolos Unicode (fallback si Bootstrap Icons no carga)
-      const iconFallback = {
-        'door-closed': '🚪',
-        'motion': '⚡',
-        'exclamation-triangle-fill': '⚠️',
-        'shield-check': '🛡️',
-        'cpu': '💾',
-        'eye-fill': '👁️',
-        'phone': '📱',
-        'house-fill': '🏠',
-        'camera-video': '📹',
-        'camera-fill': '📷',
-        'clock-history': '⏰',
-        'crosshair': '🎯',
-        'wifi': '📡',
-        'app': '💻',
-        'gear-fill': '⚙️',
-        'diagram-3-fill': '🔗',
-        'lightbulb-fill': '💡',
-        'thermometer-half': '🌡️'
-      };
-      
-      const fallbackSymbol = iconFallback[iconCode] || '•';
-      marker.innerHTML = `<i class="bi bi-${iconCode}" style="display: inline-block; font-size: 1.2rem; line-height: 1;">${fallbackSymbol}</i>`;
-      
-      // Marcar como activo si corresponde
+      marker.style.top = normalizeCoordinate(markerItem.marker?.y ?? markerItem.marker?.top);
+      marker.style.left = normalizeCoordinate(markerItem.marker?.x ?? markerItem.marker?.left);
+      marker.innerHTML = `<i class="bi bi-${markerItem.icon || "shield-check"}" aria-hidden="true"></i>`;
+      marker.setAttribute("aria-label", markerItem.title || `Ver punto ${index + 1}`);
+      marker.setAttribute("title", markerItem.title || "");
       marker.classList.toggle("is-active", index === activeIndex);
 
       if (index === activeIndex) {
@@ -2829,92 +2648,73 @@ function initZonasProteccionHogar(options = {}) {
       }
     });
 
-    // ========================================================
-    // Actualizar contenido del panel lateral
-    // ========================================================
-    panelTitle.textContent = currentItem.title;
-    panelDescription.textContent = currentItem.description;
-    setImageSourceWithFallback(productImage, currentItem.image);
-    productImage.alt = currentItem.alt;
+    if (panelKicker) {
+      panelKicker.textContent = tabLabelMap.get(activeTab) || "Detalle";
+    }
+
+    panelTitle.textContent = currentItem.title || "";
+    panelDescription.textContent = currentItem.description || "";
+    setImageSourceWithFallback(productImage, currentItem.image, true);
+    productImage.alt = currentItem.alt || currentItem.title || "";
+
+    if (panelPoints) {
+      const highlights = Array.isArray(currentItem.highlights) ? currentItem.highlights : [];
+      panelPoints.innerHTML = highlights.map((point) => `<li>${point}</li>`).join("");
+      panelPoints.hidden = !highlights.length;
+    }
   }
 
-  // ============================================================
-  // PASO 6: EVENT LISTENERS - INTERACTIVIDAD
-  // ============================================================
-  
-  /**
-   * Cambiar entre pestañas (tabs)
-   */
   tabs.forEach((tab) => {
     tab.addEventListener("click", function () {
       const nextTab = this.dataset.tab;
       if (!nextTab || nextTab === activeTab) return;
-      
+
       activeTab = nextTab;
-      activeIndex = 0;  // Resetea al primer item de la nueva pestaña
+      activeIndex = 0;
       openPanel();
       render();
     });
   });
 
-  /**
-   * Seleccionar un item por su marcador
-   */
   markers.forEach((marker, index) => {
     marker.addEventListener("click", function () {
       const total = getActiveItems().length;
       if (index >= total) return;
-      
+
       activeIndex = index;
       openPanel();
       render();
     });
   });
 
-  /**
-   * Botón anterior (navegación entre items)
-   */
   prevButton.addEventListener("click", function () {
     activeIndex -= 1;
     openPanel();
     render();
   });
 
-  /**
-   * Botón siguiente (navegación entre items)
-   */
   nextButton.addEventListener("click", function () {
     activeIndex += 1;
     openPanel();
     render();
   });
 
-  /**
-   * Botón cerrar panel (solo en mobile)
-   */
   if (closeButton) {
     closeButton.addEventListener("click", closePanel);
   }
 
-  /**
-   * Al cambiar el tamaño de pantalla, abre el panel en desktop
-   */
   window.addEventListener("resize", function () {
     if (!isMobileViewport()) {
       openPanel();
     }
   });
 
-  // ============================================================
-  // PASO 7: INICIALIZACIÓN FINAL
-  // ============================================================
-  
   panel.setAttribute("aria-hidden", "false");
-  render();  // Renderiza el estado inicial
+  render();
 }
 
 /* =========================================================
-   CARGAR SECCIÓN: CARACTERÍSTICAS DEL PANEL
+   CARGAR SECCIÃ“N: CARACTERÃSTICAS DEL PANEL
    ========================================================= */
 
 async function cargarCaracteristicasPanel() {
@@ -2938,10 +2738,9 @@ async function cargarCaracteristicasPanel() {
 
     initCaracteristicasPanel();
   } catch (error) {
-    console.error("Error al cargar la sección características del panel:", error);
+    console.error("Error al cargar la secciÃ³n caracterÃ­sticas del panel:", error);
   }
 }
-
 /* =========================================================
    CARGAR SECCION: COMPARACION CARACTERISTICAS PLANES
    ========================================================= */
@@ -3041,23 +2840,23 @@ function initServiciosParaComercios(rootElement) {
   const slides = [
     {
       title: "Monitoreo 24/7 para tu negocio",
-      description: "Tu sistema de alarma queda conectado a nuestra central de monitoreo las 24 horas, todos los días. Ante una alerta real, se activa el protocolo con aviso a las fuerzas de seguridad."
+      description: "Tu sistema de alarma queda conectado a nuestra central de monitoreo las 24 horas, todos los dÃ­as. Ante una alerta real, se activa el protocolo con aviso a las fuerzas de seguridad."
     },
     {
       title: "Aviso de apertura fuera de horario",
-      description: "Recibí notificaciones cuando alguien desactive la alarma de tu comercio en horarios no autorizados, para tener control total de quién abre y cuándo."
+      description: "RecibÃ­ notificaciones cuando alguien desactive la alarma de tu comercio en horarios no autorizados, para tener control total de quiÃ©n abre y cuÃ¡ndo."
     },
     {
       title: "Control remoto desde la app",
-      description: "Armá y desarmá tu sistema de alarma, consultá el historial de eventos y gestioná usuarios desde tu celular, estés donde estés."
+      description: "ArmÃ¡ y desarmÃ¡ tu sistema de alarma, consultÃ¡ el historial de eventos y gestionÃ¡ usuarios desde tu celular, estÃ©s donde estÃ©s."
     },
     {
-      title: "Protección perimetral exterior",
-      description: "Sensores de doble tecnología para exteriores que detectan intrusos antes de que ingresen a tu comercio, más sirena exterior disuasiva."
+      title: "ProtecciÃ³n perimetral exterior",
+      description: "Sensores de doble tecnologÃ­a para exteriores que detectan intrusos antes de que ingresen a tu comercio, mÃ¡s sirena exterior disuasiva."
     },
     {
-      title: "Códigos de usuario para cada empleado",
-      description: "Asigná códigos personalizados a tus colaboradores para saber quién abre y cierra tu negocio en cada turno y llevar registro de accesos."
+      title: "CÃ³digos de usuario para cada empleado",
+      description: "AsignÃ¡ cÃ³digos personalizados a tus colaboradores para saber quiÃ©n abre y cierra tu negocio en cada turno y llevar registro de accesos."
     }
   ];
 
@@ -4162,7 +3961,7 @@ function initKitsTienda(container) {
   // =========================================================
   // DATOS DE KITS
   // Para agregar/quitar kits, editar solo este array.
-  // El slider, modal y botones se construyen automáticamente.
+  // El slider, modal y botones se construyen automÃ¡ticamente.
   // =========================================================
   const kitsData = [
     {
@@ -4300,7 +4099,7 @@ function initKitsTienda(container) {
     }
   });
 
-  // Reforzar posición inicial al primer render visual.
+  // Reforzar posiciÃ³n inicial al primer render visual.
   requestAnimationFrame(() => {
     if (kitsSwiper.params.loop) {
       kitsSwiper.slideToLoop(initialIndex, 0, false);
@@ -4383,13 +4182,13 @@ async function cargarEnConstruccion() {
 }
 
 /* =========================================================
-   INICIALIZAR SECCIÓN: CARACTERÍSTICAS DEL PANEL
+   INICIALIZAR SECCIÃ“N: CARACTERÃSTICAS DEL PANEL
    
-   DESCRIPCIÓN:
-   Slider automático con 5 características del panel inteligente.
+   DESCRIPCIÃ“N:
+   Slider automÃ¡tico con 5 caracterÃ­sticas del panel inteligente.
    - Auto-advance cada 5 segundos
-   - Navegación manual con flechas < >
-   - Indicadores de posición
+   - NavegaciÃ³n manual con flechas < >
+   - Indicadores de posiciÃ³n
    
    ========================================================= */
 
@@ -4417,10 +4216,10 @@ function initCaracteristicasPanel() {
   // ============================================================
 
   /**
-   * Muestra un slide específico
+   * Muestra un slide especÃ­fico
    */
   function goToSlide(index) {
-    // Asegurar que el índice está dentro del rango
+    // Asegurar que el Ã­ndice estÃ¡ dentro del rango
     currentSlide = (index + slides.length) % slides.length;
 
     // Actualizar slides
@@ -4469,7 +4268,7 @@ function initCaracteristicasPanel() {
   }
 
   /**
-   * Pausa el auto-play cuando el usuario interactúa
+   * Pausa el auto-play cuando el usuario interactÃºa
    */
   function pauseAutoPlay() {
     clearInterval(autoPlayInterval);
@@ -4479,7 +4278,7 @@ function initCaracteristicasPanel() {
   // EVENT LISTENERS
   // ============================================================
 
-  // Función auxiliar para remover clase después del click
+  // FunciÃ³n auxiliar para remover clase despuÃ©s del click
   function handleTouchButton(button, callback) {
     button.addEventListener("touchstart", function(e) {
       e.preventDefault();
@@ -4492,7 +4291,7 @@ function initCaracteristicasPanel() {
       callback();
     });
     button.addEventListener("click", function(e) {
-      // El click en mobile ya se manejó en touchend
+      // El click en mobile ya se manejÃ³ en touchend
       if (e.isTrusted && e.pointerType === "") {
         return; // Es un click generado por touchend, ignorar
       }
@@ -4500,7 +4299,7 @@ function initCaracteristicasPanel() {
     });
   }
 
-  // Botón anterior
+  // BotÃ³n anterior
   if (arrowPrev) {
     handleTouchButton(arrowPrev, () => {
       pauseAutoPlay();
@@ -4508,7 +4307,7 @@ function initCaracteristicasPanel() {
     });
   }
 
-  // Botón siguiente
+  // BotÃ³n siguiente
   if (arrowNext) {
     handleTouchButton(arrowNext, () => {
       pauseAutoPlay();
@@ -4535,12 +4334,12 @@ function initCaracteristicasPanel() {
     });
   });
 
-  // Pausar autoplay cuando el usuario mueve el mouse sobre la sección
+  // Pausar autoplay cuando el usuario mueve el mouse sobre la secciÃ³n
   section.addEventListener("mouseenter", pauseAutoPlay);
   section.addEventListener("mouseleave", resetAutoPlay);
 
   // ============================================================
-  // INICIALIZACIÓN
+  // INICIALIZACIÃ“N
   // ============================================================
 
   // Mostrar primer slide
@@ -4549,3 +4348,4 @@ function initCaracteristicasPanel() {
   // Iniciar auto-play
   startAutoPlay();
 }
+

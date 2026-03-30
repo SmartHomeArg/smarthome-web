@@ -1,216 +1,382 @@
-<!-- ================================================================
-     SECCIÓN: ZONAS DE PROTECCIÓN DEL HOGAR
+﻿<!-- ================================================================
+     COMPONENTE: ZONAS DE PROTECCION DEL HOGAR
      ================================================================
-     
-     DESCRIPCIÓN:
-     Sistema interactivo que permite seleccionar diferentes tipos de
-     protección (Perimetral, Interior, Video, Conectividad) y mostrar
-     productos/servicios asociados con iconos flotantes posicionables.
-     
-     ESTRUCTURA:
-     1. Título principal y descripción
-     2. Pestañas para cambiar entre categorías de protección
-     3. Área visual con imagen y marcadores flotantes (iconos)
-     4. Panel lateral con detalles del producto seleccionado
-     5. Beneficios generales del sistema
-     6. Llamada a la acción (CTA)
-     
-     ICONOGRAFÍA:
-     Los iconos flotantes usan Bootstrap Icons (https://icons.getbootstrap.com/)
-     Selecciona iconos que representen el contenido de cada item.
-     
+
+     GUIA RAPIDA DE EDICION
+     1. Cambia textos, tabs, items, beneficios y CTA dentro del bloque
+        JSON del final de este archivo.
+     2. Para mover un icono flotante, edita marker.x y marker.y.
+        Puedes usar numeros (ej: 24) o porcentajes (ej: "24%").
+     3. Las coordenadas se aplican al CENTRO del circulo celeste.
+     4. Todas las imagenes usadas por esta seccion viven en esta misma
+        carpeta para que luego puedas reemplazarlas facilmente.
+     5. Si agregas items nuevos no hace falta tocar el HTML: los tabs,
+        los marcadores y los beneficios se renderizan automaticamente.
+
+     NOTA:
+     Este componente comparte la logica base con la version de comercio.
+     La configuracion de contenido queda aislada en este archivo para
+     facilitar mantenimiento futuro.
      ================================================================ -->
 
-<section class="zonas-proteccion-hogar">
+<section class="zonas-proteccion-hogar" data-component="zonas-proteccion-hogar">
     <div class="zonas-proteccion-hogar__inner container">
 
-        <!-- =========================================================
-             SUBSECCION: TITULO PRINCIPAL
-             ========================================================= -->
         <div class="zonas-proteccion-hogar__header">
             <h2 class="zonas-proteccion-hogar__title">
-                Cada rincón de tu hogar protegido
-                <span>con nuestro sistema de alarma inteligente</span>
+                <span class="zonas-proteccion-hogar__title-line" data-title-main>Cada acceso importante de tu hogar protegido</span>
+                <span data-title-accent>con tecnologia, monitoreo y control desde la app</span>
             </h2>
+
+            <p class="zonas-proteccion-hogar__lead">
+                Combinamos sensores, panel inteligente, camaras y monitoreo 24/7 para cubrir ingresos,
+                circulacion y respuesta ante eventos sin complicarte el uso diario.
+            </p>
         </div>
 
-        <!-- =========================================================
-             SUBSECCION: PESTAÑAS (TABS) DE CATEGORÍAS
-             
-             PARA AGREGAR UNA NUEVA PESTAÑA:
-             1. Copia un <button> existente
-             2. Cambia data-tab a un identificador único (ej: "smartlock")
-             3. Actualiza el texto visible
-             4. En el HTML de ITEMS, agrega una nueva sección <div 
-                data-tab="smartlock"> con los items correspondientes
-             5. En el JavaScript, agrega tu pestaña a sectionData
-             
-             ========================================================= -->
-        <div class="zonas-proteccion-hogar__tabs" role="tablist" aria-label="Zonas de protección del hogar">
-            <button class="zonas-proteccion-hogar__tab is-active" type="button" data-tab="perimetral"
-                role="tab" aria-selected="true" aria-controls="zonas-proteccion-hogar-panel">
-                Protección Perimetral
-            </button>
+        <!-- Los botones de tabs se crean desde JavaScript segun la configuracion -->
+        <div class="zonas-proteccion-hogar__tabs" role="tablist" aria-label="Zonas de proteccion del hogar"></div>
 
-            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="interior"
-                role="tab" aria-selected="false" aria-controls="zonas-proteccion-hogar-panel">
-                Protección Interior
-            </button>
-
-            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="video"
-                role="tab" aria-selected="false" aria-controls="zonas-proteccion-hogar-panel">
-                Video
-            </button>
-
-            <button class="zonas-proteccion-hogar__tab" type="button" data-tab="conectividad"
-                role="tab" aria-selected="false" aria-controls="zonas-proteccion-hogar-panel">
-                Conectividad
-            </button>
-        </div>
-
-        <!-- =========================================================
-             SUBSECCION: ÁREA VISUAL CON IMAGEN Y MARCADORES
-             ========================================================= -->
         <div class="zonas-proteccion-hogar__media">
-
-            <!-- COLUMNA IZQUIERDA: IMAGEN + MARCADORES FLOTANTES -->
             <div class="zonas-proteccion-hogar__visual">
                 <div class="zonas-proteccion-hogar__image-wrap">
-                    <!-- Imagen de fondo del hogar -->
-                    <img src="" alt="Vista del hogar con zonas de protección"
-                        class="zonas-proteccion-hogar__main-image">
+                    <img
+                        src=""
+                        alt="Vista del hogar con puntos de proteccion interactivos"
+                        class="zonas-proteccion-hogar__main-image"
+                    >
 
-                    <!-- ====================================================
-                         MARCADORES FLOTANTES (ICONOS INTERACTIVOS)
-                         
-                         CARACTERÍSTICAS:
-                         - Cada pestaña puede tener diferente cantidad de items
-                         - Los no utilizados se ocultan automáticamente con display: none
-                         - Posición se controla con top/left desde JavaScript
-                         
-                         PARA CAMBIAR EL ICONO:
-                         El icono se genera desde JavaScript (marker.textContent)
-                         No edites estos botones manualmente - la lógica está en JS
-                         
-                         PARA CAMBIAR LA POSICIÓN:
-                         En JavaScript, busca la sección "sectionData" y ajusta
-                         los valores "top" y "left" en porcentaje (ej: "23%", "9%")
-                         
-                         ==================================================== -->
-                    <button class="zonas-proteccion-hogar__marker is-active" type="button" data-slide="0"
-                        aria-label="Ver producto 1">
-                        <!-- El icono se inserta aquí desde JavaScript -->
-                    </button>
-
-                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="1"
-                        aria-label="Ver producto 2">
-                    </button>
-
-                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="2"
-                        aria-label="Ver producto 3">
-                    </button>
-
-                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="3"
-                        aria-label="Ver producto 4">
-                    </button>
-
-                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="4"
-                        aria-label="Ver producto 5">
-                    </button>
-
-                    <button class="zonas-proteccion-hogar__marker" type="button" data-slide="5"
-                        aria-label="Ver producto 6">
-                    </button>
-
+                    <!--
+                      Los marcadores tambien se crean desde JavaScript.
+                      Eso permite sumar o quitar items sin modificar este HTML.
+                    -->
                 </div>
             </div>
 
-            <!-- COLUMNA DERECHA: PANEL DE DETALLES DEL PRODUCTO -->
-            <div class="zonas-proteccion-hogar__panel" id="zonas-proteccion-hogar-panel" role="tabpanel"
-                aria-live="polite">
-                <!-- Botón para cerrar panel en mobile -->
+            <div class="zonas-proteccion-hogar__panel" id="zonas-proteccion-hogar-panel" role="tabpanel" aria-live="polite">
                 <button class="zonas-proteccion-hogar__panel-close" type="button" aria-label="Cerrar panel">
-                    ×
+                    x
                 </button>
 
-                <!-- Texto del producto: título + descripción -->
                 <div class="zonas-proteccion-hogar__panel-text">
+                    <p class="zonas-proteccion-hogar__panel-kicker">Proteccion perimetral</p>
+
                     <h3 class="zonas-proteccion-hogar__panel-title">
-                        Contacto magnético exterior
+                        Sensor de apertura para puerta principal
                     </h3>
 
                     <p class="zonas-proteccion-hogar__panel-description">
-                        Detector de contacto ideal para proteger accesos exteriores, puertas,
-                        ventanas y otros puntos sensibles del perímetro del hogar.
+                        Detecta aperturas no autorizadas en ingresos clave y dispara aviso al sistema cuando la alarma esta armada.
                     </p>
+
+                    <!--
+                      Lista opcional de puntos destacados del item activo.
+                      Se completa automaticamente segun "highlights" en el JSON.
+                    -->
+                    <ul class="zonas-proteccion-hogar__panel-points"></ul>
                 </div>
 
-                <!-- Slider de imágenes del producto con flechas de navegación -->
                 <div class="zonas-proteccion-hogar__panel-slider">
-                    <!-- Botón anterior -->
-                    <button class="zonas-proteccion-hogar__arrow zonas-proteccion-hogar__arrow--prev" type="button"
-                        aria-label="Anterior">
-                        ‹
+                    <button class="zonas-proteccion-hogar__arrow zonas-proteccion-hogar__arrow--prev" type="button" aria-label="Anterior">
+                        &lsaquo;
                     </button>
 
-                    <!-- Imagen del producto -->
                     <div class="zonas-proteccion-hogar__product-image-wrap">
-                        <img src="" alt="Contacto magnético exterior"
-                            class="zonas-proteccion-hogar__product-image">
+                        <img
+                            src=""
+                            alt="Sensor de apertura para puerta principal"
+                            class="zonas-proteccion-hogar__product-image"
+                        >
                     </div>
 
-                    <!-- Botón siguiente -->
-                    <button class="zonas-proteccion-hogar__arrow zonas-proteccion-hogar__arrow--next" type="button"
-                        aria-label="Siguiente">
-                        ›
+                    <button class="zonas-proteccion-hogar__arrow zonas-proteccion-hogar__arrow--next" type="button" aria-label="Siguiente">
+                        &rsaquo;
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- =========================================================
-             SUBSECCION: BENEFICIOS GENERALES DEL SISTEMA
-             ========================================================= -->
-        <div class="zonas-proteccion-hogar__benefits">
-            <article class="zonas-proteccion-hogar__benefit">
-                <div class="zonas-proteccion-hogar__benefit-icon">🛡️</div>
-                <p>
-                    <strong>Detección de inhibición:</strong> el sistema detecta intentos de sabotaje para mantener la
-                    protección activa.
-                </p>
-            </article>
+        <!-- Los beneficios se renderizan desde la configuracion -->
+        <div class="zonas-proteccion-hogar__benefits"></div>
 
-            <article class="zonas-proteccion-hogar__benefit">
-                <div class="zonas-proteccion-hogar__benefit-icon">📶</div>
-                <p>
-                    <strong>Seguridad multivía:</strong> redundancia de comunicación ante intrusión, sabotaje o
-                    inhibición.
-                </p>
-            </article>
-
-            <article class="zonas-proteccion-hogar__benefit">
-                <div class="zonas-proteccion-hogar__benefit-icon">💻</div>
-                <p>
-                    <strong>Monitoreo remoto:</strong> supervisión permanente del sistema para una respuesta más rápida.
-                </p>
-            </article>
-
-            <article class="zonas-proteccion-hogar__benefit">
-                <div class="zonas-proteccion-hogar__benefit-icon">📱</div>
-                <p>
-                    <strong>Control desde app:</strong> acceso al estado del sistema y gestión básica desde el celular.
-                </p>
-            </article>
-        </div>
-
-        <!-- =========================================================
-             SUBSECCION: LLAMADA A LA ACCIÓN (CTA)
-             ========================================================= -->
         <div class="zonas-proteccion-hogar__cta">
-            <a href="#contacto" class="btn-principal">
-                Me interesa
-            </a>
+            <a href="#cotizar" class="btn-principal">Quiero proteger mi hogar</a>
         </div>
 
+        <!-- =========================================================
+             CONFIGURACION DEL COMPONENTE
+
+             ESTRUCTURA DE CADA ITEM:
+             - title: titulo principal del panel lateral
+             - description: texto descriptivo
+             - image: nombre del archivo dentro de esta carpeta
+             - alt: texto alternativo de la imagen
+             - icon: nombre de Bootstrap Icons (sin el prefijo "bi-")
+             - marker.x / marker.y: coordenadas del icono sobre la escena
+             - highlights: lista opcional de puntos destacados
+
+             SUGERENCIA PARA REUBICAR ICONOS:
+             - Mueve x primero para izquierda/derecha
+             - Mueve y despues para arriba/abajo
+             - Prueba en saltos de 2 o 3 puntos hasta encontrar el lugar ideal
+             ========================================================= -->
+        <script type="application/json" class="zonas-proteccion-hogar__config">
+{
+  "componentFolder": "zonas-proteccion-hogar",
+  "mainSceneImage": "hogar-escena-principal.png",
+  "mainSceneAlt": "Vista de una vivienda con puntos interactivos de proteccion",
+  "title": "Cada acceso importante de tu hogar protegido",
+  "titleAccent": "con tecnologia, monitoreo y control desde la app",
+  "lead": "Combinamos sensores, panel K1 Ultra, camaras y monitoreo 24/7 para cubrir ingresos, circulacion y respuesta ante eventos sin complicarte el uso diario.",
+  "tabsAriaLabel": "Zonas de proteccion del hogar",
+  "tabs": [
+    {
+      "id": "perimetral",
+      "label": "Proteccion perimetral",
+      "items": [
+        {
+          "title": "Sensor de apertura para puerta principal",
+          "description": "Protege el ingreso mas usado de la casa con un aviso inmediato cuando detecta apertura mientras el sistema esta armado.",
+          "image": "hogar-sensor-apertura.png",
+          "alt": "Sensor de apertura para puerta principal",
+          "icon": "door-closed",
+          "marker": { "x": 16, "y": 29 },
+          "highlights": [
+            "Ideal para puertas de acceso diario o ingresos secundarios.",
+            "Se instala como zona independiente para saber exactamente donde hubo evento.",
+            "Puede resolverse en modo cableado o inalambrico segun la ubicacion."
+          ]
+        },
+        {
+          "title": "Cobertura de ventanas y salidas al patio",
+          "description": "Extiende la proteccion perimetral a ventanas, puertas balcon y accesos hacia patio, quincho o lavadero.",
+          "image": "hogar-sensor-apertura.png",
+          "alt": "Cobertura de ventanas y salidas al patio",
+          "icon": "window",
+          "marker": { "x": 39, "y": 19 },
+          "highlights": [
+            "Ayuda a proteger puntos de ingreso menos visibles desde la calle.",
+            "Permite armar zonas especificas cuando la familia esta dentro del hogar."
+          ]
+        },
+        {
+          "title": "Sirena interior para efecto disuasivo inmediato",
+          "description": "Cuando el sistema detecta intrusion, la sirena genera una alerta sonora intensa para cortar la accion y avisar a quienes estan cerca.",
+          "image": "hogar-monitoreo-24-7.jpg",
+          "alt": "Sirena interior para efecto disuasivo inmediato",
+          "icon": "bell-fill",
+          "marker": { "x": 63, "y": 46 },
+          "highlights": [
+            "Se integra con sensores y reportes a central de monitoreo.",
+            "Aporta disuasion local mientras se activa el protocolo definido."
+          ]
+        },
+        {
+          "title": "Carteleria visible para desalentar intrusiones",
+          "description": "La presencia visible del sistema tambien trabaja a tu favor: comunica que la propiedad cuenta con proteccion activa y servicio monitoreado.",
+          "image": "hogar-monitoreo-24-7.jpg",
+          "alt": "Carteleria visible del sistema de seguridad",
+          "icon": "shield-check",
+          "marker": { "x": 82, "y": 64 },
+          "highlights": [
+            "Suma valor disuasivo incluso antes de que ocurra un intento de ingreso.",
+            "Refuerza la percepcion de control en fachada y accesos."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interior",
+      "label": "Proteccion interior",
+      "items": [
+        {
+          "title": "Central Hellgrun Kummert K1 Ultra",
+          "description": "Es el corazon del sistema. Administra sensores, comunica eventos y mantiene el enlace con la app y la central de monitoreo.",
+          "image": "hogar-panel-central.png",
+          "alt": "Central Hellgrun Kummert K1 Ultra",
+          "icon": "cpu",
+          "marker": { "x": 50, "y": 50 },
+          "highlights": [
+            "Compatibilidad con sensores cableados e inalambricos.",
+            "Conectividad Wi-Fi y 4G para mayor continuidad operativa.",
+            "Permite administrar particiones, usuarios y eventos desde la app."
+          ]
+        },
+        {
+          "title": "Sensor de movimiento para zonas de paso",
+          "description": "Supervisa pasillos, living y espacios comunes para detectar presencia no autorizada dentro de la vivienda.",
+          "image": "hogar-sensor-movimiento.png",
+          "alt": "Sensor de movimiento para zonas de paso",
+          "icon": "activity",
+          "marker": { "x": 28, "y": 44 },
+          "highlights": [
+            "Se ubica donde genera mejor cobertura sin invadir la rutina diaria.",
+            "En instalaciones cercanas a la central puede resolverse cableado."
+          ]
+        },
+        {
+          "title": "Llavero remoto para armado, desarmado y panico",
+          "description": "Aporta una forma simple de operar la alarma al entrar o salir, con acceso rapido a funciones de emergencia.",
+          "image": "hogar-codigos-usuarios.jpg",
+          "alt": "Llavero remoto para armado, desarmado y panico",
+          "icon": "key-fill",
+          "marker": { "x": 21, "y": 72 },
+          "highlights": [
+            "Practico para uso cotidiano o para integrantes de la familia.",
+            "Puede convivir con codigos personalizados desde teclado o app."
+          ]
+        },
+        {
+          "title": "Modos presente, ausente y control por particiones",
+          "description": "El sistema se adapta a la rutina del hogar para proteger solo las zonas necesarias segun si hay gente en la casa o no.",
+          "image": "hogar-app-movil.jpg",
+          "alt": "Control del sistema por modos y particiones",
+          "icon": "house-gear",
+          "marker": { "x": 76, "y": 38 },
+          "highlights": [
+            "Permite anular o habilitar zonas puntuales segun el momento del dia.",
+            "Ideal para dormir con perimetro activo y sectores internos liberados."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "video",
+      "label": "Video",
+      "items": [
+        {
+          "title": "Camara Wi-Fi para ver que pasa en tiempo real",
+          "description": "Suma respaldo visual para validar eventos, revisar ambientes y seguir la actividad desde la app.",
+          "image": "hogar-camara-interior.jpg",
+          "alt": "Camara Wi-Fi para el hogar",
+          "icon": "camera-video",
+          "marker": { "x": 30, "y": 30 },
+          "highlights": [
+            "Ideal para living, ingreso, playroom o ambientes de circulacion.",
+            "Puede integrarse al plan que combine alarma mas video."
+          ]
+        },
+        {
+          "title": "Grabacion local y respaldo en la nube",
+          "description": "Las grabaciones ayudan a revisar un evento aun cuando el cliente no estaba mirando en vivo en ese momento.",
+          "image": "hogar-video-grabacion.jpg",
+          "alt": "Grabacion local y en la nube para el hogar",
+          "icon": "cloud-check",
+          "marker": { "x": 54, "y": 25 },
+          "highlights": [
+            "Tarjeta de memoria incluida segun kit disponible.",
+            "La nube suma una capa extra de seguridad frente a dano o robo del equipo."
+          ]
+        },
+        {
+          "title": "Alertas por movimiento y presencia humana",
+          "description": "Recibes avisos en el celular cuando la camara detecta actividad relevante para reaccionar mas rapido.",
+          "image": "hogar-app-movil.jpg",
+          "alt": "Alertas inteligentes por movimiento en el hogar",
+          "icon": "bell",
+          "marker": { "x": 69, "y": 58 },
+          "highlights": [
+            "Permite verificar situaciones antes de desplazarte a la propiedad.",
+            "Complementa el historial de eventos del sistema de alarma."
+          ]
+        },
+        {
+          "title": "Vista en vivo desde el celular",
+          "description": "Consulta la escena cuando quieras y comparte acceso con los usuarios necesarios sin perder el control del sistema.",
+          "image": "hogar-app-movil.jpg",
+          "alt": "Vista en vivo desde la aplicacion movil",
+          "icon": "phone",
+          "marker": { "x": 82, "y": 40 },
+          "highlights": [
+            "Pensado para Android y iOS.",
+            "Permite revisar el estado general incluso cuando no estas en casa."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "conectividad",
+      "label": "Conectividad",
+      "items": [
+        {
+          "title": "Comunicacion Wi-Fi + 4G con respaldo",
+          "description": "La central puede mantener el servicio con mas de un canal para reducir el impacto de cortes, fallas o intentos de sabotaje.",
+          "image": "hogar-conectividad.jpg",
+          "alt": "Conectividad Wi-Fi y 4G del sistema",
+          "icon": "router",
+          "marker": { "x": 34, "y": 24 },
+          "highlights": [
+            "Pensado para continuidad operativa y mejor disponibilidad del sistema.",
+            "Base tecnica ideal para control remoto y monitoreo profesional."
+          ]
+        },
+        {
+          "title": "Monitoreo 24/7 con respuesta profesional",
+          "description": "Los eventos pueden reportarse a central de monitoreo para activar el protocolo correspondiente segun el tipo de alarma.",
+          "image": "hogar-monitoreo-24-7.jpg",
+          "alt": "Central de monitoreo 24 horas",
+          "icon": "headset",
+          "marker": { "x": 53, "y": 52 },
+          "highlights": [
+            "Servicio permanente todos los dias del ano.",
+            "Base central del modelo comercial del proyecto."
+          ]
+        },
+        {
+          "title": "App para armar, desarmar y revisar zonas",
+          "description": "La aplicacion permite operar la alarma, ver el estado del sistema, anular zonas y consultar eventos sin depender de estar en la propiedad.",
+          "image": "hogar-app-movil.jpg",
+          "alt": "Aplicacion para controlar la alarma del hogar",
+          "icon": "phone",
+          "marker": { "x": 68, "y": 34 },
+          "highlights": [
+            "Incluye historial, notificaciones y gestion de modos de uso.",
+            "Tambien permite administrar usuarios y claves."
+          ]
+        },
+        {
+          "title": "Codigos, historial y trazabilidad de uso",
+          "description": "Cada usuario puede tener su propio codigo para saber quien entro, quien salio y a que hora se opero el sistema.",
+          "image": "hogar-codigos-usuarios.jpg",
+          "alt": "Codigos y eventos del sistema del hogar",
+          "icon": "clock-history",
+          "marker": { "x": 82, "y": 67 },
+          "highlights": [
+            "Muy util para familia, personal domestico o visitas frecuentes.",
+            "Facilita seguimiento y control sin complejidad tecnica para el cliente."
+          ]
+        }
+      ]
+    }
+  ],
+  "benefits": [
+    {
+      "icon": "shield-check",
+      "title": "Monitoreo 24/7 real",
+      "description": "Todos los planes con alarma pueden reportar eventos a central de monitoreo para dar continuidad al servicio los siete dias de la semana."
+    },
+    {
+      "icon": "router",
+      "title": "Comunicacion multivia",
+      "description": "La combinacion de Wi-Fi y 4G ayuda a sostener la conexion del sistema ante cortes o sabotajes del canal principal."
+    },
+    {
+      "icon": "phone",
+      "title": "Control desde la app",
+      "description": "Arma, desarma, revisa zonas, recibe notificaciones y consulta el historial desde Android o iOS."
+    },
+    {
+      "icon": "person-badge",
+      "title": "Usuarios y claves personalizadas",
+      "description": "Asigna permisos segun la rutina del hogar y registra quien opero la alarma en cada momento."
+    }
+  ],
+  "cta": {
+    "label": "Quiero proteger mi hogar",
+    "href": "#cotizar"
+  }
+}
+        </script>
     </div>
 </section>
+
