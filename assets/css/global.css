@@ -4130,6 +4130,11 @@ FOOTER
   0 0 3px rgba(255, 255, 255, 0.4);
 }
 
+.funcionalidades-home__slider .swiper-slide.swiper-slide-active .funcionalidades-home__title {
+  color: #ffffff;
+  text-shadow: none;
+}
+
 .funcionalidades-home__description {
   margin: 0;
   font-size: 1.02rem;
@@ -4198,7 +4203,8 @@ FOOTER
   }
 
   .funcionalidades-home__slider .swiper-slide.swiper-slide-active .funcionalidades-home__title {
-    color: #064086;
+    color: #ffffff;
+    text-shadow: none;
   }
 
   .funcionalidades-home__slider .swiper-slide.swiper-slide-active .funcionalidades-home__description {
