@@ -2624,7 +2624,7 @@ function initZonasProteccionHogar(options = {}) {
       {
         title: "Video inteligente",
         description: "Visualización y verificación remota para responder con más contexto ante eventos de seguridad.",
-        image: "funcionalidades-video-inteligencia.jpg",
+        image: "funcionalidades-video-vivo-grabacion-nube.jpg",
         alt: "Video inteligente",
         icon: "camera-video",  // ← CAMBIAR ICONO
         marker: { top: "28%", left: "17%" }  // ← CAMBIAR POSICIÓN
@@ -2640,7 +2640,7 @@ function initZonasProteccionHogar(options = {}) {
       {
         title: "Registro de eventos",
         description: "Historial visual para consultar eventos detectados y facilitar la toma de decisiones.",
-        image: "funcionalidades-hogar-y-mascotas.jpg",
+        image: "funcionalidades-compatible-mascotas.jpg",
         alt: "Registro de eventos de seguridad",
         icon: "clock-history",  // ← CAMBIAR ICONO
         marker: { top: "67%", left: "54%" }  // ← CAMBIAR POSICIÓN
