@@ -2096,7 +2096,7 @@ function cargarContactate() {
 
       const imagen = placeholder.querySelector(".contactate-home__image img");
       if (imagen) {
-        imagen.src = getSiteAssetUrl("components/contactate/contactate.jpg");
+        imagen.src = getSiteAssetUrl("components/contactate/contactate.webp");
       }
 
       const cta = placeholder.querySelector(".contactate-home__button");
