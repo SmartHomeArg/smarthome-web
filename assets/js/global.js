@@ -818,26 +818,59 @@ async function cargarHero() {
 
     const heroConfig = {
       index: {
-        title: '<span class="text-brand">Seguridad inteligente</span> para tu hogar',
-        description: "Alarmas, cámaras y monitoreo profesional para proteger tu casa con una solución moderna y confiable.",
-        origen: "index"
+        title: '<span class="text-brand">Protegé lo que más querés</span> con seguridad inteligente',
+        description: "Descubrí alarmas, cámaras y monitoreo profesional para vivir con más tranquilidad todos los días.",
+        origen: "index",
+        image: "components/hero/hero-index.jpg"
       },
       hogar: {
         title: '<span class="text-brand">Seguridad inteligente</span> para tu hogar',
         description: "Alarmas, cámaras y monitoreo profesional para proteger tu casa con una solución moderna y confiable.",
-        origen: "hogar"
+        origen: "hogar",
+        image: "components/hero/hero-hogar.jpg"
       },
       comercio: {
         title: '<span class="text-brand">Seguridad inteligente</span> para tu comercio',
         description: "Alarmas, cámaras y monitoreo profesional para proteger tu comercio con una solución moderna y confiable.",
-        origen: "comercio"
+        origen: "comercio",
+        image: "components/hero/hero-comercio.jpg"
+      },
+      "plan-basic": {
+        title: '<span class="text-brand">Plan Basic</span> para empezar a proteger tu hogar',
+        description: "Una solución simple y efectiva para dar el primer paso en seguridad con respaldo profesional.",
+        origen: "plan-basic",
+        image: "components/hero/hero-plan-basic.jpg"
+      },
+      "plan-comercial": {
+        title: '<span class="text-brand">Plan Comercial</span> pensado para tu negocio',
+        description: "Protección integral para tu local con monitoreo activo, alertas rápidas y soporte especializado.",
+        origen: "plan-comercial",
+        image: "components/hero/hero-plan-comercial.jpg"
+      },
+      "plan-plus": {
+        title: '<span class="text-brand">Plan Plus</span> con mayor cobertura y control',
+        description: "Ideal para quienes buscan más funcionalidades y una experiencia de seguridad más completa.",
+        origen: "plan-plus",
+        image: "components/hero/hero-plan-plus.jpg"
+      },
+      "plan-pro": {
+        title: '<span class="text-brand">Plan Pro</span> para operaciones exigentes',
+        description: "Máximo nivel de protección y gestión para comercios con mayor dinámica y necesidades avanzadas.",
+        origen: "plan-pro",
+        image: "components/hero/hero-plan-pro.jpg"
+      },
+      "plan-video": {
+        title: '<span class="text-brand">Plan Video</span> con vigilancia en tiempo real',
+        description: "Visualizá tus espacios desde donde estés y complementá tu seguridad con monitoreo profesional.",
+        origen: "plan-video",
+        image: "components/hero/hero-plan-video.jpg"
       }
     };
 
     const pageKey = heroConfig[pageSlug] ? pageSlug : "index";
 
-    const resolveHeroImagePath = async (slug) => {
-      const candidate = getSiteAssetUrl(`components/hero/hero-${slug}.jpg`);
+    const resolveHeroImagePath = async (relativePath) => {
+      const candidate = getSiteAssetUrl(relativePath || "components/hero/hero-index.jpg");
       try {
         const imgCheck = await fetch(candidate, { method: "HEAD" });
         if (imgCheck.ok) return candidate;
@@ -856,7 +889,7 @@ async function cargarHero() {
     heroContainer.innerHTML = heroHTML;
 
     const config = heroConfig[pageKey] || heroConfig.index;
-    const heroImage = await resolveHeroImagePath(pageSlug);
+    const heroImage = await resolveHeroImagePath(config.image);
 
     const section = heroContainer.querySelector(".hero-page");
     if (section) {
