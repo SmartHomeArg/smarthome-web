@@ -3913,9 +3913,11 @@ FOOTER
 .equipamiento-home__img-front {
   position: absolute;
   left: 24px;
-  bottom: -38px;
-  width: clamp(140px, 22vw, 260px);
+  bottom: -88px;
+  width: clamp(182px, 28.6vw, 338px);
   height: auto;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.25))
+          drop-shadow(0 20px 34px rgba(0, 0, 0, 0.22));
   z-index: 2;
 }
 
@@ -3974,8 +3976,8 @@ FOOTER
 
   .equipamiento-home__img-front {
     left: 14px;
-    bottom: -28px;
-    width: clamp(110px, 34vw, 170px);
+    bottom: -62px;
+    width: clamp(143px, 44.2vw, 221px);
   }
 
   .equipamiento-home__features h3 {
