@@ -2862,6 +2862,19 @@ FOOTER
   line-height: 1.2;
 }
 
+.form-group .field-error {
+  display: none;
+  margin-top: 2px;
+  color: #c62828;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.form-group .field-error.is-visible {
+  display: block;
+}
+
 .form-check {
   display: flex;
   align-items: flex-start;

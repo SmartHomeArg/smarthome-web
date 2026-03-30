@@ -1155,15 +1155,58 @@ function initHeroLeadForm() {
   if (telefonoInput) {
     telefonoInput.addEventListener('input', function () {
       this.value = onlyDigits(this.value).slice(0, 10);
+      if (this.value.length === 10) {
+        clearFieldError(this);
+      }
     });
   }
 
-  function clearFieldError(field) {
-    if (field) field.classList.remove('is-invalid');
+  function getFieldErrorNode(field) {
+    if (!field || !field.id) return null;
+
+    const group = field.closest('.form-group');
+    if (!group) return null;
+
+    let errorNode = group.querySelector(`.field-error[data-for="${field.id}"]`);
+    if (!errorNode) {
+      errorNode = document.createElement('small');
+      errorNode.className = 'field-error';
+      errorNode.dataset.for = field.id;
+      errorNode.id = `${field.id}-error`;
+      group.appendChild(errorNode);
+    }
+
+    return errorNode;
   }
 
-  function setFieldError(field) {
-    if (field) field.classList.add('is-invalid');
+  function clearFieldError(field) {
+    if (!field) return;
+
+    field.classList.remove('is-invalid');
+    field.removeAttribute('aria-invalid');
+
+    const errorNode = getFieldErrorNode(field);
+    if (errorNode) {
+      errorNode.textContent = '';
+      errorNode.classList.remove('is-visible');
+      if (field.getAttribute('aria-describedby') === errorNode.id) {
+        field.removeAttribute('aria-describedby');
+      }
+    }
+  }
+
+  function setFieldError(field, message) {
+    if (!field) return;
+
+    field.classList.add('is-invalid');
+    field.setAttribute('aria-invalid', 'true');
+
+    const errorNode = getFieldErrorNode(field);
+    if (errorNode) {
+      errorNode.textContent = String(message || 'Este campo es obligatorio.');
+      errorNode.classList.add('is-visible');
+      field.setAttribute('aria-describedby', errorNode.id);
+    }
   }
 
   function showMessage(text, type) {
@@ -1188,23 +1231,23 @@ function initHeroLeadForm() {
     const email = emailInput ? emailInput.value.trim() : '';
 
     if (nombre.length < 3) {
-      setFieldError(nombreInput);
+      setFieldError(nombreInput, 'Ingresá nombre y apellido (mínimo 3 caracteres).');
       isValid = false;
     }
 
     // Ahora requerimos exactamente 10 dígitos para teléfono
     if (telefono.length !== 10) {
-      setFieldError(telefonoInput);
+      setFieldError(telefonoInput, 'Ingresá 10 dígitos, sin 0 y sin 15.');
       isValid = false;
     }
 
     if (!provincia) {
-      setFieldError(provinciaInput);
+      setFieldError(provinciaInput, 'Seleccioná una provincia.');
       isValid = false;
     }
 
     if (!emailIsValid(email)) {
-      setFieldError(emailInput);
+      setFieldError(emailInput, 'Ingresá un mail válido (ejemplo: nombre@dominio.com).');
       isValid = false;
     }
 
@@ -1387,13 +1430,6 @@ function initContactLeadForm() {
     return spamPatterns.some((re) => re.test(text));
   };
 
-  const escapeHtml = (value) => String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-
   function showMessage(text, type) {
     if (!messageBox) return;
     messageBox.innerHTML = text;
@@ -1404,7 +1440,53 @@ function initContactLeadForm() {
 
   function setFieldError(field, hasError) {
     if (!field) return;
-    field.classList.toggle('is-invalid', Boolean(hasError));
+
+    if (hasError) {
+      field.classList.add('is-invalid');
+      field.setAttribute('aria-invalid', 'true');
+      return;
+    }
+
+    field.classList.remove('is-invalid');
+    field.removeAttribute('aria-invalid');
+  }
+
+  function getFieldErrorNode(field) {
+    if (!field || !field.id) return null;
+
+    const group = field.closest('.form-group');
+    if (!group) return null;
+
+    let errorNode = group.querySelector(`.field-error[data-for="${field.id}"]`);
+    if (!errorNode) {
+      errorNode = document.createElement('small');
+      errorNode.className = 'field-error';
+      errorNode.dataset.for = field.id;
+      errorNode.id = `${field.id}-error`;
+      group.appendChild(errorNode);
+    }
+
+    return errorNode;
+  }
+
+  function setFieldErrorMessage(field, message) {
+    if (!field) return;
+
+    const errorNode = getFieldErrorNode(field);
+    if (!errorNode) return;
+
+    if (message) {
+      errorNode.textContent = String(message);
+      errorNode.classList.add('is-visible');
+      field.setAttribute('aria-describedby', errorNode.id);
+      return;
+    }
+
+    errorNode.textContent = '';
+    errorNode.classList.remove('is-visible');
+    if (field.getAttribute('aria-describedby') === errorNode.id) {
+      field.removeAttribute('aria-describedby');
+    }
   }
 
   function fillProvincias() {
@@ -1480,7 +1562,7 @@ function initContactLeadForm() {
   }
 
   function validateForm() {
-    const errors = [];
+    let hasErrors = false;
 
     [
       motivoInput,
@@ -1492,7 +1574,10 @@ function initContactLeadForm() {
       ciudadInput,
       comentariosInput,
       adjuntosInput
-    ].forEach((field) => setFieldError(field, false));
+    ].forEach((field) => {
+      setFieldError(field, false);
+      setFieldErrorMessage(field, '');
+    });
 
     const motivo = normalize(motivoInput?.value);
     const nombre = normalize(nombreInput?.value);
@@ -1505,52 +1590,61 @@ function initContactLeadForm() {
 
     if (!motivo) {
       setFieldError(motivoInput, true);
-      errors.push('Seleccioná el motivo de consulta.');
+      setFieldErrorMessage(motivoInput, 'Seleccioná el motivo de consulta.');
+      hasErrors = true;
     }
 
     if (nombre.length < 3 || hasSuspiciousPatterns(nombre)) {
       setFieldError(nombreInput, true);
-      errors.push('Nombre y apellido inválido.');
+      setFieldErrorMessage(nombreInput, 'Ingresá nombre y apellido real (mínimo 3 caracteres, sin links).');
+      hasErrors = true;
     }
 
     if (telefono.length !== 10) {
       setFieldError(telefonoInput, true);
-      errors.push('El teléfono debe tener 10 dígitos.');
+      setFieldErrorMessage(telefonoInput, 'Ingresá 10 dígitos, sin 0 y sin 15.');
+      hasErrors = true;
     }
 
     if (!isValidEmail(mail) || hasSuspiciousPatterns(mail)) {
       setFieldError(emailInput, true);
-      errors.push('Mail inválido.');
+      setFieldErrorMessage(emailInput, 'Ingresá un mail válido (ejemplo: nombre@dominio.com).');
+      hasErrors = true;
     }
 
     if (direccion.length < 6 || hasSuspiciousPatterns(direccion)) {
       setFieldError(direccionInput, true);
-      errors.push('Dirección inválida.');
+      setFieldErrorMessage(direccionInput, 'Ingresá una dirección válida (mínimo 6 caracteres, sin links).');
+      hasErrors = true;
     }
 
     if (!provincia) {
       setFieldError(provinciaInput, true);
-      errors.push('Seleccioná la provincia.');
+      setFieldErrorMessage(provinciaInput, 'Seleccioná una provincia.');
+      hasErrors = true;
     }
 
     if (!ciudad) {
       setFieldError(ciudadInput, true);
-      errors.push('Seleccioná la ciudad.');
+      setFieldErrorMessage(ciudadInput, 'Seleccioná una ciudad.');
+      hasErrors = true;
     }
 
     if (comentarios.length < 10 || comentarios.length > 1200 || hasSuspiciousPatterns(comentarios)) {
       setFieldError(comentariosInput, true);
-      errors.push('Comentarios inválidos o sospechosos.');
+      setFieldErrorMessage(comentariosInput, 'Escribí entre 10 y 1200 caracteres, sin links o texto sospechoso.');
+      hasErrors = true;
     }
 
     const filesError = validateFiles(adjuntosInput?.files);
     if (filesError) {
       setFieldError(adjuntosInput, true);
-      errors.push(filesError);
+      setFieldErrorMessage(adjuntosInput, filesError);
+      hasErrors = true;
     }
 
-    if (errors.length) {
-      showMessage(escapeHtml(errors[0]), 'error');
+    if (hasErrors) {
+      showMessage('Revisá los campos marcados antes de enviar.', 'error');
       return false;
     }
 
@@ -1655,6 +1749,10 @@ function initContactLeadForm() {
   if (telefonoInput) {
     telefonoInput.addEventListener('input', function () {
       this.value = onlyDigits(this.value).slice(0, 10);
+      if (this.value.length === 10) {
+        setFieldError(this, false);
+        setFieldErrorMessage(this, '');
+      }
     });
   }
 
@@ -1662,6 +1760,37 @@ function initContactLeadForm() {
     provinciaInput.addEventListener('change', function () {
       fillCiudades(this.value);
       setFieldError(ciudadInput, false);
+      setFieldErrorMessage(ciudadInput, '');
+    });
+  }
+
+  [
+    motivoInput,
+    nombreInput,
+    emailInput,
+    direccionInput,
+    provinciaInput,
+    ciudadInput,
+    comentariosInput
+  ].forEach((field) => {
+    if (!field) return;
+
+    const eventName = field.tagName === 'SELECT' ? 'change' : 'input';
+    field.addEventListener(eventName, function () {
+      if (normalize(this.value)) {
+        setFieldError(this, false);
+        setFieldErrorMessage(this, '');
+      }
+    });
+  });
+
+  if (adjuntosInput) {
+    adjuntosInput.addEventListener('change', function () {
+      const filesError = validateFiles(this.files);
+      if (!filesError) {
+        setFieldError(this, false);
+        setFieldErrorMessage(this, '');
+      }
     });
   }
 
