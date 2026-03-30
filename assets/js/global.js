@@ -371,6 +371,7 @@ function injectStructuredData() {
       image: "assets/img/tienda-hero-pc.webp",
       faq: [
         { q: "Sirve para hogar y comercio?", a: "Si. Adaptamos la solucion al tipo de propiedad, cantidad de accesos y nivel de riesgo." },
+        { q: "Tengo que comprar el equipamiento?", a: "No. El equipamiento se entrega en comodato junto con el plan contratado, sin inversion inicial en dispositivos." },
         { q: "Puedo controlar todo desde el celular?", a: "Si. Podes armar y desarmar, ver eventos y recibir alertas en tiempo real desde la app." },
         { q: "Que pasa si necesito soporte?", a: "Contas con asistencia postventa y seguimiento tecnico para resolver ajustes o incidencias." }
       ]
@@ -396,7 +397,7 @@ function injectStructuredData() {
       sku: "kit-cam-plus",
       price: 89999,
       image: "pages/tienda/kit-cam-plus.webp",
-      schemaDescription: "Ideal para hogares y comercios. Monitoreo 24/7 con deteccion de sabotaje. Camara incluida para visualizacion en tiempo real."
+      schemaDescription: "Camara Wi-Fi con grabacion en la nube, tarjeta de memoria, carteleria disuasiva y proteccion para exteriores."
     },
     "pages/tienda/kit-industrial.html": {
       kind: "product",
@@ -404,7 +405,7 @@ function injectStructuredData() {
       sku: "kit-industrial",
       price: 179999,
       image: "pages/tienda/kit-industrial.webp",
-      schemaDescription: "Ideal para industrias y grandes superficies. Monitoreo 24/7 con deteccion de sabotaje. Cobertura ampliada para mayor superficie."
+      schemaDescription: "Sistema de alarma con proteccion interior y exterior: sirena exterior, sensores de doble tecnologia para exteriores y cobertura ampliada."
     },
     "pages/tienda/kit-smart-1-1.html": {
       kind: "product",
@@ -412,7 +413,7 @@ function injectStructuredData() {
       sku: "kit-smart-1-1",
       price: 108999,
       image: "pages/tienda/kit-smart-1-1.webp",
-      schemaDescription: "Ideal para hogares y comercios. Monitoreo 24/7 con deteccion de sabotaje. Personaliza codigos de usuario para saber quien ingresa y sale."
+      schemaDescription: "Sistema de alarma con central, sensor de movimiento, sensor magnetico inalambrico, sirena interior y llavero de control."
     },
     "pages/tienda/kit-smart-2-2.html": {
       kind: "product",
@@ -420,7 +421,7 @@ function injectStructuredData() {
       sku: "kit-smart-2-2",
       price: 126999,
       image: "pages/tienda/kit-smart-2-2.webp",
-      schemaDescription: "Ideal para hogares y comercios. Monitoreo 24/7 con deteccion de sabotaje. Personaliza codigos de usuario para saber quien ingresa y sale."
+      schemaDescription: "Sistema de alarma con central, 2 sensores de movimiento, 2 sensores magneticos inalambricos, sirena interior y llavero."
     },
     "pages/tienda/kit-smart-cam-2-2.html": {
       kind: "product",
@@ -428,7 +429,7 @@ function injectStructuredData() {
       sku: "kit-smart-cam-2-2",
       price: 134999,
       image: "pages/tienda/kit-smart-cam-2-2.webp",
-      schemaDescription: "Ideal para hogares y comercios. Monitoreo 24/7 con deteccion de sabotaje. Incluye camara para ver eventos en vivo."
+      schemaDescription: "Todo lo del Kit Smart 2.2 mas una camara Wi-Fi con grabacion en la nube y deteccion de movimiento."
     },
     "pages/soluciones-a-medida/cerco-electrico.html": { kind: "service", name: "Cerco Electrico Inteligente", category: "Soluciones a medida", image: "assets/img/pages/cercos-electricos/hero-cercos.jpg" },
     "pages/soluciones-a-medida/domotica.html": { kind: "service", name: "Domotica", category: "Soluciones a medida", image: "assets/img/tienda-hero-pc.webp" },
@@ -3039,24 +3040,24 @@ function initServiciosParaComercios(rootElement) {
 
   const slides = [
     {
-      title: "Todo en uno",
-      description: "En vez de administrar tus ubicaciones de forma individual, nuestra Consola Empresarial te permite agruparlas, asignar accesos a tu equipo y ver cámaras desde un solo lugar."
+      title: "Monitoreo 24/7 para tu negocio",
+      description: "Tu sistema de alarma queda conectado a nuestra central de monitoreo las 24 horas, todos los días. Ante una alerta real, se activa el protocolo con aviso a las fuerzas de seguridad."
     },
     {
-      title: "Ahorrá tiempo",
-      description: "Las notificaciones empresariales te permiten recibir alertas oportunas de varias ubicaciones a la vez, sin crear reglas individuales por cada comercio."
+      title: "Aviso de apertura fuera de horario",
+      description: "Recibí notificaciones cuando alguien desactive la alarma de tu comercio en horarios no autorizados, para tener control total de quién abre y cuándo."
     },
     {
-      title: "Enteráte primero sin estar allí",
-      description: "Desde la web o tu aplicación móvil podrás ver un resumen del estado de todas tus ubicaciones, enterarte de aperturas y cierres fuera de horario y del estado del panel."
+      title: "Control remoto desde la app",
+      description: "Armá y desarmá tu sistema de alarma, consultá el historial de eventos y gestioná usuarios desde tu celular, estés donde estés."
     },
     {
-      title: "Organizá tus ubicaciones como prefieras",
-      description: "Agrupá tus ubicaciones por zona geográfica, tipo de propiedad o departamento, para tener una operación ordenada y una gestión más ágil."
+      title: "Protección perimetral exterior",
+      description: "Sensores de doble tecnología para exteriores que detectan intrusos antes de que ingresen a tu comercio, más sirena exterior disuasiva."
     },
     {
-      title: "Vos decidís quién sí y quién no",
-      description: "Asigná códigos de usuario a tus colaboradores para todas las ubicaciones y definí qué permisos tiene cada perfil dentro de la plataforma."
+      title: "Códigos de usuario para cada empleado",
+      description: "Asigná códigos personalizados a tus colaboradores para saber quién abre y cierra tu negocio en cada turno y llevar registro de accesos."
     }
   ];
 
@@ -4169,50 +4170,50 @@ function initKitsTienda(container) {
       name: "KIT CAM+",
       image: "kit-cam-plus.webp",
       slug: "kit-cam-plus",
-      description: "Ideal para hogares y comercios.",
+      description: "Camara Wi-Fi con grabacion en la nube, tarjeta de memoria, carteleria disuasiva y proteccion para exteriores.",
       price: "$ 89.999",
       installments: "6 cuotas sin interes",
-      features: ["Monitoreo 24/7", "App SmartHome", "Recibe alertas", "Soporte tecnico"]
+      features: ["Video en vivo desde la app", "Grabacion en la nube", "Carteleria disuasiva", "Gabinete y jaula de proteccion"]
     },
     {
       id: "kit-smart-1-1",
       name: "KIT SMART 1.1",
       image: "kit-smart-1-1.webp",
       slug: "kit-smart-1-1",
-      description: "Ideal para hogares y comercios.",
+      description: "Sistema de alarma con central, sensor de movimiento, sensor magnetico inalambrico, sirena interior y llavero.",
       price: "$ 108.999",
       installments: "6 cuotas sin interes",
-      features: ["Monitoreo 24/7", "Personaliza codigos", "Arma/desarma con la App", "Recibe alertas"]
+      features: ["Monitoreo 24/7", "1 sensor de movimiento", "1 sensor magnetico", "Control desde la app"]
     },
     {
       id: "kit-smart-2-2",
       name: "KIT SMART 2.2",
       image: "kit-smart-2-2.webp",
       slug: "kit-smart-2-2",
-      description: "Ideal para hogares y comercios.",
+      description: "Sistema de alarma con central, 2 sensores de movimiento, 2 sensores magneticos inalambricos, sirena interior y llavero.",
       price: "$ 126.999",
       installments: "6 cuotas sin interes",
-      features: ["Monitoreo 24/7", "2 sensores + 2 controles", "Panel interactivo", "Recibe alertas"]
+      features: ["Monitoreo 24/7", "2 sensores de movimiento", "2 sensores magneticos", "Control desde la app"]
     },
     {
       id: "kit-smart-cam-2-2",
       name: "KIT SMART CAM 2.2",
       image: "kit-smart-cam-2-2.webp",
       slug: "kit-smart-cam-2-2",
-      description: "Ideal para hogares y comercios.",
+      description: "Todo lo del Kit Smart 2.2 mas una camara Wi-Fi con grabacion en la nube y carteleria disuasiva.",
       price: "$ 134.999",
       installments: "6 cuotas sin interes",
-      features: ["Monitoreo 24/7", "Camara incluida", "Panel interactivo", "Recibe alertas"]
+      features: ["Monitoreo 24/7", "Camara Wi-Fi incluida", "Grabacion en la nube", "Alarma + video en un solo kit"]
     },
     {
       id: "kit-industrial",
       name: "KIT INDUSTRIAL",
       image: "kit-industrial.webp",
       slug: "kit-industrial",
-      description: "Ideal para industrias y grandes superficies.",
+      description: "Sistema de alarma con proteccion interior y exterior: sirena exterior, sensores de doble tecnologia y cobertura perimetral.",
       price: "$ 179.999",
       installments: "6 cuotas sin interes",
-      features: ["Monitoreo 24/7", "Cobertura ampliada", "Panel interactivo", "Soporte tecnico"]
+      features: ["Monitoreo 24/7", "Sirena exterior disuasiva", "Sensores doble tecnologia exterior", "Cobertura perimetral"]
     }
   ];
 
