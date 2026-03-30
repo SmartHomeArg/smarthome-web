@@ -2,10 +2,19 @@
      SECCION: PLANES HOME
 ========================= -->
 <section class="plans-home-section">
+  <!--
+    IMAGENES DE LAS CARDS (EDITABLE):
+    Reemplazar archivos en: components/planes-slide/
+    - plan-video-card.jpg
+    - plan-basic-card.jpg
+    - plan-plus-card.jpg
+    - plan-pro-card.jpg
+    - plan-comercial-card.jpg
+  -->
   <div class="plans-home-band">
     <div class="container">
       <div class="plans-home-heading">
-        <h2>Conocé nuestros planes de seguridad</h2>
+        <h2>Conoce nuestros planes de seguridad</h2>
       </div>
     </div>
   </div>
@@ -15,147 +24,164 @@
       <div class="plans-home-slider swiper" id="plansHomeSlider">
         <div class="swiper-wrapper">
 
-          <!-- PLAN 1 -->
+          <!-- ===================================================== -->
+          <!-- PLAN 1 - PLAN VIDEO (EDITABLE) -->
+          <!--
+            GUIA RAPIDA DE EDICION:
+            1) Nombre visible del plan: en .plan-home-card__tag
+            2) Texto corto del plan: en .plan-home-card__text
+            3) Lista de caracteristicas: <ul class="plan-home-card__features">
+            4) URL de destino del boton: data-plan-url
+            5) Imagen del plan: src de <img> (archivo dentro de components/planes-slide/)
+          -->
+          <!-- ===================================================== -->
           <div class="swiper-slide">
             <article class="plan-home-card">
               <div class="plan-home-card__image-wrap">
-                <img src="assets/img/plan-home-control.jpg" alt="Plan Home Control SmartHome"
-                  class="plan-home-card__image" />
-                <span class="plan-home-card__tag">Home Control</span>
+                <img src="components/planes-slide/plan-video-card.jpg" alt="Plan Video SmartHome" class="plan-home-card__image" />
+                <span class="plan-home-card__tag">Plan Video</span>
               </div>
 
               <div class="plan-home-card__body">
                 <p class="plan-home-card__text">
-                  Mayor interacción con tu hogar y control desde tu celular.
+                  Integracion de monitoreo visual para ver y verificar eventos en tiempo real.
                 </p>
 
-                <a href="contacto.html" class="plan-home-card__button">
+                <a href="#" class="plan-home-card__button" data-plan-url="pages/planes/plan-video.html">
                   Me interesa
                 </a>
 
                 <ul class="plan-home-card__features">
-                  <li>Monitoreo 24/7 con respuesta ante eventos.</li>
+                  <li>Monitoreo 24/7 con respaldo profesional.</li>
+                  <li>Visualizacion en vivo desde la app.</li>
+                  <li>Registro de eventos de video para verificacion.</li>
+                  <li>Alertas con contexto visual para respuesta rapida.</li>
+                  <li>Cobertura adaptable a hogar o comercio.</li>
+                </ul>
+              </div>
+            </article>
+          </div>
+
+          <!-- ===================================================== -->
+          <!-- PLAN 2 - PLAN BASIC (EDITABLE) -->
+          <!-- ===================================================== -->
+          <div class="swiper-slide">
+            <article class="plan-home-card">
+              <div class="plan-home-card__image-wrap">
+                <img src="components/planes-slide/plan-basic-card.jpg" alt="Plan Basic SmartHome" class="plan-home-card__image" />
+                <span class="plan-home-card__tag">Plan Basic</span>
+              </div>
+
+              <div class="plan-home-card__body">
+                <p class="plan-home-card__text">
+                  Proteccion esencial para hogar o comercio con monitoreo profesional y control diario.
+                </p>
+
+                <a href="#" class="plan-home-card__button" data-plan-url="pages/planes/plan-basic.html">
+                  Me interesa
+                </a>
+
+                <ul class="plan-home-card__features">
+                  <li>Monitoreo 24/7 de senales y eventos.</li>
                   <li>Alertas y notificaciones en tiempo real.</li>
                   <li>Armado y desarmado desde la app.</li>
-                  <li>Códigos de usuario personalizados.</li>
+                  <li>Codigos de usuario personalizados.</li>
+                  <li>Gestion de emergencias con central de monitoreo.</li>
                 </ul>
               </div>
             </article>
           </div>
 
-          <!-- PLAN 2 -->
+          <!-- ===================================================== -->
+          <!-- PLAN 3 - PLAN PLUS (EDITABLE) -->
+          <!-- ===================================================== -->
           <div class="swiper-slide">
             <article class="plan-home-card">
               <div class="plan-home-card__image-wrap">
-                <img src="assets/img/plan-home-live.jpg" alt="Plan Home Live SmartHome"
-                  class="plan-home-card__image" />
-                <span class="plan-home-card__tag">Home Live</span>
+                <img src="components/planes-slide/plan-plus-card.jpg" alt="Plan Plus SmartHome" class="plan-home-card__image" />
+                <span class="plan-home-card__tag">Plan Plus</span>
               </div>
 
               <div class="plan-home-card__body">
                 <p class="plan-home-card__text">
-                  Conectado en tiempo real con tu hogar, estés donde estés.
+                  Mas cobertura y control para quienes buscan una experiencia de seguridad mas completa.
                 </p>
 
-                <a href="contacto.html" class="plan-home-card__button">
+                <a href="#" class="plan-home-card__button" data-plan-url="pages/planes/plan-plus.html">
                   Me interesa
                 </a>
 
                 <ul class="plan-home-card__features">
-                  <li>Monitoreo 24/7 con deteccion de eventos.</li>
-                  <li>Notificaciones automáticas al celular.</li>
-                  <li>Control remoto desde la app.</li>
-                  <li>Integración con video y registros de eventos.</li>
-                  <li>Grabación de clips ante alertas importantes.</li>
+                  <li>Monitoreo 24/7 con seguimiento profesional.</li>
+                  <li>Control total desde app con alertas inteligentes.</li>
+                  <li>Historial de eventos para analisis y trazabilidad.</li>
+                  <li>Mayor nivel de automatizacion en la operacion diaria.</li>
+                  <li>Escalable con dispositivos y zonas adicionales.</li>
                 </ul>
               </div>
             </article>
           </div>
 
-          <!-- PLAN 3 -->
+          <!-- ===================================================== -->
+          <!-- PLAN 4 - PLAN PRO (EDITABLE) -->
+          <!-- ===================================================== -->
           <div class="swiper-slide">
             <article class="plan-home-card">
               <div class="plan-home-card__image-wrap">
-                <img src="assets/img/plan-home-plus.jpg" alt="Plan Home Plus SmartHome"
-                  class="plan-home-card__image" />
-                <span class="plan-home-card__tag">Home Plus</span>
+                <img src="components/planes-slide/plan-pro-card.jpg" alt="Plan Pro SmartHome" class="plan-home-card__image" />
+                <span class="plan-home-card__tag">Plan Pro</span>
               </div>
 
               <div class="plan-home-card__body">
                 <p class="plan-home-card__text">
-                  Seguridad más completa para hogares que buscan cobertura total.
+                  Seguridad avanzada para necesidades exigentes con mayor respaldo operativo.
                 </p>
 
-                <a href="contacto.html" class="plan-home-card__button">
+                <a href="#" class="plan-home-card__button" data-plan-url="pages/planes/plan-pro.html">
                   Me interesa
                 </a>
 
                 <ul class="plan-home-card__features">
-                  <li>Monitoreo profesional las 24 horas.</li>
-                  <li>Gestión completa desde app móvil.</li>
-                  <li>Mayor nivel de automatización y avisos.</li>
-                  <li>Historial de eventos del sistema.</li>
-                  <li>Escalable con cámaras y sensores adicionales.</li>
+                  <li>Monitoreo 24/7 con respuesta prioritaria.</li>
+                  <li>Mayor capacidad de prevencion y control.</li>
+                  <li>Gestion completa multiusuario desde app.</li>
+                  <li>Soporte tecnico proactivo y seguimiento continuo.</li>
+                  <li>Arquitectura escalable para operaciones de mayor demanda.</li>
                 </ul>
               </div>
             </article>
           </div>
-          <!-- PLAN 4 -->
+
+          <!-- ===================================================== -->
+          <!-- PLAN 5 - PLAN COMERCIAL (EDITABLE) -->
+          <!-- ===================================================== -->
           <div class="swiper-slide">
             <article class="plan-home-card">
               <div class="plan-home-card__image-wrap">
-                <img src="assets/img/plan-home-plus.jpg" alt="Plan Home Plus SmartHome"
-                  class="plan-home-card__image" />
-                <span class="plan-home-card__tag">Home Plus 2</span>
+                <img src="components/planes-slide/plan-comercial-card.jpg" alt="Plan Comercial SmartHome" class="plan-home-card__image" />
+                <span class="plan-home-card__tag">Plan Comercial</span>
               </div>
 
               <div class="plan-home-card__body">
                 <p class="plan-home-card__text">
-                  Seguridad más completa para hogares que buscan cobertura total.
+                  Pensado para negocios que necesitan continuidad operativa y control inteligente.
                 </p>
 
-                <a href="contacto.html" class="plan-home-card__button">
+                <a href="#" class="plan-home-card__button" data-plan-url="pages/planes/plan-comercial.html">
                   Me interesa
                 </a>
 
                 <ul class="plan-home-card__features">
-                  <li>Monitoreo profesional las 24 horas.</li>
-                  <li>Gestión completa desde app móvil.</li>
-                  <li>Mayor nivel de automatización y avisos.</li>
-                  <li>Historial de eventos del sistema.</li>
-                  <li>Escalable con cámaras y sensores adicionales.</li>
+                  <li>Monitoreo 24/7 para accesos y zonas criticas.</li>
+                  <li>Control remoto desde app en celular, tablet o PC.</li>
+                  <li>Alertas operativas en tiempo real.</li>
+                  <li>Canal multivia para comunicacion estable.</li>
+                  <li>Mantenimiento y diagnostico remoto.</li>
                 </ul>
               </div>
             </article>
           </div>
-          <!-- PLAN 5 -->
-          <div class="swiper-slide">
-            <article class="plan-home-card">
-              <div class="plan-home-card__image-wrap">
-                <img src="assets/img/plan-home-plus.jpg" alt="Plan Home Plus SmartHome"
-                  class="plan-home-card__image" />
-                <span class="plan-home-card__tag">Home Plus 3</span>
-              </div>
 
-              <div class="plan-home-card__body">
-                <p class="plan-home-card__text">
-                  Seguridad más completa para hogares que buscan cobertura total.
-                </p>
-
-                <a href="contacto.html" class="plan-home-card__button">
-                  Me interesa
-                </a>
-
-                <ul class="plan-home-card__features">
-                  <li>Monitoreo profesional las 24 horas.</li>
-                  <li>Gestión completa desde app móvil.</li>
-                  <li>Mayor nivel de automatización y avisos.</li>
-                  <li>Historial de eventos del sistema.</li>
-                  <li>Escalable con cámaras y sensores adicionales.</li>
-                </ul>
-              </div>
-            </article>
-          </div>
         </div>
       </div>
     </div>

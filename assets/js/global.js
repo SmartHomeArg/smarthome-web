@@ -960,13 +960,17 @@ async function cargarPlanesSlide() {
     const html = await response.text();
     container.innerHTML = html;
 
-    const imageBase = getSiteAssetUrl("components/planes-slide/");
     container.querySelectorAll(".plan-home-card__image").forEach((img) => {
       const currentSrc = img.getAttribute("src") || "";
-      const fileName = currentSrc.split("/").pop();
-      if (fileName) {
-        img.src = imageBase + fileName;
+      if (currentSrc) {
+        img.src = getSiteAssetUrl(currentSrc);
       }
+    });
+
+    container.querySelectorAll(".plan-home-card__button[data-plan-url]").forEach((button) => {
+      const targetPath = String(button.getAttribute("data-plan-url") || "").trim();
+      if (!targetPath) return;
+      button.setAttribute("href", getSiteAssetUrl(targetPath));
     });
 
     await ensureSwiperResources();
@@ -1953,14 +1957,17 @@ function initPlansHomeSlider() {
 
   function enablePlansHomeSwiper() {
     if (plansHomeSwiper) return;
-    // Determinar número de slides y usar el índice central como inicio
+    // En mobile, iniciar centrado en Plan Basic (orden esperado: Video, Basic, Plus, Pro, Comercial)
     const slides = sliderElement.querySelectorAll('.swiper-slide');
     const slidesCount = Math.max(1, slides.length);
-    const initialIndex = Math.floor(slidesCount / 2) || 0;
+    const BASIC_PLAN_INDEX_MOBILE = 1;
+    const initialIndex = Math.min(BASIC_PLAN_INDEX_MOBILE, slidesCount - 1);
 
     plansHomeSwiper = new Swiper(sliderElement, {
       loop: true,
       slidesPerView: 1.12,
+      centeredSlides: true,
+      initialSlide: initialIndex,
       spaceBetween: 18,
       speed: 600,
       grabCursor: true,
