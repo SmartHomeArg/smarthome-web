@@ -2454,6 +2454,38 @@ function initZonasProteccionHogar(options = {}) {
     return preferComponent ? componentImageBasePath + fileName : imageBasePath + fileName;
   };
 
+  const normalizeProductImageFrame = (imgElement) => {
+    if (!imgElement || !imgElement.classList.contains("zonas-proteccion-hogar__product-image")) return;
+
+    const width = Number(imgElement.naturalWidth || 0);
+    const height = Number(imgElement.naturalHeight || 0);
+    if (!width || !height) return;
+
+    const ratio = width / height;
+    let targetWidth = "82%";
+    let targetHeight = "82%";
+
+    if (ratio >= 1.7) {
+      targetWidth = "96%";
+      targetHeight = "70%";
+    } else if (ratio >= 1.3) {
+      targetWidth = "92%";
+      targetHeight = "76%";
+    } else if (ratio <= 0.72) {
+      targetWidth = "62%";
+      targetHeight = "94%";
+    } else if (ratio <= 0.9) {
+      targetWidth = "70%";
+      targetHeight = "90%";
+    } else {
+      targetWidth = "82%";
+      targetHeight = "82%";
+    }
+
+    imgElement.style.setProperty("--zonas-product-image-width", targetWidth);
+    imgElement.style.setProperty("--zonas-product-image-height", targetHeight);
+  };
+
   const setImageSourceWithFallback = (imgElement, fileName, preferComponent = false) => {
     if (!imgElement || !fileName) return;
 
@@ -2468,6 +2500,10 @@ function initZonasProteccionHogar(options = {}) {
       imgElement.src = fallbackSrc;
     };
 
+    imgElement.onload = function () {
+      normalizeProductImageFrame(imgElement);
+    };
+
     imgElement.dataset.fallbackApplied = "false";
     imgElement.src = primarySrc;
   };
@@ -2478,6 +2514,7 @@ function initZonasProteccionHogar(options = {}) {
   const tabsContainer = section.querySelector(".zonas-proteccion-hogar__tabs");
   const imageWrap = section.querySelector(".zonas-proteccion-hogar__image-wrap");
   const panel = section.querySelector(".zonas-proteccion-hogar__panel");
+  const panelText = section.querySelector(".zonas-proteccion-hogar__panel-text");
   const panelKicker = section.querySelector(".zonas-proteccion-hogar__panel-kicker");
   const panelTitle = section.querySelector(".zonas-proteccion-hogar__panel-title");
   const panelDescription = section.querySelector(".zonas-proteccion-hogar__panel-description");
@@ -2494,6 +2531,7 @@ function initZonasProteccionHogar(options = {}) {
     !tabsContainer ||
     !imageWrap ||
     !panel ||
+    !panelText ||
     !panelTitle ||
     !panelDescription ||
     !productImage ||
@@ -2570,6 +2608,8 @@ function initZonasProteccionHogar(options = {}) {
 
   let activeTab = tabsConfig[0].id;
   let activeIndex = 0;
+  let panelUpdateTimer = null;
+  let hasRenderedOnce = false;
 
   const isMobileViewport = () => window.matchMedia("(max-width: 991.98px)").matches;
 
@@ -2596,6 +2636,89 @@ function initZonasProteccionHogar(options = {}) {
   };
 
   const getActiveItems = () => sectionData[activeTab] || [];
+
+  const setPanelContent = (item) => {
+    if (panelKicker) {
+      panelKicker.textContent = tabLabelMap.get(activeTab) || "Detalle";
+    }
+
+    panelTitle.textContent = item.title || "";
+    panelDescription.textContent = item.description || "";
+    setImageSourceWithFallback(productImage, item.image, true);
+    productImage.alt = item.alt || item.title || "";
+
+    if (panelPoints) {
+      const highlights = Array.isArray(item.highlights) ? item.highlights : [];
+      panelPoints.innerHTML = highlights.map((point) => `<li>${point}</li>`).join("");
+      panelPoints.hidden = !highlights.length;
+    }
+  };
+
+  const runPanelTransition = (callback) => {
+    if (!hasRenderedOnce) {
+      callback();
+      return;
+    }
+
+    if (panelUpdateTimer) {
+      window.clearTimeout(panelUpdateTimer);
+    }
+
+    panel.classList.add("is-updating");
+
+    panelUpdateTimer = window.setTimeout(() => {
+      callback();
+      requestAnimationFrame(() => {
+        panel.classList.remove("is-updating");
+      });
+    }, 140);
+  };
+
+  const syncPanelTextHeight = () => {
+    const allItems = tabsConfig.flatMap((tab) => Array.isArray(tab.items) ? tab.items : []);
+    if (!allItems.length) return;
+
+    const measurement = panelText.cloneNode(true);
+    const measurementPoints = measurement.querySelector(".zonas-proteccion-hogar__panel-points");
+    const measurementKicker = measurement.querySelector(".zonas-proteccion-hogar__panel-kicker");
+    const measurementTitle = measurement.querySelector(".zonas-proteccion-hogar__panel-title");
+    const measurementDescription = measurement.querySelector(".zonas-proteccion-hogar__panel-description");
+
+    measurement.style.position = "absolute";
+    measurement.style.visibility = "hidden";
+    measurement.style.pointerEvents = "none";
+    measurement.style.left = "-9999px";
+    measurement.style.top = "0";
+    measurement.style.width = `${panelText.getBoundingClientRect().width || panel.getBoundingClientRect().width}px`;
+    measurement.style.minHeight = "0";
+    measurement.style.height = "auto";
+
+    section.appendChild(measurement);
+
+    let maxHeight = 0;
+
+    allItems.forEach((item) => {
+      if (measurementKicker) {
+        measurementKicker.textContent = tabLabelMap.get(
+          tabsConfig.find((tab) => (tab.items || []).includes(item))?.id || activeTab
+        ) || "Detalle";
+      }
+
+      if (measurementTitle) measurementTitle.textContent = item.title || "";
+      if (measurementDescription) measurementDescription.textContent = item.description || "";
+
+      if (measurementPoints) {
+        const highlights = Array.isArray(item.highlights) ? item.highlights : [];
+        measurementPoints.innerHTML = highlights.map((point) => `<li>${point}</li>`).join("");
+        measurementPoints.hidden = !highlights.length;
+      }
+
+      maxHeight = Math.max(maxHeight, measurement.offsetHeight);
+    });
+
+    section.removeChild(measurement);
+    panelText.style.minHeight = `${Math.ceil(maxHeight)}px`;
+  };
 
   function render() {
     const items = getActiveItems();
@@ -2635,20 +2758,11 @@ function initZonasProteccionHogar(options = {}) {
       }
     });
 
-    if (panelKicker) {
-      panelKicker.textContent = tabLabelMap.get(activeTab) || "Detalle";
-    }
+    runPanelTransition(() => {
+      setPanelContent(currentItem);
+    });
 
-    panelTitle.textContent = currentItem.title || "";
-    panelDescription.textContent = currentItem.description || "";
-    setImageSourceWithFallback(productImage, currentItem.image, true);
-    productImage.alt = currentItem.alt || currentItem.title || "";
-
-    if (panelPoints) {
-      const highlights = Array.isArray(currentItem.highlights) ? currentItem.highlights : [];
-      panelPoints.innerHTML = highlights.map((point) => `<li>${point}</li>`).join("");
-      panelPoints.hidden = !highlights.length;
-    }
+    hasRenderedOnce = true;
   }
 
   tabs.forEach((tab) => {
@@ -2694,9 +2808,11 @@ function initZonasProteccionHogar(options = {}) {
     if (!isMobileViewport()) {
       openPanel();
     }
+    syncPanelTextHeight();
   });
 
   panel.setAttribute("aria-hidden", "false");
+  syncPanelTextHeight();
   render();
 }
 

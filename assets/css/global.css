@@ -5272,7 +5272,7 @@ FOOTER
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(320px, 1fr);
-  align-items: center;
+  align-items: start;
   gap: 42px;
   margin-bottom: 54px;
 }
@@ -5282,6 +5282,7 @@ FOOTER
 .zonas-proteccion-hogar__visual {
   position: relative;
   min-width: 0;
+  align-self: start;
 }
 
 .zonas-proteccion-hogar__image-wrap {
@@ -5360,9 +5361,9 @@ FOOTER
   padding: 34px 26px 28px;
   box-shadow: 0 26px 70px rgba(15, 33, 70, 0.12);
   min-height: 500px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: start;
   transition: transform 0.28s ease, opacity 0.28s ease, visibility 0.28s ease;
 }
 
@@ -5383,6 +5384,7 @@ FOOTER
 
 .zonas-proteccion-hogar__panel-text {
   padding-right: 16px;
+  min-height: 0;
 }
 
 .zonas-proteccion-hogar__panel-kicker {
@@ -5429,6 +5431,7 @@ FOOTER
   align-items: center;
   gap: 14px;
   margin-top: 26px;
+  align-self: end;
 }
 
 .zonas-proteccion-hogar__arrow {
@@ -5453,16 +5456,40 @@ FOOTER
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 240px;
+  width: 100%;
+  min-height: 260px;
+  height: 260px;
+  overflow: hidden;
+  padding: 10px;
 }
 
 .zonas-proteccion-hogar__product-image {
   display: block;
   max-width: 100%;
-  max-height: 260px;
-  width: auto;
-  height: auto;
+  max-height: 100%;
+  width: var(--zonas-product-image-width, 82%);
+  height: var(--zonas-product-image-height, 82%);
   object-fit: contain;
+}
+
+.zonas-proteccion-hogar__panel-kicker,
+.zonas-proteccion-hogar__panel-title,
+.zonas-proteccion-hogar__panel-description,
+.zonas-proteccion-hogar__panel-points,
+.zonas-proteccion-hogar__product-image {
+  transition:
+    opacity 0.22s ease,
+    transform 0.28s ease;
+  will-change: opacity, transform;
+}
+
+.zonas-proteccion-hogar__panel.is-updating .zonas-proteccion-hogar__panel-kicker,
+.zonas-proteccion-hogar__panel.is-updating .zonas-proteccion-hogar__panel-title,
+.zonas-proteccion-hogar__panel.is-updating .zonas-proteccion-hogar__panel-description,
+.zonas-proteccion-hogar__panel.is-updating .zonas-proteccion-hogar__panel-points,
+.zonas-proteccion-hogar__panel.is-updating .zonas-proteccion-hogar__product-image {
+  opacity: 0;
+  transform: translateY(10px);
 }
 
 /* =========================
@@ -5650,6 +5677,12 @@ FOOTER
     padding: 42px 20px 22px;
     /* TransiciÃ³n suave cuando se abre/cierra */
     transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease, margin 0.35s ease;
+  }
+
+  .zonas-proteccion-hogar__product-image-wrap {
+    min-height: 220px;
+    height: 220px;
+    padding: 8px;
   }
 
   .zonas-proteccion-hogar__panel-close {
