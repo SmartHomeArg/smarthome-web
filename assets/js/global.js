@@ -2627,6 +2627,7 @@ function initZonasProteccionHogar(options = {}) {
   let hasRenderedOnce = false;
 
   const isMobileViewport = () => window.matchMedia("(max-width: 991.98px)").matches;
+  const shouldSyncPanelTextHeight = () => window.matchMedia("(min-width: 992px)").matches;
 
   const clampIndex = (index, total) => {
     if (!total) return 0;
@@ -2690,6 +2691,11 @@ function initZonasProteccionHogar(options = {}) {
   };
 
   const syncPanelTextHeight = () => {
+    if (!shouldSyncPanelTextHeight()) {
+      panelText.style.minHeight = "0";
+      return;
+    }
+
     const allItems = tabsConfig.flatMap((tab) => Array.isArray(tab.items) ? tab.items : []);
     if (!allItems.length) return;
 
