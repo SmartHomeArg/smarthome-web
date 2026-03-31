@@ -1,4 +1,4 @@
-﻿/* ================================================= */
+/* ================================================= */
 /* RESET CSS */
 /* ================================================= */
 
@@ -137,7 +137,7 @@ main {
 .header-spacer {
   flex: 0 0 auto;
   width: 140px;
-  /* ajustar segÃºn el ancho visual del logo */
+  /* ajustar según el ancho visual del logo */
 }
 
 @media (max-width: 991.98px) {
@@ -201,8 +201,8 @@ main {
 
 }
 
-/* Asegurar que la lÃ­nea tambiÃ©n aparezca en foco/activo y cuando
-   el item estÃ¡ abierto por JS (.is-open) â€” Ãºtil en touch devices */
+/* Asegurar que la línea también aparezca en foco/activo y cuando
+   el item está abierto por JS (.is-open) — útil en touch devices */
 .menu-principal .nav-link:focus-visible::before,
 .menu-principal .nav-link:active::before,
 .menu-principal .nav-item.is-open > .nav-link::before,
@@ -423,8 +423,8 @@ main {
   }
 }
 
-/* Mostrar y rotar tambiÃ©n cuando se agrega la clase `.is-open`
-   (usada por la lÃ³gica tÃ¡ctil para toggle por touch/click) */
+/* Mostrar y rotar también cuando se agrega la clase `.is-open`
+   (usada por la lógica táctil para toggle por touch/click) */
 .como-dropdown.is-open .como-menu {
   display: block !important;
 }
@@ -2220,7 +2220,7 @@ FOOTER
 /* =========================================================
    HERO PRINCIPAL
    - Estructura global reutilizable
-   - Imagen de fondo con recorte automÃ¡tico
+   - Imagen de fondo con recorte automático
    - Texto a la izquierda
    - Caja a la derecha
 ========================================================= */
@@ -2713,7 +2713,7 @@ FOOTER
 }
 
 /* Ajustes para que el formulario (azul + blanco) rellene todo el
-   rectÃ¡ngulo del contenedor y no deje el Ã¡rea "transparente" visible. */
+   rectángulo del contenedor y no deje el área "transparente" visible. */
 .hero-form-box {
   /* movemos el espaciado adentro de la tarjeta: */
   padding: 0;
@@ -2974,8 +2974,8 @@ FOOTER
   line-height: 1.35;
 }
 
-/* Centrar y ampliar el mensaje de Ã©xito dentro de la tarjeta del hero
-   para que quede alineado con el botÃ³n del formulario. */
+/* Centrar y ampliar el mensaje de éxito dentro de la tarjeta del hero
+   para que quede alineado con el botón del formulario. */
 .hero-form-body .form-message.is-success {
   display: block;
   width: 100%;
@@ -3301,7 +3301,7 @@ FOOTER
     font-weight: 700;
   }
 
-  /* En mobile no mostrar lÃ­nea azul fija de feedback activo */
+  /* En mobile no mostrar línea azul fija de feedback activo */
   .menu-principal .nav-link.active::before,
   .menu-principal .nav-item.is-open > .nav-link::before,
   .como-dropdown.is-open > .nav-link::before {
@@ -3721,7 +3721,7 @@ FOOTER
 }
 
 /* =========================================================
-   SECCIÃ“N: COTIZAR HOME
+   SECCIÓN: COTIZAR HOME
 ========================================================= */
 
 .cotizar-home-section {
@@ -3880,7 +3880,7 @@ FOOTER
 .equipamiento-home {
   padding: 90px 0;
   background-color: #f5f5f5;
-  /* cambialo o quitÃ¡lo si no querÃ©s fondo gris */
+  /* cambialo o quitálo si no querés fondo gris */
 }
 
 .equipamiento-home__intro {
@@ -4571,13 +4571,13 @@ FOOTER
 }
 
 .whatsapp-float img {
-  width: 64px;
-  height: 64px;
+  width: 83px;
+  height: 83px;
   object-fit: contain;
   display: block;
 }
 
-/* ApariciÃ³n al cargar */
+/* Aparición al cargar */
 @keyframes whatsappEntrance {
   to {
     opacity: 1;
@@ -4585,7 +4585,7 @@ FOOTER
   }
 }
 
-/* PequeÃ±o salto cada algunos segundos */
+/* Pequeño salto cada algunos segundos */
 @keyframes whatsappBounce {
   0%, 85%, 100% {
     transform: translateY(0) scale(1);
@@ -4606,8 +4606,8 @@ FOOTER
   }
 
   .whatsapp-float img {
-    width: 58px;
-    height: 58px;
+    width: 75px;
+    height: 75px;
   }
 }
 
@@ -4619,15 +4619,15 @@ FOOTER
   }
 
   .whatsapp-float img {
-    width: 54px;
-    height: 54px;
+    width: 70px;
+    height: 70px;
   }
 }
 
 /* =========================================================
-   Suavizar la apertura/cierre del collapse del menÃº en mobile
+   Suavizar la apertura/cierre del collapse del menú en mobile
    - Aplica solo en anchos <= 991.98px para no interferir en desktop
-   - Usa transiciÃ³n de max-height para un cierre mÃ¡s fluido
+   - Usa transición de max-height para un cierre más fluido
 ========================================================= */
 @media (max-width: 991.98px) {
   .navbar-collapse.collapse {
@@ -4637,7 +4637,7 @@ FOOTER
   }
 
   .navbar-collapse.collapse.show {
-    /* valor suficientemente alto para contener el menÃº; no debe cortar contenido */
+    /* valor suficientemente alto para contener el menú; no debe cortar contenido */
     max-height: 1200px;
   }
 }
@@ -5675,7 +5675,7 @@ FOOTER
     margin: 16px auto 0;
     border-radius: 24px;
     padding: 42px 20px 22px;
-    /* TransiciÃ³n suave cuando se abre/cierra */
+    /* Transición suave cuando se abre/cierra */
     transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease, margin 0.35s ease;
   }
 
@@ -5697,19 +5697,19 @@ FOOTER
     margin: -20px auto 0;
   }
 
-  /* SecciÃ³n de beneficios con transiciÃ³n suave */
+  /* Sección de beneficios con transición suave */
   .zonas-proteccion-hogar__benefits {
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
     overflow: visible;
     padding-bottom: 0;
-    /* TransiciÃ³n para que se mueva cuando el panel se abre/cierra */
+    /* Transición para que se mueva cuando el panel se abre/cierra */
     transition: margin-top 0.35s ease;
     margin-top: 0;
   }
 
-  /* Cuando el panel estÃ¡ colapsado, los beneficios suben */
+  /* Cuando el panel está colapsado, los beneficios suben */
   .zonas-proteccion-hogar__benefits.benefits-collapsed {
     margin-top: -480px;
   }
@@ -5726,7 +5726,7 @@ FOOTER
 }
 
 /* ================================================= */
-/* SECCIÃ“N: CARACTERÃSTICAS DEL PANEL INTELIGENTE */
+/* SECCIÓN: CARACTERÍSTICAS DEL PANEL INTELIGENTE */
 /* ================================================= */
 
 .section--caracteristicas-panel {
@@ -5841,7 +5841,7 @@ FOOTER
   width: 100% !important;
 }
 
-/* Flechas de navegaciÃ³n */
+/* Flechas de navegación */
 .caracteristicas-panel__arrow {
   width: 44px;
   height: 44px;

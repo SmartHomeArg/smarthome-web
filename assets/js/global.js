@@ -1,18 +1,18 @@
-﻿/**
+/**
  * =========================================================
  * SmartHome Web - Global JavaScript
  * Archivo: assets/js/global.js
  *
- * Este archivo contiene toda la lÃ³gica JavaScript global
+ * Este archivo contiene toda la lógica JavaScript global
  * del sitio institucional SmartHome.
  *
  * Principios:
- * - CÃ³digo simple
- * - CÃ³digo claro
- * - CÃ³digo mantenible
+ * - Código simple
+ * - Código claro
+ * - Código mantenible
  * - Sin dependencias innecesarias
  *
- * Toda la lÃ³gica estÃ¡ encapsulada para evitar contaminar
+ * Toda la lógica está encapsulada para evitar contaminar
  * el scope global del navegador.
  * =========================================================
  */
@@ -23,7 +23,7 @@
 
 
   /* =========================================================
-     CONFIGURACIÃ“N DEL SITIO
+     CONFIGURACIÓN DEL SITIO
      ========================================================= */
 
   const SITE_CONFIG = {
@@ -53,7 +53,7 @@
   }
 
   /**
-   * Selecciona mÃºltiples elementos
+   * Selecciona múltiples elementos
    */
   function $$(selector) {
     return document.querySelectorAll(selector);
@@ -66,17 +66,22 @@
     return document.querySelector(selector) !== null;
   }
 
+  /**
+   * Fuerza la decodificacion UTF-8 de respuestas de texto para evitar
+   * mojibake cuando el servidor no envia correctamente el charset.
+   */
+
 
 
   /* =========================================================
-     INICIALIZACIÃ“N DEL SITIO
+     INICIALIZACIÓN DEL SITIO
      ========================================================= */
 
   document.addEventListener("DOMContentLoaded", initSite);
 
 
   /**
-   * FunciÃ³n principal de inicializaciÃ³n
+   * Función principal de inicialización
    */
 
   function initSite() {
@@ -114,7 +119,7 @@
 
 
   /* =========================================================
-     LAZY LOADING DE IMÃGENES
+     LAZY LOADING DE IMÁGENES
      ========================================================= */
 
   function initLazyLoading() {
@@ -180,6 +185,11 @@
 
 })();
 
+async function responseAsUtf8Text(response) {
+  const buffer = await response.arrayBuffer();
+  return new TextDecoder("utf-8").decode(buffer);
+}
+
 /* =========================================
    MARCAR MENU ACTIVO
 ========================================= */
@@ -226,7 +236,7 @@ function activarMenu() {
 
   });
 
-  // Si una pÃ¡gina pertenece a un dropdown, marcar activo el texto padre
+  // Si una página pertenece a un dropdown, marcar activo el texto padre
   const parentDropdowns = document.querySelectorAll(".menu-principal .como-dropdown");
 
   parentDropdowns.forEach(dropdown => {
@@ -381,8 +391,8 @@ function injectStructuredData() {
       name: "Contacto",
       image: "assets/img/pages/contacto/contacto-hero.jpg",
       faq: [
-        { q: "Estamos para ayudarte con cualquier consulta", a: "CompletÃ¡ el formulario y nuestro equipo te contactarÃ¡ a la brevedad. Si necesitÃ¡s, podÃ©s adjuntar archivos para que entendamos mejor tu caso." },
-        { q: "Canales de atenciÃ³n", a: "Este formulario estÃ¡ pensado para centralizar consultas comerciales, tÃ©cnicas y administrativas en una sola vÃ­a de contacto." }
+        { q: "Estamos para ayudarte con cualquier consulta", a: "Completá el formulario y nuestro equipo te contactará a la brevedad. Si necesitás, podés adjuntar archivos para que entendamos mejor tu caso." },
+        { q: "Canales de atención", a: "Este formulario está pensado para centralizar consultas comerciales, técnicas y administrativas en una sola vía de contacto." }
       ]
     },
     "pages/quienes-somos.html": { kind: "about", name: "Quienes Somos", image: "assets/img/pages/quienes-somos/hero-quienes-somos.jpg" },
@@ -708,7 +718,7 @@ function getSiteAssetUrl(relativePath) {
 
 function cargarHeader() {
   fetch(getSiteAssetUrl('components/header/header.html'))
-    .then(response => response.text())
+    .then(response => responseAsUtf8Text(response))
     .then(data => {
       const headerEl = document.getElementById('header');
       if (headerEl) headerEl.innerHTML = data;
@@ -732,7 +742,7 @@ function cargarHeader() {
       });
 
       // En links externos con target=_blank, quitar foco luego del click
-      // para evitar feedback visual persistente en la pÃ¡gina actual.
+      // para evitar feedback visual persistente en la página actual.
       document.querySelectorAll('.menu-principal a[target="_blank"]').forEach(link => {
         if (link.dataset.blurOnClickInit === 'true') return;
         link.dataset.blurOnClickInit = 'true';
@@ -750,7 +760,7 @@ function cargarHeader() {
         // fail silently if function not available
       }
 
-      // Inicializar comportamiento tÃ¡ctil para dropdowns del header y auto-close del menu mÃ³vil
+      // Inicializar comportamiento táctil para dropdowns del header y auto-close del menu móvil
       try {
         initHeaderDropdownTouch();
       } catch (e) {
@@ -773,7 +783,7 @@ function cargarHeader() {
 
 function cargarFooter() {
   fetch(getSiteAssetUrl('components/footer/footer.html'))
-    .then(response => response.text())
+    .then(response => responseAsUtf8Text(response))
     .then(data => {
       const footerEl = document.getElementById('footer');
       if (footerEl) footerEl.innerHTML = data;
@@ -819,50 +829,50 @@ async function cargarHero() {
 
     const heroConfig = {
       index: {
-        title: '<span class="text-brand">ProtegÃ© lo que mÃ¡s querÃ©s</span> con seguridad inteligente',
-        description: "DescubrÃ­ alarmas, cÃ¡maras y monitoreo profesional para vivir con mÃ¡s tranquilidad todos los dÃ­as.",
+        title: '<span class="text-brand">Protegé lo que más querés</span> con seguridad inteligente',
+        description: "Descubrí alarmas, cámaras y monitoreo profesional para vivir con más tranquilidad todos los días.",
         origen: "index",
         image: "components/hero/hero-index.jpg"
       },
       hogar: {
         title: '<span class="text-brand">Seguridad inteligente</span> para tu hogar',
-        description: "Alarmas, cÃ¡maras y monitoreo profesional para proteger tu casa con una soluciÃ³n moderna y confiable.",
+        description: "Alarmas, cámaras y monitoreo profesional para proteger tu casa con una solución moderna y confiable.",
         origen: "hogar",
         image: "components/hero/hero-hogar.jpg"
       },
       comercio: {
         title: '<span class="text-brand">Seguridad inteligente</span> para tu comercio',
-        description: "Alarmas, cÃ¡maras y monitoreo profesional para proteger tu comercio con una soluciÃ³n moderna y confiable.",
+        description: "Alarmas, cámaras y monitoreo profesional para proteger tu comercio con una solución moderna y confiable.",
         origen: "comercio",
         image: "components/hero/hero-comercio.jpg"
       },
       "plan-basic": {
         title: '<span class="text-brand">Plan Basic</span> para empezar a proteger tu hogar',
-        description: "Una soluciÃ³n simple y efectiva para dar el primer paso en seguridad con respaldo profesional.",
+        description: "Una solución simple y efectiva para dar el primer paso en seguridad con respaldo profesional.",
         origen: "plan-basic",
         image: "components/hero/hero-plan-basic.jpg"
       },
       "plan-comercial": {
         title: '<span class="text-brand">Plan Comercial</span> pensado para tu negocio',
-        description: "ProtecciÃ³n integral para tu local con monitoreo activo, alertas rÃ¡pidas y soporte especializado.",
+        description: "Protección integral para tu local con monitoreo activo, alertas rápidas y soporte especializado.",
         origen: "plan-comercial",
         image: "components/hero/hero-plan-comercial.jpg"
       },
       "plan-plus": {
         title: '<span class="text-brand">Plan Plus</span> con mayor cobertura y control',
-        description: "Ideal para quienes buscan mÃ¡s funcionalidades y una experiencia de seguridad mÃ¡s completa.",
+        description: "Ideal para quienes buscan más funcionalidades y una experiencia de seguridad más completa.",
         origen: "plan-plus",
         image: "components/hero/hero-plan-plus.jpg"
       },
       "plan-pro": {
         title: '<span class="text-brand">Plan Pro</span> para operaciones exigentes',
-        description: "MÃ¡ximo nivel de protecciÃ³n y gestiÃ³n para comercios con mayor dinÃ¡mica y necesidades avanzadas.",
+        description: "Máximo nivel de protección y gestión para comercios con mayor dinámica y necesidades avanzadas.",
         origen: "plan-pro",
         image: "components/hero/hero-plan-pro.jpg"
       },
       "plan-video": {
         title: '<span class="text-brand">Plan Video</span> con vigilancia en tiempo real',
-        description: "VisualizÃ¡ tus espacios desde donde estÃ©s y complementÃ¡ tu seguridad con monitoreo profesional.",
+        description: "Visualizá tus espacios desde donde estés y complementá tu seguridad con monitoreo profesional.",
         origen: "plan-video",
         image: "components/hero/hero-plan-video.jpg"
       }
@@ -886,7 +896,7 @@ async function cargarHero() {
       throw new Error(`No se pudo cargar hero.html: ${response.status}`);
     }
 
-    const heroHTML = await response.text();
+    const heroHTML = await responseAsUtf8Text(response);
     heroContainer.innerHTML = heroHTML;
 
     const config = heroConfig[pageKey] || heroConfig.index;
@@ -930,7 +940,7 @@ function cargarPorQueSmartHome() {
       if (!response.ok) {
         throw new Error(`No se pudo cargar por-que-smarthome.html: ${response.status}`);
       }
-      return response.text();
+      return responseAsUtf8Text(response);
     })
     .then(html => {
       container.innerHTML = html;
@@ -958,7 +968,7 @@ async function cargarPlanesSlide() {
       throw new Error(`No se pudo cargar planes-slide.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     container.querySelectorAll(".plan-home-card__image").forEach((img) => {
@@ -995,7 +1005,7 @@ async function cargarCotizar() {
       throw new Error(`No se pudo cargar cotizar.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     container.querySelectorAll('a[href]').forEach(link => {
@@ -1027,7 +1037,7 @@ async function cargarEquipamiento() {
       throw new Error(`No se pudo cargar equipamiento.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     const backImg = container.querySelector(".equipamiento-home__img-back");
@@ -1064,7 +1074,7 @@ async function cargarFuncionalidades() {
       throw new Error(`No se pudo cargar funcionalidades.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     container.querySelectorAll(".funcionalidades-home__bg[data-bg]").forEach(bgEl => {
@@ -1094,7 +1104,7 @@ async function cargarTuHogarProtegido() {
       throw new Error(`No se pudo cargar tu-hogar-protegido.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     const images = container.querySelectorAll("img");
@@ -1120,7 +1130,7 @@ async function cargarTuComercioProtegido() {
       throw new Error(`No se pudo cargar tu-comercio-protegido.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     const images = container.querySelectorAll("img");
@@ -1135,13 +1145,13 @@ async function cargarTuComercioProtegido() {
 /* =========================================================
    FORMULARIO GLOBAL DEL HERO
    El formulario vive dentro de components/hero/hero.html
-   y aquÃ­ solo se inicializa su lÃ³gica y origen.
+   y aquí solo se inicializa su lógica y origen.
 ========================================================= */
 
 async function cargarHeroForm() {
   const heroFormContainer = document.getElementById("hero-form-container");
 
-  /* Si la pÃ¡gina no tiene contenedor, no hacemos nada */
+  /* Si la página no tiene contenedor, no hacemos nada */
   if (!heroFormContainer) return;
 
   try {
@@ -1180,7 +1190,7 @@ function initHeroLeadForm() {
   form.dataset.initialized = 'true';
 
   if (origenInput && !origenInput.value) {
-    origenInput.value = document.title || 'PÃ¡gina sin tÃ­tulo';
+    origenInput.value = document.title || 'Página sin título';
   }
 
   if (formLoadedAtInput) {
@@ -1269,28 +1279,28 @@ function initHeroLeadForm() {
     const email = emailInput ? emailInput.value.trim() : '';
 
     if (nombre.length < 3) {
-      setFieldError(nombreInput, 'IngresÃ¡ nombre y apellido (mÃ­nimo 3 caracteres).');
+      setFieldError(nombreInput, 'Ingresá nombre y apellido (mínimo 3 caracteres).');
       isValid = false;
     }
 
-    // Ahora requerimos exactamente 10 dÃ­gitos para telÃ©fono
+    // Ahora requerimos exactamente 10 dígitos para teléfono
     if (telefono.length !== 10) {
-      setFieldError(telefonoInput, 'IngresÃ¡ 10 dÃ­gitos, sin 0 y sin 15.');
+      setFieldError(telefonoInput, 'Ingresá 10 dígitos, sin 0 y sin 15.');
       isValid = false;
     }
 
     if (!provincia) {
-      setFieldError(provinciaInput, 'SeleccionÃ¡ una provincia.');
+      setFieldError(provinciaInput, 'Seleccioná una provincia.');
       isValid = false;
     }
 
     if (!emailIsValid(email)) {
-      setFieldError(emailInput, 'IngresÃ¡ un mail vÃ¡lido (ejemplo: nombre@dominio.com).');
+      setFieldError(emailInput, 'Ingresá un mail válido (ejemplo: nombre@dominio.com).');
       isValid = false;
     }
 
     if (!isValid) {
-      showMessage('RevisÃ¡ los campos marcados antes de enviar.', 'error');
+      showMessage('Revisá los campos marcados antes de enviar.', 'error');
     }
 
     return isValid;
@@ -1303,7 +1313,7 @@ function initHeroLeadForm() {
 
     if (!validateForm()) return;
 
-    // Cambiar texto del botÃ³n a 'Enviando...' y deshabilitarlo
+    // Cambiar texto del botón a 'Enviando...' y deshabilitarlo
     const originalButtonText = submitButton ? submitButton.textContent.trim() : '';
     if (submitButton) {
       submitButton.disabled = true;
@@ -1323,7 +1333,7 @@ function initHeroLeadForm() {
       mail: emailInput ? emailInput.value.trim() : '',
       website: websiteInput ? websiteInput.value.trim() : '',
       tiempoSegundos: tiempoSegundos,
-      pagina: origenInput ? origenInput.value : (document.title || 'PÃ¡gina sin tÃ­tulo'),
+      pagina: origenInput ? origenInput.value : (document.title || 'Página sin título'),
       url: window.location.href,
       userAgent: navigator.userAgent
     };
@@ -1340,7 +1350,7 @@ function initHeroLeadForm() {
       const result = await response.json();
 
       if (result.ok) {
-        // Mostrar mensaje de Ã©xito centrado antes de redirigir
+        // Mostrar mensaje de éxito centrado antes de redirigir
         showMessage('Datos enviados correctamente. Redirigiendo...', 'success');
 
         setTimeout(function () {
@@ -1351,17 +1361,17 @@ function initHeroLeadForm() {
           window.location.href = successURL;
         }, 700);
       } else {
-        showMessage('No se pudo enviar el formulario. RevisÃ¡ los datos e intentÃ¡ nuevamente.', 'error');
+        showMessage('No se pudo enviar el formulario. Revisá los datos e intentá nuevamente.', 'error');
         console.error('Respuesta del backend:', result);
       }
     } catch (error) {
-      showMessage('OcurriÃ³ un error al enviar. IntentÃ¡ nuevamente en unos minutos.', 'error');
+      showMessage('Ocurrió un error al enviar. Intentá nuevamente en unos minutos.', 'error');
       console.error('Error enviando formulario:', error);
     } finally {
-      // Restaurar texto y estado del botÃ³n si no se redirige
+      // Restaurar texto y estado del botón si no se redirige
       if (submitButton) {
         submitButton.disabled = false;
-        // Restaurar texto original despuÃ©s de un pequeÃ±o retraso para que el usuario vea el cambio
+        // Restaurar texto original después de un pequeño retraso para que el usuario vea el cambio
         const original = submitButton.dataset.originalText || 'Enviar';
         submitButton.textContent = original;
         delete submitButton.dataset.originalText;
@@ -1422,30 +1432,30 @@ function initContactLeadForm() {
   const IMAGE_COMPRESS_QUALITY = 0.8;
 
   const provinciasCiudades = {
-    'Buenos Aires': ['La Plata', 'Mar del Plata', 'BahÃ­a Blanca', 'San Isidro'],
-    'CABA': ['Ciudad AutÃ³noma de Buenos Aires'],
-    'Catamarca': ['San Fernando del Valle de Catamarca', 'BelÃ©n'],
-    'Chaco': ['Resistencia', 'Presidencia Roque SÃ¡enz PeÃ±a'],
+    'Buenos Aires': ['La Plata', 'Mar del Plata', 'Bahía Blanca', 'San Isidro'],
+    'CABA': ['Ciudad Autónoma de Buenos Aires'],
+    'Catamarca': ['San Fernando del Valle de Catamarca', 'Belén'],
+    'Chaco': ['Resistencia', 'Presidencia Roque Sáenz Peña'],
     'Chubut': ['Rawson', 'Comodoro Rivadavia', 'Puerto Madryn'],
-    'CÃ³rdoba': ['CÃ³rdoba', 'Villa Carlos Paz', 'RÃ­o Cuarto'],
+    'Córdoba': ['Córdoba', 'Villa Carlos Paz', 'Río Cuarto'],
     'Corrientes': ['Corrientes', 'Goya'],
-    'Entre RÃ­os': ['ParanÃ¡', 'Concordia', 'GualeguaychÃº'],
+    'Entre Ríos': ['Paraná', 'Concordia', 'Gualeguaychú'],
     'Formosa': ['Formosa', 'Clorinda'],
-    'Jujuy': ['San Salvador de Jujuy', 'PalpalÃ¡'],
+    'Jujuy': ['San Salvador de Jujuy', 'Palpalá'],
     'La Pampa': ['Santa Rosa', 'General Pico'],
     'La Rioja': ['La Rioja', 'Chilecito'],
     'Mendoza': ['Mendoza', 'Godoy Cruz', 'San Rafael'],
     'Misiones': ['Posadas', 'Eldorado'],
-    'NeuquÃ©n': ['NeuquÃ©n', 'San MartÃ­n de los Andes'],
-    'RÃ­o Negro': ['Viedma', 'Bariloche', 'General Roca'],
+    'Neuquén': ['Neuquén', 'San Martín de los Andes'],
+    'Río Negro': ['Viedma', 'Bariloche', 'General Roca'],
     'Salta': ['Salta', 'Tartagal'],
     'San Juan': ['San Juan', 'Rivadavia', 'Rawson'],
     'San Luis': ['San Luis', 'Villa Mercedes'],
-    'Santa Cruz': ['RÃ­o Gallegos', 'Caleta Olivia'],
+    'Santa Cruz': ['Río Gallegos', 'Caleta Olivia'],
     'Santa Fe': ['Santa Fe', 'Rosario', 'Rafaela'],
     'Santiago del Estero': ['Santiago del Estero', 'La Banda'],
-    'Tierra del Fuego': ['Ushuaia', 'RÃ­o Grande'],
-    'TucumÃ¡n': ['San Miguel de TucumÃ¡n', 'Yerba Buena']
+    'Tierra del Fuego': ['Ushuaia', 'Río Grande'],
+    'Tucumán': ['San Miguel de Tucumán', 'Yerba Buena']
   };
 
   const onlyDigits = (value) => String(value || '').replace(/\D/g, '');
@@ -1574,12 +1584,12 @@ function initContactLeadForm() {
     const list = Array.from(files || []);
 
     if (list.length > MAX_FILES) {
-      return `PodÃ©s adjuntar hasta ${MAX_FILES} archivos.`;
+      return `Podés adjuntar hasta ${MAX_FILES} archivos.`;
     }
 
     const totalSize = list.reduce((acc, file) => acc + Number(file.size || 0), 0);
     if (totalSize > MAX_TOTAL_SIZE) {
-      return 'El tamaÃ±o total de adjuntos supera el lÃ­mite permitido.';
+      return 'El tamaño total de adjuntos supera el límite permitido.';
     }
 
     for (const file of list) {
@@ -1592,7 +1602,7 @@ function initContactLeadForm() {
       }
 
       if (Number(file.size || 0) > MAX_FILE_SIZE) {
-        return `El archivo ${file.name} supera el tamaÃ±o mÃ¡ximo permitido.`;
+        return `El archivo ${file.name} supera el tamaño máximo permitido.`;
       }
     }
 
@@ -1628,49 +1638,49 @@ function initContactLeadForm() {
 
     if (!motivo) {
       setFieldError(motivoInput, true);
-      setFieldErrorMessage(motivoInput, 'SeleccionÃ¡ el motivo de consulta.');
+      setFieldErrorMessage(motivoInput, 'Seleccioná el motivo de consulta.');
       hasErrors = true;
     }
 
     if (nombre.length < 3 || hasSuspiciousPatterns(nombre)) {
       setFieldError(nombreInput, true);
-      setFieldErrorMessage(nombreInput, 'IngresÃ¡ nombre y apellido real (mÃ­nimo 3 caracteres, sin links).');
+      setFieldErrorMessage(nombreInput, 'Ingresá nombre y apellido real (mínimo 3 caracteres, sin links).');
       hasErrors = true;
     }
 
     if (telefono.length !== 10) {
       setFieldError(telefonoInput, true);
-      setFieldErrorMessage(telefonoInput, 'IngresÃ¡ 10 dÃ­gitos, sin 0 y sin 15.');
+      setFieldErrorMessage(telefonoInput, 'Ingresá 10 dígitos, sin 0 y sin 15.');
       hasErrors = true;
     }
 
     if (!isValidEmail(mail) || hasSuspiciousPatterns(mail)) {
       setFieldError(emailInput, true);
-      setFieldErrorMessage(emailInput, 'IngresÃ¡ un mail vÃ¡lido (ejemplo: nombre@dominio.com).');
+      setFieldErrorMessage(emailInput, 'Ingresá un mail válido (ejemplo: nombre@dominio.com).');
       hasErrors = true;
     }
 
     if (direccion.length < 6 || hasSuspiciousPatterns(direccion)) {
       setFieldError(direccionInput, true);
-      setFieldErrorMessage(direccionInput, 'IngresÃ¡ una direcciÃ³n vÃ¡lida (mÃ­nimo 6 caracteres, sin links).');
+      setFieldErrorMessage(direccionInput, 'Ingresá una dirección válida (mínimo 6 caracteres, sin links).');
       hasErrors = true;
     }
 
     if (!provincia) {
       setFieldError(provinciaInput, true);
-      setFieldErrorMessage(provinciaInput, 'SeleccionÃ¡ una provincia.');
+      setFieldErrorMessage(provinciaInput, 'Seleccioná una provincia.');
       hasErrors = true;
     }
 
     if (!ciudad) {
       setFieldError(ciudadInput, true);
-      setFieldErrorMessage(ciudadInput, 'SeleccionÃ¡ una ciudad.');
+      setFieldErrorMessage(ciudadInput, 'Seleccioná una ciudad.');
       hasErrors = true;
     }
 
     if (comentarios.length < 10 || comentarios.length > 1200 || hasSuspiciousPatterns(comentarios)) {
       setFieldError(comentariosInput, true);
-      setFieldErrorMessage(comentariosInput, 'EscribÃ­ entre 10 y 1200 caracteres, sin links o texto sospechoso.');
+      setFieldErrorMessage(comentariosInput, 'Escribí entre 10 y 1200 caracteres, sin links o texto sospechoso.');
       hasErrors = true;
     }
 
@@ -1682,7 +1692,7 @@ function initContactLeadForm() {
     }
 
     if (hasErrors) {
-      showMessage('RevisÃ¡ los campos marcados antes de enviar.', 'error');
+      showMessage('Revisá los campos marcados antes de enviar.', 'error');
       return false;
     }
 
@@ -1857,7 +1867,7 @@ function initContactLeadForm() {
     }
 
     if (tiempoSegundos > 0 && tiempoSegundos < 4) {
-      showMessage('EsperÃ¡ unos segundos antes de enviar el formulario.', 'error');
+      showMessage('Esperá unos segundos antes de enviar el formulario.', 'error');
       return;
     }
 
@@ -1922,13 +1932,13 @@ function initContactLeadForm() {
           (Array.isArray(result.errors) && result.errors.length ? result.errors[0] : '') ||
           result.detail ||
           result.message ||
-          'No se pudo enviar la consulta. VerificÃ¡ tus datos e intentÃ¡ nuevamente.';
+          'No se pudo enviar la consulta. Verificá tus datos e intentá nuevamente.';
 
         showMessage(backendError, 'error');
         console.error('Respuesta backend contacto:', result);
       }
     } catch (error) {
-      showMessage('OcurriÃ³ un error durante el envÃ­o. IntentÃ¡ nuevamente en unos minutos.', 'error');
+      showMessage('Ocurrió un error durante el envío. Intentá nuevamente en unos minutos.', 'error');
       console.error('Error enviando contacto:', error);
     } finally {
       if (submitButton) {
@@ -2072,8 +2082,8 @@ function initFuncionalidadesHomeSlider() {
   });
 
   /*
-    Si por alguna razÃ³n cambiÃ¡s slides manualmente
-    mÃ¡s adelante, esto ayuda a refrescar.
+    Si por alguna razón cambiás slides manualmente
+    más adelante, esto ayuda a refrescar.
   */
   window.addEventListener("resize", function () {
     if (funcionalidadesHomeSwiper) {
@@ -2091,7 +2101,7 @@ function cargarContactate() {
   if (!placeholder) return;
 
   fetch(getSiteAssetUrl("components/contactate/contactate.html"))
-    .then(response => response.text())
+    .then(response => responseAsUtf8Text(response))
     .then(data => {
       placeholder.innerHTML = data;
 
@@ -2119,7 +2129,7 @@ function cargarWhatsappFloat() {
   if (!contenedor) return;
 
   fetch(getSiteAssetUrl("components/whatsapp-float/whatsapp-float.html"))
-    .then(response => response.text())
+    .then(response => responseAsUtf8Text(response))
     .then(data => {
       contenedor.innerHTML = data;
 
@@ -2128,19 +2138,19 @@ function cargarWhatsappFloat() {
         imagen.src = getSiteAssetUrl("components/whatsapp-float/whatsapp-logo.png");
       }
     })
-    .catch(error => console.error("Error cargando botÃ³n flotante de WhatsApp:", error));
+    .catch(error => console.error("Error cargando botón flotante de WhatsApp:", error));
 }
 
 
 /* =========================================
-   Inicializar dropdowns del header para dispositivos tÃ¡ctiles
+   Inicializar dropdowns del header para dispositivos táctiles
    - Detecta dispositivos touch y agrega click handlers que
      hacen toggle de la clase `is-open` en `.como-dropdown`.
    - Cierra dropdowns al tocar fuera.
 ========================================= */
 function initHeaderDropdownTouch() {
   try {
-    // Activar en touch o en anchos mÃ³viles (para asegurar funcionamiento en tablets/emulaciÃ³n tÃ¡ctil)
+    // Activar en touch o en anchos móviles (para asegurar funcionamiento en tablets/emulación táctil)
     const shouldInit = ('ontouchstart' in window) || window.innerWidth < 992 || window.matchMedia('(hover: none)').matches;
     if (!shouldInit) return;
 
@@ -2160,7 +2170,7 @@ function initHeaderDropdownTouch() {
       toggle.dataset.touchInit = 'true';
 
       const handler = function (e) {
-        // Evitar navegaciÃ³n si el link es sÃ³lo para abrir el menÃº
+        // Evitar navegación si el link es sólo para abrir el menú
         const href = this.getAttribute('href') || '';
         if (href === '#' || href.startsWith('#')) {
           e.preventDefault();
@@ -2233,10 +2243,10 @@ function initHeaderDropdownTouch() {
 
 
 /* =========================================
-   Auto-close del menÃº mobile/tablet
-   - Cierra el collapse `#menuPrincipal` cuando estÃ¡ abierto
+   Auto-close del menú mobile/tablet
+   - Cierra el collapse `#menuPrincipal` cuando está abierto
      al tocar fuera, al hacer scroll o al hacer touchmove.
-   - Usa la API de Bootstrap si estÃ¡ disponible.
+   - Usa la API de Bootstrap si está disponible.
 ========================================= */
 function initMobileMenuAutoClose() {
   try {
@@ -2259,7 +2269,7 @@ function initMobileMenuAutoClose() {
       // altura actual del contenido
       const height = el.scrollHeight;
 
-      // preparar la animaciÃ³n
+      // preparar la animación
       el.style.maxHeight = height + 'px';
       el.style.overflow = 'hidden';
       // forzar reflow
@@ -2288,7 +2298,7 @@ function initMobileMenuAutoClose() {
       };
 
       el.addEventListener('transitionend', onEnd);
-      // Fallback: si transitionend no se dispara, limpiar despuÃ©s de 600ms
+      // Fallback: si transitionend no se dispara, limpiar después de 600ms
       const fallbackTimer = setTimeout(() => {
         try { cleanup(); } catch (e) { /* silent */ }
       }, 600);
@@ -2317,22 +2327,22 @@ function initMobileMenuAutoClose() {
           } catch (e) { /* fallback abajo */ }
         }
 
-        // Fallback: animaciÃ³n manual y limpieza garantizada
+        // Fallback: animación manual y limpieza garantizada
         smoothClose(menu);
       } catch (err) {
         console.error('closeMenu error:', err);
       }
     };
 
-    // Click fuera del menÃº
+    // Click fuera del menú
     document.addEventListener('click', function (e) {
       if (!isOpen()) return;
       if (e.target.closest && (e.target.closest('#menuPrincipal') || e.target.closest('.navbar-toggler'))) return;
       closeMenu();
     }, false);
 
-    // Detectar scroll / gestures que indican intenciÃ³n de interacciÃ³n fuera.
-    // Si el evento ocurre dentro del menÃº o en el botÃ³n toggler, no cerrar.
+    // Detectar scroll / gestures que indican intención de interacción fuera.
+    // Si el evento ocurre dentro del menú o en el botón toggler, no cerrar.
     const closeOnScrollOrTouch = (e) => {
       if (!isOpen()) return;
 
@@ -2368,12 +2378,12 @@ async function cargarZonasProteccionHogar() {
       throw new Error("No se pudo cargar el componente zonas-proteccion-hogar/zonas-proteccion-hogar.html");
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     initZonasProteccionHogar();
   } catch (error) {
-    console.error("Error al cargar la secciÃ³n zonas-proteccion-hogar:", error);
+    console.error("Error al cargar la sección zonas-proteccion-hogar:", error);
   }
 }
 
@@ -2391,7 +2401,7 @@ async function cargarZonasProteccionComercio() {
       throw new Error("No se pudo cargar el componente zonas-proteccion-comercio/zonas-proteccion-comercio.html");
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     initZonasProteccionHogar({
@@ -2399,7 +2409,7 @@ async function cargarZonasProteccionComercio() {
       componentFolder: "zonas-proteccion-comercio"
     });
   } catch (error) {
-    console.error("Error al cargar la secciÃ³n zonas-proteccion-comercio:", error);
+    console.error("Error al cargar la sección zonas-proteccion-comercio:", error);
   }
 }
 
@@ -2817,7 +2827,7 @@ function initZonasProteccionHogar(options = {}) {
 }
 
 /* =========================================================
-   CARGAR SECCIÃ“N: CARACTERÃSTICAS DEL PANEL
+   CARGAR SECCIÓN: CARACTERÍSTICAS DEL PANEL
    ========================================================= */
 
 async function cargarCaracteristicasPanel() {
@@ -2831,7 +2841,7 @@ async function cargarCaracteristicasPanel() {
       throw new Error("No se pudo cargar el componente caracteristicas-panel.html");
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     const panelImage = container.querySelector(".caracteristicas-panel__image");
@@ -2841,7 +2851,7 @@ async function cargarCaracteristicasPanel() {
 
     initCaracteristicasPanel();
   } catch (error) {
-    console.error("Error al cargar la secciÃ³n caracterÃ­sticas del panel:", error);
+    console.error("Error al cargar la sección características del panel:", error);
   }
 }
 /* =========================================================
@@ -2859,7 +2869,7 @@ async function cargarComparacionCaracteristicasPlanes() {
       throw new Error("No se pudo cargar el componente comparacion-caracteristicas-planes.html");
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     const imageBase = getSiteAssetUrl("components/comparacion-caracteristicas-planes/");
@@ -2894,7 +2904,7 @@ async function cargarCentralMonitoreo247() {
       throw new Error("No se pudo cargar el componente central-monitoreo-24-7.html");
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     const image = container.querySelector(".central-monitoreo-24-7__image");
@@ -2921,7 +2931,7 @@ async function cargarServiciosParaComercios() {
       throw new Error("No se pudo cargar el componente servicios-para-comercios.html");
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     const image = container.querySelector("img[data-image]");
@@ -2949,23 +2959,23 @@ function initServiciosParaComercios(rootElement) {
   const slides = [
     {
       title: "Monitoreo 24/7 para tu negocio",
-      description: "Tu sistema de alarma queda conectado a nuestra central de monitoreo las 24 horas, todos los dÃ­as. Ante una alerta real, se activa el protocolo con aviso a las fuerzas de seguridad."
+      description: "Tu sistema de alarma queda conectado a nuestra central de monitoreo las 24 horas, todos los días. Ante una alerta real, se activa el protocolo con aviso a las fuerzas de seguridad."
     },
     {
       title: "Aviso de apertura fuera de horario",
-      description: "RecibÃ­ notificaciones cuando alguien desactive la alarma de tu comercio en horarios no autorizados, para tener control total de quiÃ©n abre y cuÃ¡ndo."
+      description: "Recibí notificaciones cuando alguien desactive la alarma de tu comercio en horarios no autorizados, para tener control total de quién abre y cuándo."
     },
     {
       title: "Control remoto desde la app",
-      description: "ArmÃ¡ y desarmÃ¡ tu sistema de alarma, consultÃ¡ el historial de eventos y gestionÃ¡ usuarios desde tu celular, estÃ©s donde estÃ©s."
+      description: "Armá y desarmá tu sistema de alarma, consultá el historial de eventos y gestioná usuarios desde tu celular, estés donde estés."
     },
     {
-      title: "ProtecciÃ³n perimetral exterior",
-      description: "Sensores de doble tecnologÃ­a para exteriores que detectan intrusos antes de que ingresen a tu comercio, mÃ¡s sirena exterior disuasiva."
+      title: "Protección perimetral exterior",
+      description: "Sensores de doble tecnología para exteriores que detectan intrusos antes de que ingresen a tu comercio, más sirena exterior disuasiva."
     },
     {
-      title: "CÃ³digos de usuario para cada empleado",
-      description: "AsignÃ¡ cÃ³digos personalizados a tus colaboradores para saber quiÃ©n abre y cierra tu negocio en cada turno y llevar registro de accesos."
+      title: "Códigos de usuario para cada empleado",
+      description: "Asigná códigos personalizados a tus colaboradores para saber quién abre y cierra tu negocio en cada turno y llevar registro de accesos."
     }
   ];
 
@@ -3005,7 +3015,7 @@ async function cargarApp() {
       throw new Error("No se pudo cargar el componente app.html");
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     const imageBase = getSiteAssetUrl("components/app/");
@@ -3063,7 +3073,7 @@ async function cargarPlanesQueEs() {
         throw new Error(`No se pudo cargar ${htmlFile}: ${response.status}`);
       }
 
-      const html = await response.text();
+      const html = await responseAsUtf8Text(response);
       container.innerHTML = html;
 
       const imageBase = getSiteAssetUrl(`components/${folder}/`);
@@ -3124,7 +3134,7 @@ async function cargarPlanesIncluye() {
         throw new Error(`No se pudo cargar ${htmlFile}: ${response.status}`);
       }
 
-      const html = await response.text();
+      const html = await responseAsUtf8Text(response);
       container.innerHTML = html;
       initPlanIncluyeSliders(container);
     } catch (error) {
@@ -3376,7 +3386,7 @@ async function cargarKitsQueIncluye() {
         throw new Error(`No se pudo cargar ${htmlFile}: ${response.status}`);
       }
 
-      const html = await response.text();
+      const html = await responseAsUtf8Text(response);
       container.innerHTML = html;
 
       const imageBase = getSiteAssetUrl(`components/${folder}/`);
@@ -3608,7 +3618,7 @@ async function cargarBeneficiosConfianza() {
       throw new Error(`No se pudo cargar beneficios-confianza.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     await ensureSwiperResources();
@@ -3679,7 +3689,7 @@ async function cargarKitsTienda() {
       throw new Error(`No se pudo cargar kits-tienda.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     await ensureSwiperResources();
@@ -3703,7 +3713,7 @@ async function cargarContrata4Pasos() {
       throw new Error(`No se pudo cargar contrata-4-pasos.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     await ensureSwiperResources();
@@ -3774,7 +3784,7 @@ async function cargarPorQueElegir() {
       throw new Error(`No se pudo cargar por-que-elegir.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
   } catch (error) {
     console.error("Error cargando por-que-elegir:", error);
@@ -3795,7 +3805,7 @@ async function cargarDetalleProductoKit() {
       throw new Error(`No se pudo cargar kit-producto-detalle.html: ${response.status}`);
     }
 
-    container.innerHTML = await response.text();
+    container.innerHTML = await responseAsUtf8Text(response);
 
     const getPageSlug = (path) => {
       const cleanPath = String(path || "").split("?")[0].split("#")[0];
@@ -4070,7 +4080,7 @@ function initKitsTienda(container) {
   // =========================================================
   // DATOS DE KITS
   // Para agregar/quitar kits, editar solo este array.
-  // El slider, modal y botones se construyen automÃ¡ticamente.
+  // El slider, modal y botones se construyen automáticamente.
   // =========================================================
   const kitsData = [
     {
@@ -4208,7 +4218,7 @@ function initKitsTienda(container) {
     }
   });
 
-  // Reforzar posiciÃ³n inicial al primer render visual.
+  // Reforzar posición inicial al primer render visual.
   requestAnimationFrame(() => {
     if (kitsSwiper.params.loop) {
       kitsSwiper.slideToLoop(initialIndex, 0, false);
@@ -4278,7 +4288,7 @@ async function cargarEnConstruccion() {
       throw new Error(`No se pudo cargar en-construccion.html: ${response.status}`);
     }
 
-    const html = await response.text();
+    const html = await responseAsUtf8Text(response);
     container.innerHTML = html;
 
     const cta = container.querySelector(".en-construccion__cta");
@@ -4291,13 +4301,13 @@ async function cargarEnConstruccion() {
 }
 
 /* =========================================================
-   INICIALIZAR SECCIÃ“N: CARACTERÃSTICAS DEL PANEL
+   INICIALIZAR SECCIÓN: CARACTERÍSTICAS DEL PANEL
    
-   DESCRIPCIÃ“N:
-   Slider automÃ¡tico con 5 caracterÃ­sticas del panel inteligente.
+   DESCRIPCIÓN:
+   Slider automático con 5 características del panel inteligente.
    - Auto-advance cada 5 segundos
-   - NavegaciÃ³n manual con flechas < >
-   - Indicadores de posiciÃ³n
+   - Navegación manual con flechas < >
+   - Indicadores de posición
    
    ========================================================= */
 
@@ -4325,10 +4335,10 @@ function initCaracteristicasPanel() {
   // ============================================================
 
   /**
-   * Muestra un slide especÃ­fico
+   * Muestra un slide específico
    */
   function goToSlide(index) {
-    // Asegurar que el Ã­ndice estÃ¡ dentro del rango
+    // Asegurar que el índice está dentro del rango
     currentSlide = (index + slides.length) % slides.length;
 
     // Actualizar slides
@@ -4377,7 +4387,7 @@ function initCaracteristicasPanel() {
   }
 
   /**
-   * Pausa el auto-play cuando el usuario interactÃºa
+   * Pausa el auto-play cuando el usuario interactúa
    */
   function pauseAutoPlay() {
     clearInterval(autoPlayInterval);
@@ -4387,7 +4397,7 @@ function initCaracteristicasPanel() {
   // EVENT LISTENERS
   // ============================================================
 
-  // FunciÃ³n auxiliar para remover clase despuÃ©s del click
+  // Función auxiliar para remover clase después del click
   function handleTouchButton(button, callback) {
     button.addEventListener("touchstart", function(e) {
       e.preventDefault();
@@ -4400,7 +4410,7 @@ function initCaracteristicasPanel() {
       callback();
     });
     button.addEventListener("click", function(e) {
-      // El click en mobile ya se manejÃ³ en touchend
+      // El click en mobile ya se manejó en touchend
       if (e.isTrusted && e.pointerType === "") {
         return; // Es un click generado por touchend, ignorar
       }
@@ -4408,7 +4418,7 @@ function initCaracteristicasPanel() {
     });
   }
 
-  // BotÃ³n anterior
+  // Botón anterior
   if (arrowPrev) {
     handleTouchButton(arrowPrev, () => {
       pauseAutoPlay();
@@ -4416,7 +4426,7 @@ function initCaracteristicasPanel() {
     });
   }
 
-  // BotÃ³n siguiente
+  // Botón siguiente
   if (arrowNext) {
     handleTouchButton(arrowNext, () => {
       pauseAutoPlay();
@@ -4443,12 +4453,12 @@ function initCaracteristicasPanel() {
     });
   });
 
-  // Pausar autoplay cuando el usuario mueve el mouse sobre la secciÃ³n
+  // Pausar autoplay cuando el usuario mueve el mouse sobre la sección
   section.addEventListener("mouseenter", pauseAutoPlay);
   section.addEventListener("mouseleave", resetAutoPlay);
 
   // ============================================================
-  // INICIALIZACIÃ“N
+  // INICIALIZACIÓN
   // ============================================================
 
   // Mostrar primer slide
