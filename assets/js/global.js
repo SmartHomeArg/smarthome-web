@@ -2868,6 +2868,12 @@ async function cargarComparacionCaracteristicasPlanes() {
       .forEach((img) => {
         img.src = imageBase + img.dataset.image;
       });
+
+    container.querySelectorAll("a[href]").forEach((link) => {
+      const href = (link.getAttribute("href") || "").trim();
+      if (!href || href.startsWith("#") || href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+      link.href = getSiteAssetUrl(href);
+    });
   } catch (error) {
     console.error("Error al cargar la seccion comparacion-caracteristicas-planes:", error);
   }

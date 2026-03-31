@@ -7085,10 +7085,12 @@ FOOTER
   text-align: center;
   color: #0b3b8f;
   font-weight: 700;
+  position: relative;
+  overflow: hidden;
 }
 
 .packs-hogar-table thead th:first-child {
-  width: 40%;
+  width: 33%;
   text-align: left;
 }
 
@@ -7104,6 +7106,84 @@ FOOTER
 
 .packs-hogar-table thead th span {
   display: block;
+}
+
+.packs-hogar-table thead th:not(:first-child) span {
+  white-space: nowrap;
+}
+
+.packs-hogar-table thead th:nth-child(3),
+.packs-hogar-table tbody td:nth-child(3),
+.packs-hogar-table tfoot td:nth-child(3) {
+  background: #f8fcf9;
+  border-left: 2px solid #b9e3c8;
+  border-right: 2px solid #b9e3c8;
+}
+
+.packs-hogar-table thead th:nth-child(6),
+.packs-hogar-table tbody td:nth-child(6),
+.packs-hogar-table tfoot td:nth-child(6) {
+  background: #fffbf4;
+  border-left: 2px solid #ffd79a;
+  border-right: 2px solid #ffd79a;
+}
+
+.packs-hogar-table thead th:nth-child(3) {
+  border-top: 2px solid #b9e3c8;
+}
+
+.packs-hogar-table tfoot td:nth-child(3) {
+  border-bottom: 2px solid #b9e3c8;
+}
+
+.packs-hogar-table thead th:nth-child(6) {
+  border-top: 2px solid #ffd79a;
+}
+
+.packs-hogar-table tfoot td:nth-child(6) {
+  border-bottom: 2px solid #ffd79a;
+}
+
+.packs-hogar-table thead th:nth-child(3)::after {
+  content: "MAS CONTRATADO\A EN HOGARES";
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  text-align: center;
+  background: #1f7a3a;
+  color: #ffffff;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  white-space: pre-line;
+  z-index: 2;
+}
+
+.packs-hogar-table thead th:nth-child(6)::after {
+  content: "MAS CONTRATADO\A EN COMERCIOS";
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  text-align: center;
+  background: #c47a0b;
+  color: #ffffff;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  white-space: pre-line;
+  z-index: 2;
 }
 
 .packs-hogar-table tbody td:first-child {
@@ -7125,6 +7205,7 @@ FOOTER
 .packs-hogar-table .pack-card-hogar__cta {
   margin: 0 auto;
   max-width: 160px;
+  white-space: nowrap;
 }
 
 .packs-hogar-table__featured-col {
@@ -7178,6 +7259,11 @@ FOOTER
   background: #fbeceb;
 }
 
+.estado--adicional {
+  color: #9b5f04;
+  background: #fff4df;
+}
+
 .pack-card-hogar__cta {
   display: block;
   margin: 14px;
@@ -7207,6 +7293,7 @@ FOOTER
   box-shadow: 0 12px 30px rgba(10, 43, 99, 0.08);
   border: 1px solid #e4ebf7;
   overflow: hidden;
+  position: relative;
 }
 
 .pack-mobile-hogar + .pack-mobile-hogar {
@@ -7237,6 +7324,58 @@ FOOTER
 
 .pack-mobile-hogar--featured {
   border-color: #f8b712;
+}
+
+.pack-mobile-hogar--popular-home {
+  border-color: #ccebd7;
+  box-shadow: 0 14px 30px rgba(31, 122, 58, 0.12);
+}
+
+.pack-mobile-hogar--popular-home::before {
+  content: "MAS CONTRATADO\A EN HOGARES";
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  text-align: center;
+  background: #1f7a3a;
+  color: #ffffff;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  white-space: pre-line;
+  z-index: 3;
+}
+
+.pack-mobile-hogar--popular-comercio {
+  border-color: #ffe1b3;
+  box-shadow: 0 14px 30px rgba(155, 95, 4, 0.12);
+}
+
+.pack-mobile-hogar--popular-comercio::before {
+  content: "MAS CONTRATADO\A EN COMERCIOS";
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  text-align: center;
+  background: #c47a0b;
+  color: #ffffff;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  white-space: pre-line;
+  z-index: 3;
 }
 
 @media (max-width: 991.98px) {
