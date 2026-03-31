@@ -2553,9 +2553,14 @@ function initZonasProteccionHogar(options = {}) {
     return;
   }
 
-  if (titleMain) titleMain.textContent = componentConfig.title || "";
-  if (titleAccent) titleAccent.textContent = componentConfig.titleAccent || "";
-  if (lead) lead.textContent = componentConfig.lead || "";
+  const hasHtmlText = (element) => {
+    if (!element) return false;
+    return element.textContent.trim().length > 0;
+  };
+
+  if (titleMain && !hasHtmlText(titleMain)) titleMain.textContent = componentConfig.title || "";
+  if (titleAccent && !hasHtmlText(titleAccent)) titleAccent.textContent = componentConfig.titleAccent || "";
+  if (lead && !hasHtmlText(lead)) lead.textContent = componentConfig.lead || "";
   tabsContainer.setAttribute("aria-label", componentConfig.tabsAriaLabel || "Zonas de proteccion");
 
   if (mainImage) {
