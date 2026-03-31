@@ -2385,26 +2385,13 @@ async function cargarZonasProteccionComercio() {
   if (!container) return;
 
   try {
-    const rutasComponente = [
-      getSiteAssetUrl("components/zonas-proteccion-comercio/zonas-proteccion-comercio.html"),
-      getSiteAssetUrl("components/zonas-proteccion-comercio/zonas-proteccion-hogar.html")
-    ];
+    const response = await fetch(getSiteAssetUrl("components/zonas-proteccion-comercio/zonas-proteccion-comercio.html"));
 
-    let html = "";
-    let cargado = false;
-
-    for (const ruta of rutasComponente) {
-      const response = await fetch(ruta);
-      if (!response.ok) continue;
-      html = await response.text();
-      cargado = true;
-      break;
+    if (!response.ok) {
+      throw new Error("No se pudo cargar el componente zonas-proteccion-comercio/zonas-proteccion-comercio.html");
     }
 
-    if (!cargado) {
-      throw new Error("No se pudo cargar el componente zonas-proteccion-comercio");
-    }
-
+    const html = await response.text();
     container.innerHTML = html;
 
     initZonasProteccionHogar({
