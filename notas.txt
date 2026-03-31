@@ -1,2 +1,3 @@
 revisar Schema JSON-LD al final del proyecto
 
+"marker": { "x":
