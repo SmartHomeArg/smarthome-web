@@ -1134,7 +1134,7 @@ async function cargarTuComercioProtegido() {
     container.innerHTML = html;
 
     const images = container.querySelectorAll("img");
-    if (images[0]) images[0].src = getSiteAssetUrl("components/tu-comercio-protegido/comercio-protegido.jpg");
+    if (images[0]) images[0].src = getSiteAssetUrl("components/tu-comercio-protegido/comercio-protegido.png");
     if (images[1]) images[1].src = getSiteAssetUrl("components/tu-comercio-protegido/tu-comercio-protegido-01.jpeg");
     if (images[2]) images[2].src = getSiteAssetUrl("components/tu-comercio-protegido/tu-comercio-protegido-02.jpeg");
   } catch (error) {
