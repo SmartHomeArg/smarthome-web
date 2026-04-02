@@ -1,3 +1,5 @@
 revisar Schema JSON-LD al final del proyecto
 
 "marker": { "x":
+
+quiero editar este componente, reescribir las tarjetas que tiene, dejar las imagenes en esa misma carpeta que estan vinculadas a cada tarjeta con el nombre de cada tarjeta para que luego cuando las reemplace sea facil. eliminar tarjetas que no se usen e imagenes que no se usen. dejo lista de elementos que componen el kit:
