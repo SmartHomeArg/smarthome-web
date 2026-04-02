@@ -393,6 +393,13 @@ main {
   padding: 8px 0;
 }
 
+@media (min-width: 992px) {
+  .como-menu {
+    border-radius: 0 0 18px 18px;
+    overflow: hidden;
+  }
+}
+
 /* ITEMS */
 
 .como-menu .dropdown-item {
@@ -458,6 +465,7 @@ FOOTER
   font-size: 13px;
   line-height: 1.55;
   color: #dfe8ff;
+  text-align: center;
 }
 
 .footer-container {
