@@ -440,7 +440,24 @@ FOOTER
 .site-footer {
   background-color: #0b3b8f;
   color: #ffffff;
-  padding-top: 60px;
+  padding-top: 40px;
+}
+
+.footer-disclaimer {
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+  box-shadow: 0 14px 32px rgba(4, 23, 57, 0.16);
+}
+
+.footer-disclaimer-text {
+  margin: 0;
+  max-width: 1080px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #dfe8ff;
 }
 
 .footer-container {
@@ -584,7 +601,18 @@ FOOTER
 /* MOBILE */
 @media (max-width: 767.98px) {
   .site-footer {
-    padding-top: 40px;
+    padding-top: 28px;
+  }
+
+  .footer-disclaimer {
+    margin-bottom: 16px;
+    padding: 9px 12px;
+    border-radius: 10px;
+  }
+
+  .footer-disclaimer-text {
+    font-size: 12px;
+    line-height: 1.5;
   }
 
   .footer-container {
