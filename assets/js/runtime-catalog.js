@@ -19,7 +19,6 @@
   - No hace falta editar global.js ni las paginas HTML de tienda.
   - global.js toma estos valores y calcula automaticamente:
     - el formato con "$"
-    - el precio sin impuestos nacionales
     - el precio final del plan con descuento
     - el texto de la promocion
 
@@ -66,11 +65,11 @@
 
   const runtimeCatalogConfig = deepFreeze({
     pricing: {
-      // Impuesto usado para calcular el texto "Precio sin impuestos nacionales".
+      // Se mantiene por compatibilidad tecnica aunque ya no se muestra en pantalla.
       taxRate: 0.21,
 
-      // Texto general de cuotas mostrado en los kits de tienda.
-      defaultInstallmentsLabel: "6 cuotas sin interes",
+      // Texto general de pago mostrado en los kits de tienda.
+      defaultInstallmentsLabel: "Paga con tarjeta de credito o debito",
 
       kits: {
         // ================================================================

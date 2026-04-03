@@ -6604,6 +6604,7 @@ FOOTER
   font-size: 2rem;
   line-height: 1;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .kits-tienda__price-note {
@@ -6617,7 +6618,10 @@ FOOTER
   margin-top: 2px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 5px 8px;
+  min-height: 44px;
+  width: 148px;
   border-radius: 7px;
   background: #fff3e7;
   color: #ea7a15;
@@ -6625,6 +6629,7 @@ FOOTER
   line-height: 1.1;
   font-weight: 700;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .kits-tienda__cta {

@@ -393,8 +393,8 @@ function getStorefrontKitPricing(kitId) {
     return {
       installationPriceNumber: 0,
       installationPriceFormatted: formatArsInteger(0),
-      priceWithoutTaxFormatted: formatArsDecimal(0),
-      installmentsLabel: pricingConfig?.defaultInstallmentsLabel || "6 cuotas sin interes",
+      priceWithoutTaxFormatted: "",
+      installmentsLabel: pricingConfig?.defaultInstallmentsLabel || "Paga con tarjeta de credito o debito",
       planListNumber: 0,
       planListFormatted: formatArsInteger(0),
       planDiscountPercent: 0,
@@ -417,7 +417,7 @@ function getStorefrontKitPricing(kitId) {
     installationPriceNumber,
     installationPriceFormatted: formatArsInteger(installationPriceNumber),
     priceWithoutTaxFormatted: formatArsDecimal(priceWithoutTaxNumber),
-    installmentsLabel: pricingConfig?.defaultInstallmentsLabel || "6 cuotas sin interes",
+    installmentsLabel: pricingConfig?.defaultInstallmentsLabel || "Paga con tarjeta de credito o debito",
     planListNumber,
     planListFormatted: formatArsInteger(planListNumber),
     planDiscountPercent,
@@ -4120,13 +4120,10 @@ async function cargarDetalleProductoKit() {
     const planList = container.querySelector("#kitProductoPlanList");
     const planSell = container.querySelector("#kitProductoPlanSell");
     const planPromo = container.querySelector("#kitProductoPlanPromo");
-    const qtyInput = container.querySelector("#kitProductoQtyInput");
-    const qtyMinus = container.querySelector("#kitProductoQtyMinus");
-    const qtyPlus = container.querySelector("#kitProductoQtyPlus");
     const mainCta = container.querySelector("#kitProductoMainCta");
     const adviceCta = container.querySelector("#kitProductoAdviceCta");
 
-    if (!mainImage || !thumbs || !title || !subtitle || !price || !installments || !priceWithoutTax || !features || !includes || !planList || !planSell || !planPromo || !qtyInput || !qtyMinus || !qtyPlus || !mainCta || !adviceCta) {
+    if (!mainImage || !thumbs || !title || !subtitle || !price || !installments || !priceWithoutTax || !features || !includes || !planList || !planSell || !planPromo || !mainCta || !adviceCta) {
       return;
     }
 
@@ -4134,7 +4131,7 @@ async function cargarDetalleProductoKit() {
     subtitle.textContent = kit.subtitle;
     price.textContent = kit.pricing.installationPriceFormatted;
     installments.textContent = kit.pricing.installmentsLabel;
-    priceWithoutTax.textContent = `Precio sin impuestos nacionales ${kit.pricing.priceWithoutTaxFormatted}`;
+    priceWithoutTax.textContent = "Paga con tarjeta de credito o debito";
     planList.textContent = kit.pricing.planListFormatted;
     planSell.textContent = kit.pricing.planFinalFormatted;
     planPromo.textContent = kit.pricing.planPromoLabel;
@@ -4182,24 +4179,6 @@ async function cargarDetalleProductoKit() {
       if (Number.isNaN(index)) return;
 
       updateMainImage(index);
-    });
-
-    function normalizeQuantity(value) {
-      const parsed = Number(value);
-      if (!Number.isFinite(parsed) || parsed < 1) return 1;
-      return Math.floor(parsed);
-    }
-
-    qtyMinus.addEventListener("click", () => {
-      qtyInput.value = String(Math.max(1, normalizeQuantity(qtyInput.value) - 1));
-    });
-
-    qtyPlus.addEventListener("click", () => {
-      qtyInput.value = String(normalizeQuantity(qtyInput.value) + 1);
-    });
-
-    qtyInput.addEventListener("change", () => {
-      qtyInput.value = String(normalizeQuantity(qtyInput.value));
     });
 
     const baseWhatsapp = "https://api.whatsapp.com/send?phone=541134245573";
@@ -4390,8 +4369,8 @@ function initKitsTienda(container) {
     modalImage.alt = kit.name;
     modalTitle.textContent = kit.name;
     modalDescription.textContent = kit.description;
-    modalPrice.textContent = kit.price;
-    modalInstallments.textContent = kit.installments;
+    modalPrice.textContent = kit.pricing?.installationPriceFormatted || "";
+    modalInstallments.textContent = kit.pricing?.installmentsLabel || "";
     modalProductLink.href = getKitPageUrl(kit.slug);
 
     modalFeatures.innerHTML = kit.features
