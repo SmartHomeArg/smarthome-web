@@ -65,9 +65,6 @@
 
   const runtimeCatalogConfig = deepFreeze({
     pricing: {
-      // Se mantiene por compatibilidad tecnica aunque ya no se muestra en pantalla.
-      taxRate: 0.21,
-
       // Texto general de pago mostrado en los kits de tienda.
       defaultInstallmentsLabel: "Paga con tarjeta de credito o debito",
 

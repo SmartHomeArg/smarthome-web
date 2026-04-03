@@ -393,7 +393,6 @@ function getStorefrontKitPricing(kitId) {
     return {
       installationPriceNumber: 0,
       installationPriceFormatted: formatArsInteger(0),
-      priceWithoutTaxFormatted: "",
       installmentsLabel: pricingConfig?.defaultInstallmentsLabel || "Paga con tarjeta de credito o debito",
       planListNumber: 0,
       planListFormatted: formatArsInteger(0),
@@ -405,18 +404,15 @@ function getStorefrontKitPricing(kitId) {
     };
   }
 
-  const taxRate = Number(pricingConfig?.taxRate ?? 0.21);
   const installationPriceNumber = Number(kitConfig.installationPrice || 0);
   const planListNumber = Number(kitConfig.planListPrice || 0);
   const planDiscountPercent = Number(kitConfig.planDiscountPercent || 0);
   const planDiscountMonths = Number(kitConfig.planDiscountMonths || 0);
   const planFinalNumber = Math.round(planListNumber * (1 - (planDiscountPercent / 100)));
-  const priceWithoutTaxNumber = installationPriceNumber / (1 + taxRate);
 
   return {
     installationPriceNumber,
     installationPriceFormatted: formatArsInteger(installationPriceNumber),
-    priceWithoutTaxFormatted: formatArsDecimal(priceWithoutTaxNumber),
     installmentsLabel: pricingConfig?.defaultInstallmentsLabel || "Paga con tarjeta de credito o debito",
     planListNumber,
     planListFormatted: formatArsInteger(planListNumber),
@@ -4114,7 +4110,6 @@ async function cargarDetalleProductoKit() {
     const subtitle = container.querySelector("#kitProductoSubtitle");
     const price = container.querySelector("#kitProductoPrice");
     const installments = container.querySelector("#kitProductoInstallments");
-    const priceWithoutTax = container.querySelector("#kitProductoPriceWithoutTax");
     const features = container.querySelector("#kitProductoFeatures");
     const includes = container.querySelector("#kitProductoIncludes");
     const planList = container.querySelector("#kitProductoPlanList");
@@ -4123,7 +4118,7 @@ async function cargarDetalleProductoKit() {
     const mainCta = container.querySelector("#kitProductoMainCta");
     const adviceCta = container.querySelector("#kitProductoAdviceCta");
 
-    if (!mainImage || !thumbs || !title || !subtitle || !price || !installments || !priceWithoutTax || !features || !includes || !planList || !planSell || !planPromo || !mainCta || !adviceCta) {
+    if (!mainImage || !thumbs || !title || !subtitle || !price || !installments || !features || !includes || !planList || !planSell || !planPromo || !mainCta || !adviceCta) {
       return;
     }
 
@@ -4131,7 +4126,6 @@ async function cargarDetalleProductoKit() {
     subtitle.textContent = kit.subtitle;
     price.textContent = kit.pricing.installationPriceFormatted;
     installments.textContent = kit.pricing.installmentsLabel;
-    priceWithoutTax.textContent = "Paga con tarjeta de credito o debito";
     planList.textContent = kit.pricing.planListFormatted;
     planSell.textContent = kit.pricing.planFinalFormatted;
     planPromo.textContent = kit.pricing.planPromoLabel;
