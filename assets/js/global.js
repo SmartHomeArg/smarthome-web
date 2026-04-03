@@ -3849,7 +3849,15 @@ async function cargarDetalleProductoKit() {
           "2 detectores de movimiento",
           "Placa disuasiva"
         ],
-        includeFolder: "kit-cam-plus-que-incluye"
+        includeFolder: "kit-cam-plus-que-incluye",
+        galleryFiles: [
+          "carteleria-smarthome.png",
+          "camara-wifi-interior-exterior.png",
+          "caja-estanca.png",
+          "cable-conexion-energia.png",
+          "tarjeta-memoria.png",
+          "jaula-antivandalica.png"
+        ]
       },
       "kit-smart-1-1": {
         title: "Kit Smart 1.1",
@@ -3873,7 +3881,18 @@ async function cargarDetalleProductoKit() {
           "1 detector de movimiento",
           "Placa disuasiva"
         ],
-        includeFolder: "kit-smart-1-1-que-incluye"
+        includeFolder: "kit-smart-1-1-que-incluye",
+        galleryFiles: [
+          "central-alarma.png",
+          "sensor-apertura-magnetico-inalambrico.png",
+          "sensor-movimiento-interior.png",
+          "llavero-control-remoto.png",
+          "gabinete-metalico.png",
+          "fuente-alimentacion.png",
+          "bateria-respaldo.png",
+          "carteleria-smarthome.png",
+          "sirena-interior.png"
+        ]
       },
       "kit-smart-2-2": {
         title: "Kit Smart 2.2",
@@ -3897,7 +3916,18 @@ async function cargarDetalleProductoKit() {
           "2 detectores de movimiento",
           "Placa disuasiva"
         ],
-        includeFolder: "kit-smart-2-2-que-incluye"
+        includeFolder: "kit-smart-2-2-que-incluye",
+        galleryFiles: [
+          "central-alarma.png",
+          "sensor-apertura-magnetico-inalambrico-x2.png",
+          "sensor-movimiento-interior-x2.png",
+          "llavero-control-remoto.png",
+          "gabinete-metalico.png",
+          "fuente-alimentacion.png",
+          "bateria-respaldo.png",
+          "carteleria-smarthome.png",
+          "sirena-interior.png"
+        ]
       },
       "kit-smart-cam-2-2": {
         title: "Kit Smart Cam 2.2",
@@ -3921,7 +3951,23 @@ async function cargarDetalleProductoKit() {
           "2 detectores de movimiento",
           "Camara Full HD"
         ],
-        includeFolder: "kit-smart-cam-2-2-que-incluye"
+        includeFolder: "kit-smart-cam-2-2-que-incluye",
+        galleryFiles: [
+          "central-alarma.png",
+          "sensor-apertura-magnetico-inalambrico-x2.png",
+          "sensor-movimiento-interior-x2.png",
+          "llavero-control-remoto.png",
+          "gabinete-metalico.png",
+          "fuente-alimentacion.png",
+          "bateria-respaldo.png",
+          "carteleria-seguridad.png",
+          "sirena-interior.png",
+          "camara-wifi-interior-exterior.png",
+          "caja-estanca.png",
+          "cable-conexion-energia.png",
+          "tarjeta-memoria.png",
+          "jaula-antivandalica.png"
+        ]
       },
       "kit-industrial": {
         title: "Kit Industrial",
@@ -3945,34 +3991,39 @@ async function cargarDetalleProductoKit() {
           "4 detectores de movimiento",
           "Sirena de alta potencia"
         ],
-        includeFolder: "kit-industrial-que-incluye"
+        includeFolder: "kit-industrial-que-incluye",
+        galleryFiles: [
+          "central-alarma.png",
+          "sensor-apertura-magnetico-inalambrico.png",
+          "sensor-movimiento-interior.png",
+          "llavero-control-remoto.png",
+          "gabinete-metalico.png",
+          "fuente-alimentacion.png",
+          "carteleria-smarthome.png",
+          "sirena-interior.png",
+          "sirena-exterior.png",
+          "bateria-respaldo.png",
+          "sensor-exterior-doble-tecnologia.png"
+        ]
       }
     };
 
     const kit = kitsBySlug[slug];
     if (!kit) return;
 
+    const galleryImages = Array.isArray(kit.galleryFiles)
+      ? kit.galleryFiles.map((file, index) => ({
+        src: getSiteAssetUrl(`components/${kit.includeFolder}/${file}`),
+        alt: `${kit.title} - detalle ${index + 1}`
+      }))
+      : [];
+
     const images = [
       {
         src: getSiteAssetUrl(`pages/tienda/${slug}.webp`),
         alt: `${kit.title} - vista principal`
       },
-      {
-        src: getSiteAssetUrl(`components/${kit.includeFolder}/tarjeta-1.png`),
-        alt: `${kit.title} - item 1`
-      },
-      {
-        src: getSiteAssetUrl(`components/${kit.includeFolder}/tarjeta-2.png`),
-        alt: `${kit.title} - item 2`
-      },
-      {
-        src: getSiteAssetUrl(`components/${kit.includeFolder}/tarjeta-3.png`),
-        alt: `${kit.title} - item 3`
-      },
-      {
-        src: getSiteAssetUrl(`components/${kit.includeFolder}/tarjeta-4.png`),
-        alt: `${kit.title} - item 4`
-      }
+      ...galleryImages
     ];
 
     const mainImage = container.querySelector("#kitProductoMainImage");
@@ -4023,6 +4074,7 @@ async function cargarDetalleProductoKit() {
       selectedImageIndex = index;
       mainImage.src = imageData.src;
       mainImage.alt = imageData.alt;
+      mainImage.classList.toggle("kit-producto__main-image--full", selectedImageIndex === 0);
 
       thumbs.querySelectorAll(".kit-producto__thumb").forEach((thumb, thumbIndex) => {
         thumb.classList.toggle("is-active", thumbIndex === selectedImageIndex);
