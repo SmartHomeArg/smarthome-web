@@ -2,4 +2,161 @@ revisar Schema JSON-LD al final del proyecto
 
 "marker": { "x":
 
-quiero editar este componente, reescribir las tarjetas que tiene, dejar las imagenes en esa misma carpeta que estan vinculadas a cada tarjeta con el nombre de cada tarjeta para que luego cuando las reemplace sea facil. eliminar tarjetas que no se usen e imagenes que no se usen. dejo lista de elementos que componen el kit:
+prompt para migrar Bootstrap:
+Quiero que migres COMPLETAMENTE a recursos locales todas las librerías externas frontend de este proyecto, sin cambiar el diseño, sin cambiar el comportamiento funcional y sin introducir regresiones visibles ni técnicas.
+
+Contexto importante:
+- El sitio está alojado en GitHub Pages.
+- Hoy el proyecto depende de recursos externos cargados por CDN, principalmente desde jsDelivr.
+- Quiero eliminar esa dependencia externa y servir las librerías desde archivos locales dentro del proyecto.
+- El objetivo NO es rediseñar ni refactorizar el sitio, sino reemplazar dependencias externas por equivalentes locales manteniendo exactamente la misma versión y el mismo resultado.
+- Quiero que la migración sea conservadora, profesional y reversible.
+- Antes de tocar nada, auditá el proyecto completo para identificar TODAS las referencias a librerías externas en HTML, CSS y JS.
+- No quiero que dejes mezclado “una parte local y otra remota” salvo que lo justifiques explícitamente y me lo informes.
+
+Objetivo exacto:
+- Traer localmente y dejar funcionando desde archivos propios del proyecto:
+  1. Bootstrap CSS
+  2. Bootstrap JS bundle
+  3. Bootstrap Icons
+  4. Swiper CSS
+  5. Swiper JS
+- Mantener las mismas versiones exactas actualmente usadas en el proyecto, salvo que detectes una razón fuerte para no hacerlo. Si cambiás alguna versión, primero explicitá por qué.
+- Reemplazar todas las referencias remotas por rutas locales correctas.
+- Resolver también las cargas dinámicas desde JS, no solo los `<link>` y `<script>` en HTML.
+- Verificar que el sitio siga funcionando igual en desktop y mobile.
+
+Lo que espero que hagas, paso por paso:
+1. Auditar el proyecto completo.
+   - Encontrá todas las referencias a CDN o recursos externos relacionados con Bootstrap, Bootstrap Icons y Swiper.
+   - Revisá HTML, CSS y JS.
+   - Revisá especialmente `assets/js/global.js` porque ya sé que ahí hay carga dinámica.
+   - Identificá qué páginas dependen de cada librería.
+   - Identificá qué componentes o funciones concretas se rompen si falta cada una.
+
+2. Proponer una estructura local ordenada.
+   - Guardá los archivos en una estructura profesional, por ejemplo algo tipo:
+     - `assets/vendor/bootstrap/...`
+     - `assets/vendor/bootstrap-icons/...`
+     - `assets/vendor/swiper/...`
+   - Si Bootstrap Icons necesita fuentes (`.woff`, `.woff2`, etc.), asegurate de traerlas y dejar sus rutas resueltas correctamente.
+   - No improvises rutas desordenadas.
+
+3. Mantener exactamente el comportamiento actual.
+   - No modifiques estilos del sitio salvo que sea necesario para corregir una ruta.
+   - No cambies clases, nombres ni arquitectura del HTML salvo que sea imprescindible.
+   - No alteres inicializaciones de componentes excepto lo necesario para que apunten a archivos locales.
+   - No cambies el diseño visual, espaciados, tipografías, íconos, animaciones ni comportamiento responsive.
+
+4. Migrar todas las referencias.
+   - Cambiá todos los `<link>` y `<script>` remotos en todas las páginas que correspondan.
+   - Cambiá también cualquier carga dinámica en JavaScript.
+   - En el caso de Swiper, revisá si hoy se está cargando de más en algunas páginas y unificá el criterio sin romper nada.
+   - Si una librería se está cargando de forma redundante, corregilo cuidadosamente.
+
+5. Verificar impacto funcional.
+   - Validá explícitamente que siga funcionando:
+     - Header
+     - Menú mobile
+     - Dropdowns
+     - Modales
+     - Sliders/carruseles
+     - Íconos
+     - Componentes inyectados por `global.js`
+     - Footer
+     - Páginas legales
+     - Páginas de tienda
+     - Páginas de planes
+     - Home
+   - Revisá tanto páginas raíz como páginas en subcarpetas, porque hay distintas profundidades de ruta.
+
+6. Revisar rutas relativas.
+   - Este proyecto tiene páginas en `/`, `/pages/`, `/pages/planes/`, `/pages/tienda/`, `/pages/soluciones-a-medida/`, etc.
+   - Asegurate de que las rutas locales funcionen bien desde cualquier profundidad.
+   - Si hace falta, aprovechá lógica existente del proyecto para calcular rutas robustas, pero no reestructures de más.
+
+7. No dejes dependencias remotas olvidadas.
+   - Confirmá si quedan otras referencias externas no relacionadas con estas librerías.
+   - Si encontrás otras, listalas claramente y NO las cambies sin avisar, salvo que yo lo haya pedido.
+
+8. Entregar con verificación y resumen claro.
+   - Al final quiero:
+     - lista exacta de archivos modificados
+     - lista exacta de recursos externos eliminados
+     - lista exacta de archivos locales agregados
+     - riesgos residuales si los hubiera
+     - qué verificaste y qué no pudiste verificar
+     - cualquier punto que requiera revisión manual posterior
+
+Criterios de calidad obligatorios:
+- La migración debe ser conservadora.
+- Debe priorizar no romper nada.
+- Debe mantener las mismas versiones.
+- Debe mantener el mismo look and feel.
+- Debe mantener la misma UX.
+- Debe ser coherente con GitHub Pages.
+- Debe dejar el proyecto menos dependiente de terceros.
+- No quiero “parches rápidos”; quiero una solución limpia y mantenible.
+
+Criterios de aceptación:
+- El sitio ya no debe depender de jsDelivr para Bootstrap, Bootstrap Icons y Swiper.
+- Debe seguir viéndose igual.
+- Debe seguir funcionando igual.
+- Los íconos deben seguir cargando bien.
+- Los sliders deben seguir funcionando igual.
+- El menú mobile y modales de Bootstrap deben seguir funcionando.
+- No deben aparecer errores por rutas rotas en páginas de subdirectorios.
+- No deben quedar referencias remotas viejas a esas librerías.
+
+Chequeos específicos que quiero que hagas:
+- Buscar todas las ocurrencias de:
+  - `cdn.jsdelivr.net`
+  - `bootstrap.min.css`
+  - `bootstrap.bundle.min.js`
+  - `bootstrap-icons`
+  - `swiper-bundle.min.css`
+  - `swiper-bundle.min.js`
+- Revisar si hay funciones en `global.js` que crean `<script>` o `<link>` dinámicamente.
+- Confirmar si Bootstrap Icons usa `url(...)` a fuentes y verificar esas rutas.
+- Confirmar si alguna página carga Swiper de forma directa y si además `global.js` también lo inyecta.
+- Detectar duplicaciones o inconsistencias.
+- Confirmar qué porcentaje del sitio dependía de cada librería.
+
+Precauciones obligatorias:
+- No prometas riesgo cero.
+- Si detectás algo ambiguo o especialmente riesgoso, explicalo.
+- No borres nada importante sin confirmar antes que ya quedó reemplazado.
+- No hagas cambios destructivos innecesarios.
+- Si encontrás archivos remotos duplicados o legacy, no los elimines hasta verificar que ya no se usan.
+- Si necesitás dejar una etapa intermedia, explicitá cuál es y por qué.
+
+Estilo de trabajo esperado:
+- Primero auditá.
+- Después ejecutá la migración.
+- Después verificá.
+- Después resumí.
+- No te quedes solo en explicar: hacé el cambio completo.
+- Si encontrás algo inesperado, resolvelo con criterio de mínimo riesgo.
+
+Quiero que al final me respondas con esta estructura:
+1. Auditoría encontrada
+2. Cambios realizados
+3. Validaciones hechas
+4. Riesgos o puntos a revisar
+5. Resultado final
+
+Importante:
+- No hagas rediseño.
+- No modernices por tu cuenta.
+- No cambies textos.
+- No cambies SEO.
+- No cambies componentes salvo por lo necesario para migrar librerías.
+- No dejes mezcla innecesaria entre local y remoto.
+- No omitas ninguna referencia externa relacionada con estas librerías.
+
+Si necesitás priorizar por riesgo, seguí este orden:
+1. Bootstrap
+2. Bootstrap Icons
+3. Swiper
+
+Y si encontrás que conviene hacer una migración por etapas, primero dejá un diagnóstico claro antes de seguir.

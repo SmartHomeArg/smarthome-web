@@ -332,15 +332,116 @@ function buildBreadcrumbItems(baseUrl, pageKey, pageName) {
   return items;
 }
 
+let runtimeCatalogConfigPromise = null;
+
+function ensureRuntimeCatalogConfig() {
+  if (window.SM_RUNTIME_CATALOG?.pricing?.kits) {
+    return Promise.resolve(window.SM_RUNTIME_CATALOG);
+  }
+
+  if (runtimeCatalogConfigPromise) {
+    return runtimeCatalogConfigPromise;
+  }
+
+  runtimeCatalogConfigPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector('script[data-smarthome-runtime-catalog="1"]');
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(window.SM_RUNTIME_CATALOG), { once: true });
+      existingScript.addEventListener("error", () => reject(new Error("No se pudo cargar runtime-catalog.js")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = getSiteAssetUrl("assets/js/runtime-catalog.js");
+    script.defer = true;
+    script.setAttribute("data-smarthome-runtime-catalog", "1");
+    script.addEventListener("load", () => resolve(window.SM_RUNTIME_CATALOG), { once: true });
+    script.addEventListener("error", () => reject(new Error("No se pudo cargar runtime-catalog.js")), { once: true });
+    document.head.appendChild(script);
+  });
+
+  return runtimeCatalogConfigPromise;
+}
+
+function getRuntimeCatalogPricing() {
+  return window.SM_RUNTIME_CATALOG?.pricing || null;
+}
+
+function formatArsInteger(value) {
+  const safeNumber = Number(value || 0);
+  return `$ ${new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(safeNumber)}`;
+}
+
+function formatArsDecimal(value) {
+  const safeNumber = Number(value || 0);
+  return `$ ${new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(safeNumber)}`;
+}
+
+function getStorefrontKitPricing(kitId) {
+  const pricingConfig = getRuntimeCatalogPricing();
+  const kitConfig = pricingConfig?.kits?.[kitId];
+
+  if (!kitConfig) {
+    console.error(`No se encontro configuracion de precios para el kit "${kitId}".`);
+    return {
+      installationPriceNumber: 0,
+      installationPriceFormatted: formatArsInteger(0),
+      priceWithoutTaxFormatted: formatArsDecimal(0),
+      installmentsLabel: pricingConfig?.defaultInstallmentsLabel || "6 cuotas sin interes",
+      planListNumber: 0,
+      planListFormatted: formatArsInteger(0),
+      planDiscountPercent: 0,
+      planDiscountMonths: 0,
+      planFinalNumber: 0,
+      planFinalFormatted: formatArsInteger(0),
+      planPromoLabel: "Sin promocion vigente"
+    };
+  }
+
+  const taxRate = Number(pricingConfig?.taxRate ?? 0.21);
+  const installationPriceNumber = Number(kitConfig.installationPrice || 0);
+  const planListNumber = Number(kitConfig.planListPrice || 0);
+  const planDiscountPercent = Number(kitConfig.planDiscountPercent || 0);
+  const planDiscountMonths = Number(kitConfig.planDiscountMonths || 0);
+  const planFinalNumber = Math.round(planListNumber * (1 - (planDiscountPercent / 100)));
+  const priceWithoutTaxNumber = installationPriceNumber / (1 + taxRate);
+
+  return {
+    installationPriceNumber,
+    installationPriceFormatted: formatArsInteger(installationPriceNumber),
+    priceWithoutTaxFormatted: formatArsDecimal(priceWithoutTaxNumber),
+    installmentsLabel: pricingConfig?.defaultInstallmentsLabel || "6 cuotas sin interes",
+    planListNumber,
+    planListFormatted: formatArsInteger(planListNumber),
+    planDiscountPercent,
+    planDiscountMonths,
+    planFinalNumber,
+    planFinalFormatted: formatArsInteger(planFinalNumber),
+    planPromoLabel: `${planDiscountPercent}% de descuento por ${planDiscountMonths} meses`
+  };
+}
+
 function injectStructuredData() {
   const pageKey = getCurrentPageKey();
+  const kitCamPlusPricing = getStorefrontKitPricing("kit-cam-plus");
+  const kitSmart11Pricing = getStorefrontKitPricing("kit-smart-1-1");
+  const kitSmart22Pricing = getStorefrontKitPricing("kit-smart-2-2");
+  const kitSmartCam22Pricing = getStorefrontKitPricing("kit-smart-cam-2-2");
+  const kitIndustrialPricing = getStorefrontKitPricing("kit-industrial");
 
   const catalogKits = [
-    { name: "Kit Cam Plus", sku: "kit-cam-plus", price: 89999, url: "pages/tienda/kit-cam-plus.html", image: "pages/tienda/kit-cam-plus.webp" },
-    { name: "Kit Smart 1.1", sku: "kit-smart-1-1", price: 108999, url: "pages/tienda/kit-smart-1-1.html", image: "pages/tienda/kit-smart-1-1.webp" },
-    { name: "Kit Smart 2.2", sku: "kit-smart-2-2", price: 126999, url: "pages/tienda/kit-smart-2-2.html", image: "pages/tienda/kit-smart-2-2.webp" },
-    { name: "Kit Smart Cam 2.2", sku: "kit-smart-cam-2-2", price: 134999, url: "pages/tienda/kit-smart-cam-2-2.html", image: "pages/tienda/kit-smart-cam-2-2.webp" },
-    { name: "Kit Industrial", sku: "kit-industrial", price: 179999, url: "pages/tienda/kit-industrial.html", image: "pages/tienda/kit-industrial.webp" }
+    { name: "Kit Cam Plus", sku: "kit-cam-plus", price: kitCamPlusPricing.installationPriceNumber, url: "pages/tienda/kit-cam-plus.html", image: "pages/tienda/kit-cam-plus.webp" },
+    { name: "Kit Smart 1.1", sku: "kit-smart-1-1", price: kitSmart11Pricing.installationPriceNumber, url: "pages/tienda/kit-smart-1-1.html", image: "pages/tienda/kit-smart-1-1.webp" },
+    { name: "Kit Smart 2.2", sku: "kit-smart-2-2", price: kitSmart22Pricing.installationPriceNumber, url: "pages/tienda/kit-smart-2-2.html", image: "pages/tienda/kit-smart-2-2.webp" },
+    { name: "Kit Smart Cam 2.2", sku: "kit-smart-cam-2-2", price: kitSmartCam22Pricing.installationPriceNumber, url: "pages/tienda/kit-smart-cam-2-2.html", image: "pages/tienda/kit-smart-cam-2-2.webp" },
+    { name: "Kit Industrial", sku: "kit-industrial", price: kitIndustrialPricing.installationPriceNumber, url: "pages/tienda/kit-industrial.html", image: "pages/tienda/kit-industrial.webp" }
   ];
 
   const pageMap = {
@@ -405,7 +506,7 @@ function injectStructuredData() {
       kind: "product",
       name: "Kit Cam Plus",
       sku: "kit-cam-plus",
-      price: 89999,
+      price: kitCamPlusPricing.installationPriceNumber,
       image: "pages/tienda/kit-cam-plus.webp",
       schemaDescription: "Camara Wi-Fi con grabacion en la nube, tarjeta de memoria, carteleria disuasiva y proteccion para exteriores."
     },
@@ -413,7 +514,7 @@ function injectStructuredData() {
       kind: "product",
       name: "Kit Industrial",
       sku: "kit-industrial",
-      price: 179999,
+      price: kitIndustrialPricing.installationPriceNumber,
       image: "pages/tienda/kit-industrial.webp",
       schemaDescription: "Sistema de alarma con proteccion interior y exterior: sirena exterior, sensores de doble tecnologia para exteriores y cobertura ampliada."
     },
@@ -421,7 +522,7 @@ function injectStructuredData() {
       kind: "product",
       name: "Kit Smart 1.1",
       sku: "kit-smart-1-1",
-      price: 108999,
+      price: kitSmart11Pricing.installationPriceNumber,
       image: "pages/tienda/kit-smart-1-1.webp",
       schemaDescription: "Sistema de alarma con central, sensor de movimiento, sensor magnetico inalambrico, sirena interior y llavero de control."
     },
@@ -429,7 +530,7 @@ function injectStructuredData() {
       kind: "product",
       name: "Kit Smart 2.2",
       sku: "kit-smart-2-2",
-      price: 126999,
+      price: kitSmart22Pricing.installationPriceNumber,
       image: "pages/tienda/kit-smart-2-2.webp",
       schemaDescription: "Sistema de alarma con central, 2 sensores de movimiento, 2 sensores magneticos inalambricos, sirena interior y llavero."
     },
@@ -437,7 +538,7 @@ function injectStructuredData() {
       kind: "product",
       name: "Kit Smart Cam 2.2",
       sku: "kit-smart-cam-2-2",
-      price: 134999,
+      price: kitSmartCam22Pricing.installationPriceNumber,
       image: "pages/tienda/kit-smart-cam-2-2.webp",
       schemaDescription: "Todo lo del Kit Smart 2.2 mas una camara Wi-Fi con grabacion en la nube y deteccion de movimiento."
     },
@@ -609,6 +710,12 @@ function injectStructuredData() {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
+  try {
+    await ensureRuntimeCatalogConfig();
+  } catch (error) {
+    console.error("Error cargando configuracion central de precios:", error);
+  }
+
   injectStructuredData();
 
   cargarHeader();
@@ -3828,14 +3935,9 @@ async function cargarDetalleProductoKit() {
 
     const kitsBySlug = {
       "kit-cam-plus": {
+        pricing: getStorefrontKitPricing("kit-cam-plus"),
         title: "Kit Cam+",
         subtitle: "Ideal para hogares y comercios.",
-        price: "$ 89.999",
-        installments: "6 cuotas sin interes",
-        priceWithoutTax: "$ 74.379,34",
-        planList: "$ 59.900",
-        planSell: "$ 41.930",
-        planPromo: "30% de descuento por 6 meses",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Camara incluida para visualizacion en tiempo real",
@@ -3860,14 +3962,9 @@ async function cargarDetalleProductoKit() {
         ]
       },
       "kit-smart-1-1": {
+        pricing: getStorefrontKitPricing("kit-smart-1-1"),
         title: "Kit Smart 1.1",
         subtitle: "Ideal para hogares y comercios.",
-        price: "$ 108.999",
-        installments: "6 cuotas sin interes",
-        priceWithoutTax: "$ 90.081,82",
-        planList: "$ 61.900",
-        planSell: "$ 43.399",
-        planPromo: "30% de descuento por 6 meses",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Personaliza codigos de usuario para saber quien ingresa y sale",
@@ -3895,14 +3992,9 @@ async function cargarDetalleProductoKit() {
         ]
       },
       "kit-smart-2-2": {
+        pricing: getStorefrontKitPricing("kit-smart-2-2"),
         title: "Kit Smart 2.2",
         subtitle: "Ideal para hogares y comercios.",
-        price: "$ 126.999",
-        installments: "6 cuotas sin interes",
-        priceWithoutTax: "$ 104.957,85",
-        planList: "$ 65.900",
-        planSell: "$ 46.130",
-        planPromo: "30% de descuento por 6 meses",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Personaliza codigos de usuario para saber quien ingresa y sale",
@@ -3930,14 +4022,9 @@ async function cargarDetalleProductoKit() {
         ]
       },
       "kit-smart-cam-2-2": {
+        pricing: getStorefrontKitPricing("kit-smart-cam-2-2"),
         title: "Kit Smart Cam 2.2",
         subtitle: "Ideal para hogares y comercios.",
-        price: "$ 134.999",
-        installments: "6 cuotas sin interes",
-        priceWithoutTax: "$ 111.569,42",
-        planList: "$ 66.900",
-        planSell: "$ 46.830",
-        planPromo: "30% de descuento por 6 meses",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Incluye camara para ver eventos en vivo",
@@ -3970,14 +4057,9 @@ async function cargarDetalleProductoKit() {
         ]
       },
       "kit-industrial": {
+        pricing: getStorefrontKitPricing("kit-industrial"),
         title: "Kit Industrial",
         subtitle: "Ideal para industrias y grandes superficies.",
-        price: "$ 179.999",
-        installments: "6 cuotas sin interes",
-        priceWithoutTax: "$ 148.759,50",
-        planList: "$ 79.900",
-        planSell: "$ 55.930",
-        planPromo: "30% de descuento por 6 meses",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Cobertura ampliada para mayor superficie",
@@ -4050,12 +4132,12 @@ async function cargarDetalleProductoKit() {
 
     title.textContent = kit.title;
     subtitle.textContent = kit.subtitle;
-    price.textContent = kit.price;
-    installments.textContent = kit.installments;
-    priceWithoutTax.textContent = `Precio sin impuestos nacionales ${kit.priceWithoutTax}`;
-    planList.textContent = kit.planList;
-    planSell.textContent = kit.planSell;
-    planPromo.textContent = kit.planPromo;
+    price.textContent = kit.pricing.installationPriceFormatted;
+    installments.textContent = kit.pricing.installmentsLabel;
+    priceWithoutTax.textContent = `Precio sin impuestos nacionales ${kit.pricing.priceWithoutTaxFormatted}`;
+    planList.textContent = kit.pricing.planListFormatted;
+    planSell.textContent = kit.pricing.planFinalFormatted;
+    planPromo.textContent = kit.pricing.planPromoLabel;
 
     features.innerHTML = kit.features
       .map((item) => `<li><i class="bi bi-shield-check"></i><span>${String(item)}</span></li>`)
@@ -4152,8 +4234,7 @@ function initKitsTienda(container) {
       image: "kit-cam-plus.webp",
       slug: "kit-cam-plus",
       description: "Camara Wi-Fi con grabacion en la nube, tarjeta de memoria, carteleria disuasiva y proteccion para exteriores.",
-      price: "$ 89.999",
-      installments: "6 cuotas sin interes",
+      pricing: getStorefrontKitPricing("kit-cam-plus"),
       features: ["Video en vivo desde la app", "Grabacion en la nube", "Carteleria disuasiva", "Gabinete y jaula de proteccion"]
     },
     {
@@ -4162,8 +4243,7 @@ function initKitsTienda(container) {
       image: "kit-smart-1-1.webp",
       slug: "kit-smart-1-1",
       description: "Sistema de alarma con central, sensor de movimiento, sensor magnetico inalambrico, sirena interior y llavero.",
-      price: "$ 108.999",
-      installments: "6 cuotas sin interes",
+      pricing: getStorefrontKitPricing("kit-smart-1-1"),
       features: ["Monitoreo 24/7", "1 sensor de movimiento", "1 sensor magnetico", "Control desde la app"]
     },
     {
@@ -4172,8 +4252,7 @@ function initKitsTienda(container) {
       image: "kit-smart-2-2.webp",
       slug: "kit-smart-2-2",
       description: "Sistema de alarma con central, 2 sensores de movimiento, 2 sensores magneticos inalambricos, sirena interior y llavero.",
-      price: "$ 126.999",
-      installments: "6 cuotas sin interes",
+      pricing: getStorefrontKitPricing("kit-smart-2-2"),
       features: ["Monitoreo 24/7", "2 sensores de movimiento", "2 sensores magneticos", "Control desde la app"]
     },
     {
@@ -4182,8 +4261,7 @@ function initKitsTienda(container) {
       image: "kit-smart-cam-2-2.webp",
       slug: "kit-smart-cam-2-2",
       description: "Todo lo del Kit Smart 2.2 mas una camara Wi-Fi con grabacion en la nube y carteleria disuasiva.",
-      price: "$ 134.999",
-      installments: "6 cuotas sin interes",
+      pricing: getStorefrontKitPricing("kit-smart-cam-2-2"),
       features: ["Monitoreo 24/7", "Camara Wi-Fi incluida", "Grabacion en la nube", "Alarma + video en un solo kit"]
     },
     {
@@ -4192,8 +4270,7 @@ function initKitsTienda(container) {
       image: "kit-industrial.webp",
       slug: "kit-industrial",
       description: "Sistema de alarma con proteccion interior y exterior: sirena exterior, sensores de doble tecnologia y cobertura perimetral.",
-      price: "$ 179.999",
-      installments: "6 cuotas sin interes",
+      pricing: getStorefrontKitPricing("kit-industrial"),
       features: ["Monitoreo 24/7", "Sirena exterior disuasiva", "Sensores doble tecnologia exterior", "Cobertura perimetral"]
     }
   ];
@@ -4211,8 +4288,8 @@ function initKitsTienda(container) {
     wrapper.innerHTML = kitsData.map((kit, index) => {
       const safeName = String(kit.name || "");
       const safeDescription = String(kit.description || "");
-      const safePrice = String(kit.price || "");
-      const safeInstallments = String(kit.installments || "");
+      const safePrice = String(kit.pricing?.installationPriceFormatted || "");
+      const safeInstallments = String(kit.pricing?.installmentsLabel || "");
       const imageUrl = getKitImageUrl(kit.image);
       const pageUrl = getKitPageUrl(kit.slug);
 
