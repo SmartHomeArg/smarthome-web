@@ -74,10 +74,10 @@
         // ================================================================
         "kit-cam-plus": {
           // Precio principal del kit.
-          installationPrice: 5,
+          installationPrice: 49900,
 
           // Precio del plan mensual antes del descuento.
-          planListPrice: 20000,
+          planListPrice: 46900,
 
           // Descuento aplicado al plan.
           planDiscountPercent: 30,
@@ -90,8 +90,8 @@
         // KIT SMART 1.1
         // ================================================================
         "kit-smart-1-1": {
-          installationPrice: 108999,
-          planListPrice: 61900,
+          installationPrice: 59900,
+          planListPrice: 58900,
           planDiscountPercent: 30,
           planDiscountMonths: 6
         },
@@ -100,8 +100,8 @@
         // KIT SMART 2.2
         // ================================================================
         "kit-smart-2-2": {
-          installationPrice: 126999,
-          planListPrice: 65900,
+          installationPrice: 79900,
+          planListPrice: 62900,
           planDiscountPercent: 30,
           planDiscountMonths: 6
         },
@@ -110,8 +110,8 @@
         // KIT SMART CAM 2.2
         // ================================================================
         "kit-smart-cam-2-2": {
-          installationPrice: 134999,
-          planListPrice: 66900,
+          installationPrice: 89900,
+          planListPrice: 69990,
           planDiscountPercent: 30,
           planDiscountMonths: 6
         },
@@ -120,8 +120,8 @@
         // KIT INDUSTRIAL
         // ================================================================
         "kit-industrial": {
-          installationPrice: 179999,
-          planListPrice: 79900,
+          installationPrice: 149000,
+          planListPrice: 89900,
           planDiscountPercent: 30,
           planDiscountMonths: 6
         }

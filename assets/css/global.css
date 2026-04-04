@@ -6589,6 +6589,7 @@ FOOTER
   color: #7b8492;
   font-size: 0.9rem;
   line-height: 1.4;
+  min-height: calc(0.9rem * 1.4 * 3);
 }
 
 .kits-tienda__price-row {

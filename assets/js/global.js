@@ -3934,6 +3934,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-cam-plus"),
         title: "Kit Cam+",
         subtitle: "Ideal para hogares y comercios.",
+        planTitle: "Plan de Monitoreo Mensual VIDEO",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Camara incluida para visualizacion en tiempo real",
@@ -3961,6 +3962,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-smart-1-1"),
         title: "Kit Smart 1.1",
         subtitle: "Ideal para hogares y comercios.",
+        planTitle: "Plan de Monitoreo Mensual BASIC",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Personaliza codigos de usuario para saber quien ingresa y sale",
@@ -3991,6 +3993,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-smart-2-2"),
         title: "Kit Smart 2.2",
         subtitle: "Ideal para hogares y comercios.",
+        planTitle: "Plan de Monitoreo Mensual PLUS",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Personaliza codigos de usuario para saber quien ingresa y sale",
@@ -4021,6 +4024,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-smart-cam-2-2"),
         title: "Kit Smart Cam 2.2",
         subtitle: "Ideal para hogares y comercios.",
+        planTitle: "Plan de Monitoreo Mensual PRO",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Incluye camara para ver eventos en vivo",
@@ -4056,6 +4060,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-industrial"),
         title: "Kit Industrial",
         subtitle: "Ideal para industrias y grandes superficies.",
+        planTitle: "Plan de Monitoreo Mensual COMERCIAL",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Cobertura ampliada para mayor superficie",
@@ -4112,13 +4117,14 @@ async function cargarDetalleProductoKit() {
     const installments = container.querySelector("#kitProductoInstallments");
     const features = container.querySelector("#kitProductoFeatures");
     const includes = container.querySelector("#kitProductoIncludes");
+    const planTitle = container.querySelector("#kitProductoPlanTitle");
     const planList = container.querySelector("#kitProductoPlanList");
     const planSell = container.querySelector("#kitProductoPlanSell");
     const planPromo = container.querySelector("#kitProductoPlanPromo");
     const mainCta = container.querySelector("#kitProductoMainCta");
     const adviceCta = container.querySelector("#kitProductoAdviceCta");
 
-    if (!mainImage || !thumbs || !title || !subtitle || !price || !installments || !features || !includes || !planList || !planSell || !planPromo || !mainCta || !adviceCta) {
+    if (!mainImage || !thumbs || !title || !subtitle || !price || !installments || !features || !includes || !planTitle || !planList || !planSell || !planPromo || !mainCta || !adviceCta) {
       return;
     }
 
@@ -4126,6 +4132,7 @@ async function cargarDetalleProductoKit() {
     subtitle.textContent = kit.subtitle;
     price.textContent = kit.pricing.installationPriceFormatted;
     installments.textContent = kit.pricing.installmentsLabel;
+    planTitle.textContent = kit.planTitle || "Plan de Monitoreo Mensual";
     planList.textContent = kit.pricing.planListFormatted;
     planSell.textContent = kit.pricing.planFinalFormatted;
     planPromo.textContent = kit.pricing.planPromoLabel;
