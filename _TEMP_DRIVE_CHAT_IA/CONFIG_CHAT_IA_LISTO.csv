@@ -1,0 +1,16 @@
+clave,valor,comentario
+version,1.0.0,version de configuracion
+email_destino_alertas,institucional.smarthome@gmail.com,correo para alertas comerciales y cuota
+umbral_lead_caliente,70,score minimo para lead caliente
+score_pide_cotizacion,25,ponderacion por solicitar cotizacion
+score_declara_urgencia,20,ponderacion por urgencia declarada
+score_contacto_valido,25,ponderacion por telefono o email valido
+score_confirma_instalacion,15,ponderacion por confirmar instalacion o visita
+score_acepta_contacto_asesor,15,ponderacion por aceptar contacto comercial
+fallback_modo_faq_activo,true,activa FAQ cuando falla IA externa
+fallback_permitir_captura_lead,true,permite capturar leads sin IA externa
+mensaje_fallback_usuario,"Puedo ayudarte con informacion general y derivarte a un asesor ahora mismo.",mensaje mostrado en modo fallback
+max_caracteres_pregunta,700,limite maximo por mensaje de usuario
+telefono_min_digitos,8,cantidad minima de digitos para validar telefono
+requerir_consentimiento,true,exige confirmacion antes de enviar lead
+alerta_cuota_cooldown_min,360,minutos minimos entre alertas de cuota agotada

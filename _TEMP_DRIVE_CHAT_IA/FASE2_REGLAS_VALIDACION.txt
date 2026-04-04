@@ -1,0 +1,67 @@
+[TIPO DE DOCUMENTO]
+Reglas de validacion Fase 2 - Chat IA Smarthome
+
+[VALIDACIONES DE ENTRADA USUARIO]
+1) mensaje_usuario
+- requerido: si
+- maximo: 700 caracteres
+- accion si falla: responder error amigable y no procesar IA
+
+2) session_id
+- requerido: si
+- patron sugerido: letras, numeros, guion_bajo, guion
+- accion si falla: regenerar server-side si es posible
+
+3) source_page
+- requerido: no
+- validar que sea ruta interna o URL del dominio
+
+[VALIDACIONES DE DATOS LEAD]
+1) nombre
+- requerido: si para envio a leads
+- minimo: 2 caracteres
+
+2) telefono
+- requerido: condicional
+- regla: al menos 8 digitos utiles
+
+3) email
+- requerido: condicional
+- regla: formato email valido
+
+4) contacto minimo
+- regla obligatoria: telefono valido OR email valido
+
+5) consentimiento_contacto
+- requerido: si para enviar lead
+- regla: debe ser true
+
+6) tipo_cliente
+- requerido: si
+- valores permitidos: hogar, comercio
+
+7) lead_score
+- rango: 0 a 100
+
+[CLASIFICACION SUGERIDA]
+- 0 a 39: frio
+- 40 a 69: tibio
+- 70 a 100: caliente
+
+[VALIDACIONES OPERATIVAS]
+1) anti duplicado
+- no reenviar mismo lead (mismo telefono/email + session_id) en ventana corta
+
+2) alerta cuota IA
+- respetar cooldown de 360 minutos entre mails repetidos
+
+3) fallback
+- si proveedor IA falla por cuota/error: activar modo FAQ y continuar captura lead
+
+[CRITERIO DE ENVIO A LEADS OFICIALES]
+Enviar solo si:
+- consentimiento_contacto = true
+- contacto minimo valido (telefono o email)
+- nombre no vacio
+- tipo_cliente definido
+- intencion_compra en {cotizacion, compra} o lead_score >= umbral configurado

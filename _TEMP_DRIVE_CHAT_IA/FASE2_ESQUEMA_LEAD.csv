@@ -1,0 +1,18 @@
+campo,tipo,requerido,regla_validacion,ejemplo,descripcion
+session_id,string,si,no_vacio,sess_20260404_ab12,Identificador de sesion de chat
+timestamp,string,si,iso8601_utc,2026-04-04T18:10:00Z,Fecha y hora del evento
+nombre,string,si,largo_2_80,Juan Perez,Nombre y apellido del prospecto
+telefono,string,condicional,digitos_min_8,+5491134567890,Obligatorio si no hay email valido
+email,string,condicional,email_formato,cliente@email.com,Obligatorio si no hay telefono valido
+tipo_cliente,string,si,enum_hogar_comercio,hogar,Segmento del cliente
+localidad,string,si,largo_2_80,La Plata,Ubicacion del cliente
+interes,string,si,largo_2_120,Kit Smart Cam 2.2 + Plan Pro,Kit o plan de interes
+urgencia,string,no,enum_baja_media_alta,media,Nivel de urgencia declarada
+franja_horaria_contacto,string,no,largo_2_80,16 a 20 hs,Horario preferido
+consentimiento_contacto,boolean,si,true_requerido,true,Confirmacion explicita para contacto
+intencion_compra,string,si,enum_info_cotizacion_compra,cotizacion,Estado de la intencion comercial
+lead_score,number,si,rango_0_100,78,Puntaje de calificacion
+lead_estado,string,si,enum_frio_tibio_caliente,caliente,Clasificacion final del lead
+resumen_conversacion,string,si,largo_20_3000,Cliente busca seguridad para comercio...,Resumen ejecutivo de la conversacion
+source_page,string,no,url_o_ruta,/pages/comercio.html,Pagina donde inicio el chat
+enviado_a_leads_oficiales,boolean,si,boolean,true,Indica si ya se sincronizo con hoja oficial

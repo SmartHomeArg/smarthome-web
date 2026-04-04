@@ -1,0 +1,53 @@
+[TIPO DE DOCUMENTO]
+Base de conocimiento comercial Smarthome
+
+[EMPRESA]
+- Marca: Smarthome
+- Segmento: hogar y comercio
+- Propuesta: seguridad con monitoreo y gestion remota por app
+
+[KITS]
+1) Kit Cam+
+- Incluye: carteleria, camara Wi-Fi, memoria, gabinete estanco, jaula
+- Nota: no incluye sistema de alarma
+
+2) Kit Smart 1.1
+- Incluye base de alarma + sensores + sirena interior + llavero
+
+3) Kit Smart 2.2
+- Similar Smart 1.1 con mayor cantidad de sensores
+
+4) Kit Smart Cam 2.2
+- Base Smart 2.2 + camara y accesorios Cam+
+
+5) Kit Industrial
+- Base alarma + sirena exterior + sensores exteriores doble tecnologia
+
+[PLANES Y ASOCIACION]
+- Plan Video -> Kit Cam+
+- Plan Basic -> Kit Smart 1.1
+- Plan Plus -> Kit Smart 2.2
+- Plan Pro -> Kit Smart Cam 2.2
+- Plan Comercial -> Kit Industrial
+
+[PRESTACIONES]
+- Monitoreo 24/7 en kits con alarma
+- Control por app movil (segun kit/plan)
+- Alertas y notificaciones de eventos
+- Funciones de video segun plan asociado
+
+[FAQ]
+- El kit de camara incluye monitoreo de alarma?
+  No, Kit Cam+ es de video.
+- Se pueden mezclar planes entre kits?
+  No, cada plan corresponde a su kit.
+- Se controla desde celular?
+  Si, segun el sistema y plan contratado.
+
+[DATOS COMPLETAR/ACTUALIZAR]
+- Precios vigentes
+- Cobertura geografica exacta
+- Horarios comerciales
+- Medios de pago
+- Tiempos estimados de instalacion
+- Promociones vigentes (si aplica)

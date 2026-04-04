@@ -1,0 +1,46 @@
+[TIPO DE DOCUMENTO]
+Plantilla de eventos comerciales
+
+[EVENTO]
+nombre: lead_caliente
+descripcion: cliente con alta intencion y contacto valido
+condiciones_minimas:
+- score >= umbral_lead_caliente
+- consentimiento_contacto = si
+- telefono o email valido
+acciones:
+- enviar_alerta_email
+- crear_lead_en_script_formularios
+- guardar_resumen_conversacion
+
+[EVENTO]
+nombre: cotizacion_solicitada
+descripcion: cliente pide precio/presupuesto/propuesta
+condiciones_minimas:
+- intencion = cotizacion
+acciones:
+- pedir_datos_minimos
+- ofrecer_contacto_asesor
+- registrar_evento
+
+[EVENTO]
+nombre: cierre_probable
+descripcion: cliente listo para avanzar
+condiciones_minimas:
+- intencion = compra
+- urgencia = media o alta
+- acepta_siguiente_paso = si
+acciones:
+- priorizar_alerta_comercial
+- crear_tarea_seguimiento
+- notificar_equipo
+
+[EVENTO]
+nombre: cuota_ia_agotada
+descripcion: proveedor IA devuelve limite/cuota
+condiciones_minimas:
+- error_tipo = quota_exceeded o resource_exhausted
+acciones:
+- activar_fallback_faq
+- enviar_alerta_email_con_cooldown
+- mantener_captura_lead
