@@ -470,14 +470,9 @@ FOOTER
 
 .footer-container {
   display: grid;
-  grid-template-columns: minmax(220px, 1.3fr) repeat(3, minmax(170px, 1fr));
+  grid-template-columns: minmax(220px, 1.1fr) repeat(3, minmax(140px, 0.75fr)) minmax(340px, 1.9fr);
   gap: 24px;
   align-items: start;
-}
-
-.footer-col-stack {
-  display: grid;
-  gap: 16px;
 }
 
 /* Enlace del logo: mantiene area clickeable limpia */
@@ -562,6 +557,10 @@ FOOTER
 
 .footer-contact a {
   overflow-wrap: anywhere;
+}
+
+.footer-col-contact {
+  min-width: 0;
 }
 
 .footer-contact-label {
