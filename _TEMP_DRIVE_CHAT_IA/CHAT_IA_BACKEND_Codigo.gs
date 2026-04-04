@@ -14,6 +14,7 @@
  * - SHEET_OPERACION_ID
  * - ALERT_EMAIL
  * - GEMINI_API_KEY (opcional)
+ * - GEMINI_MODEL (opcional, ej: gemini-2.5-flash)
  * - FORMS_WEBAPP_URL (opcional)
  */
 
@@ -107,6 +108,7 @@ function getScriptProps_() {
     SHEET_OPERACION_ID: p.getProperty('SHEET_OPERACION_ID') || '',
     ALERT_EMAIL: p.getProperty('ALERT_EMAIL') || '',
     GEMINI_API_KEY: p.getProperty('GEMINI_API_KEY') || '',
+    GEMINI_MODEL: p.getProperty('GEMINI_MODEL') || 'gemini-2.5-flash',
     FORMS_WEBAPP_URL: p.getProperty('FORMS_WEBAPP_URL') || ''
   };
 
@@ -242,7 +244,7 @@ function buildBotReply_(ctx, signal, props, cfg) {
 
   if (props.GEMINI_API_KEY) {
     try {
-      const text = callGemini_(prompt, props.GEMINI_API_KEY);
+      const text = callGemini_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
       return { mode: 'ia', replyText: text };
     } catch (err) {
       const errMsg = String(err);
@@ -274,8 +276,9 @@ function readKnowledgeDocs_(props) {
   };
 }
 
-function callGemini_(prompt, apiKey) {
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + encodeURIComponent(apiKey);
+function callGemini_(prompt, apiKey, modelName) {
+  const model = cleanText_(modelName) || 'gemini-2.5-flash';
+  const url = 'https://generativelanguage.googleapis.com/v1/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
@@ -630,6 +633,7 @@ function testConfigAndAccess() {
       SHEET_OPERACION_ID: !!props.SHEET_OPERACION_ID,
       ALERT_EMAIL: !!props.ALERT_EMAIL,
       GEMINI_API_KEY: !!props.GEMINI_API_KEY,
+      GEMINI_MODEL: props.GEMINI_MODEL || 'gemini-2.5-flash',
       FORMS_WEBAPP_URL: !!props.FORMS_WEBAPP_URL
     },
     cfgPreview: cfg,
@@ -644,3 +648,39 @@ function testConfigAndAccess() {
   Logger.log(JSON.stringify(out, null, 2));
   return out;
 }
+
+/**
+ * Lista modelos disponibles para tu API key y muestra solo los que aceptan generateContent.
+ */
+function testListGeminiModels() {
+  const p = PropertiesService.getScriptProperties();
+  const apiKey = p.getProperty('GEMINI_API_KEY') || '';
+  if (!apiKey) throw new Error('Falta GEMINI_API_KEY en Script Properties');
+
+  const url = 'https://generativelanguage.googleapis.com/v1/models?key=' + encodeURIComponent(apiKey);
+  const res = UrlFetchApp.fetch(url, { method: 'get', muteHttpExceptions: true });
+  const code = res.getResponseCode();
+  const txt = res.getContentText() || '';
+
+  if (code < 200 || code >= 300) {
+    throw new Error('ListModels HTTP ' + code + ': ' + txt.slice(0, 800));
+  }
+
+  const data = JSON.parse(txt);
+  const models = (data.models || [])
+    .filter(function(m) {
+      const methods = m.supportedGenerationMethods || [];
+      return methods.indexOf('generateContent') !== -1;
+    })
+    .map(function(m) {
+      return {
+        name: m.name,
+        displayName: m.displayName,
+        supportedGenerationMethods: m.supportedGenerationMethods || []
+      };
+    });
+
+  Logger.log(JSON.stringify(models, null, 2));
+  return models;
+}
+
