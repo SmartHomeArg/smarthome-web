@@ -160,3 +160,35 @@ Si necesitás priorizar por riesgo, seguí este orden:
 3. Swiper
 
 Y si encontrás que conviene hacer una migración por etapas, primero dejá un diagnóstico claro antes de seguir.
+
+
+procedimiento chat ia 
+1 Definición de archivos
+Documento de instrucciones del bot (comportamiento comercial y límites).
+Base de conocimiento privada (datos de empresa, planes, FAQ).
+Archivo de configuración (umbrales de lead, alertas, fallback, correo destino).
+Plantilla de eventos comerciales (lead caliente, cotización solicitada, cierre probable).
+
+2 Estructura de datos
+Esquema claro de campos obligatorios para lead.
+Formato estándar para guardar resumen de conversación.
+Reglas de validación de teléfono, email y consentimiento.
+
+3 Lógica de backend (Apps Script nuevo)
+Endpoint de chat.
+Lectura segura del conocimiento privado.
+Clasificación de intención comercial.
+Disparo de alerta por mail.
+Integración con tu Apps Script actual de formularios.
+Fallback sin IA cuando no haya cuota.
+
+4 Frontend del chat en web
+Widget embebido profesional.
+Flujo para pedir datos mínimos.
+Confirmación antes de enviar lead.
+Mensajes de error y continuidad cuando no hay IA.
+
+5 Pruebas y ajuste
+Casos de prueba: consulta simple, lead caliente, falta de cuota, datos incompletos.
+Ajuste de scoring y mensajes de conversión.
+Verificación de seguridad y no exposición de conocimiento.

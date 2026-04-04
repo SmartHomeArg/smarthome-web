@@ -1,0 +1,56 @@
+{
+  "eventos": [
+    {
+      "tipo": "lead_caliente",
+      "descripcion": "Cliente con alta intencion de compra y datos de contacto validos",
+      "condicionesMinimas": [
+        "score >= umbralLeadCaliente",
+        "consentimiento = true",
+        "telefono o email valido"
+      ],
+      "acciones": [
+        "enviar_alerta_email",
+        "crear_lead_en_formularios",
+        "guardar_resumen_conversacion"
+      ]
+    },
+    {
+      "tipo": "cotizacion_solicitada",
+      "descripcion": "Cliente solicita precio, presupuesto o propuesta",
+      "condicionesMinimas": [
+        "intencion = cotizacion"
+      ],
+      "acciones": [
+        "pedir_datos_minimos",
+        "ofrecer_contacto_asesor",
+        "registrar_evento"
+      ]
+    },
+    {
+      "tipo": "cierre_probable",
+      "descripcion": "Cliente listo para avanzar a llamada/visita/instalacion",
+      "condicionesMinimas": [
+        "intencion = compra",
+        "urgencia_alta_o_media",
+        "acepta_siguiente_paso"
+      ],
+      "acciones": [
+        "priorizar_alerta_comercial",
+        "crear_tarea_seguimiento",
+        "notificar_equipo"
+      ]
+    },
+    {
+      "tipo": "cuota_ia_agotada",
+      "descripcion": "Proveedor IA rechaza por cuota o limite",
+      "condicionesMinimas": [
+        "errorProveedor in [quota_exceeded, resource_exhausted, rate_limited_critico]"
+      ],
+      "acciones": [
+        "activar_fallback_faq",
+        "enviar_alerta_email_con_cooldown",
+        "mantener_captura_lead"
+      ]
+    }
+  ]
+}
