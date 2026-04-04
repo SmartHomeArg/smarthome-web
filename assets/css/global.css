@@ -2643,6 +2643,29 @@ FOOTER
     padding: 18px 0 48px;
   }
 }
+.how-monitoring {
+  background: linear-gradient(180deg, #f0f5ff 0%, #f9fbff 100%);
+}
+.how-monitoring-intro {
+  max-width: 720px;
+  margin-bottom: 28px;
+  color: #3b4f77;
+  font-size: 1.06rem;
+  line-height: 1.65;
+}
+.how-monitoring-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 991.98px) {
+  .how-monitoring-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767.98px) {
+  .how-monitoring-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 .hero-label {
   font-size: 12px;
