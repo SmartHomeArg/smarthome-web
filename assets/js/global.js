@@ -730,6 +730,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   cargarContactate();
   cargarWhatsappFloat();
+  cargarChatIAFloat();
   cargarZonasProteccionHogar();
   cargarZonasProteccionComercio();
   await cargarServiciosParaComercios();
@@ -1272,6 +1273,7 @@ async function cargarHeroForm() {
 }
 
 const SHARED_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxkHX0fbZlJiENW5xcMq-CAkGLS3K3aI18A0vVuEySE079E1JOddCB-s6xDa3bEIasjw/exec';
+const CHAT_IA_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbylZQUltdnal_oGQ0ntZzjTkBO9vm-_TVCqcaVupBgMV5lUqcadIQy7CclMUZNeUit4Yw/exec';
 
 function initHeroLeadForm() {
   const form = document.getElementById('hero-lead-form');
@@ -2242,6 +2244,167 @@ function cargarWhatsappFloat() {
       }
     })
     .catch(error => console.error("Error cargando botón flotante de WhatsApp:", error));
+}
+
+/* =========================================
+   BOTON FLOTANTE CHAT IA
+========================================= */
+
+function ensureFloatingMount_(id) {
+  let mount = document.getElementById(id);
+  if (mount) return mount;
+
+  mount = document.createElement('div');
+  mount.id = id;
+  document.body.appendChild(mount);
+  return mount;
+}
+
+function getChatBackendUrl_() {
+  if (window.SM_CHAT_CONFIG && window.SM_CHAT_CONFIG.endpoint) {
+    return String(window.SM_CHAT_CONFIG.endpoint).trim();
+  }
+  return CHAT_IA_WEBAPP_URL;
+}
+
+function getChatSessionId_() {
+  const key = 'smarthome_chat_ia_session_id';
+
+  try {
+    const existing = sessionStorage.getItem(key);
+    if (existing) return existing;
+
+    const newId = 'sess_web_' + Math.random().toString(36).slice(2, 10);
+    sessionStorage.setItem(key, newId);
+    return newId;
+  } catch (error) {
+    return 'sess_web_' + Math.random().toString(36).slice(2, 10);
+  }
+}
+
+function cargarChatIAFloat() {
+  const contenedor = ensureFloatingMount_('chat-ia-float');
+
+  fetch(getSiteAssetUrl('components/chat-ia-float/chat-ia-float.html'))
+    .then(response => responseAsUtf8Text(response))
+    .then(data => {
+      contenedor.innerHTML = data;
+      initChatIAWidget_(contenedor);
+    })
+    .catch(error => console.error('Error cargando chat IA flotante:', error));
+}
+
+function initChatIAWidget_(contenedor) {
+  const root = contenedor.querySelector('[data-chat-ia-root]');
+  if (!root || root.dataset.initialized === 'true') return;
+  root.dataset.initialized = 'true';
+
+  const toggle = root.querySelector('.chat-ia-toggle');
+  const panel = root.querySelector('.chat-ia-panel');
+  const closeBtn = root.querySelector('.chat-ia-panel__close');
+  const form = root.querySelector('.chat-ia-form');
+  const input = root.querySelector('.chat-ia-input');
+  const sendBtn = root.querySelector('.chat-ia-send');
+  const messages = root.querySelector('.chat-ia-messages');
+
+  if (!toggle || !panel || !closeBtn || !form || !input || !sendBtn || !messages) return;
+
+  const sessionId = getChatSessionId_();
+  let isBusy = false;
+
+  function appendMessage(sender, text) {
+    const msg = document.createElement('article');
+    msg.className = 'chat-ia-msg is-' + sender;
+    msg.textContent = String(text || '').trim();
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function setOpenState(isOpen) {
+    panel.hidden = !isOpen;
+    root.classList.toggle('is-open', isOpen);
+    toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+    if (isOpen) {
+      setTimeout(() => input.focus(), 30);
+    }
+  }
+
+  function setBusyState(nextBusy) {
+    isBusy = nextBusy;
+    form.classList.toggle('is-loading', nextBusy);
+    input.disabled = nextBusy;
+    sendBtn.disabled = nextBusy;
+  }
+
+  appendMessage('bot', 'Hola, soy el asistente de SmartHome. Puedo ayudarte con kits, planes y cotizaciones.');
+
+  toggle.addEventListener('click', function () {
+    const next = panel.hidden;
+    setOpenState(next);
+  });
+
+  closeBtn.addEventListener('click', function () {
+    setOpenState(false);
+  });
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    if (isBusy) return;
+
+    const userText = String(input.value || '').trim();
+    if (!userText) return;
+
+    appendMessage('user', userText);
+    input.value = '';
+    setBusyState(true);
+
+    const endpoint = getChatBackendUrl_();
+    if (!endpoint) {
+      appendMessage('bot', 'El chat aun no esta conectado. Si quieres, escribinos por WhatsApp y te respondemos ahora.');
+      setBusyState(false);
+      return;
+    }
+
+    try {
+      const payload = {
+        sessionId: sessionId,
+        message: userText,
+        sourcePage: window.location.pathname || '/',
+        userAgent: navigator.userAgent || 'browser'
+      };
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const bodyText = await res.text();
+      let data = null;
+
+      try {
+        data = JSON.parse(bodyText);
+      } catch (error) {
+        data = null;
+      }
+
+      if (!res.ok || !data || data.ok !== true) {
+        appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.');
+      } else {
+        appendMessage('bot', data.reply || 'Te leo. Si quieres, puedo ayudarte a cotizar ahora.');
+      }
+    } catch (error) {
+      appendMessage('bot', 'No pude conectar con el asistente ahora. Puedes continuar por WhatsApp y te atendemos enseguida.');
+      console.error('Error enviando mensaje al chat IA:', error);
+    } finally {
+      setBusyState(false);
+      input.focus();
+    }
+  });
 }
 
 

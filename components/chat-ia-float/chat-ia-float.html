@@ -1,0 +1,26 @@
+<div class="chat-ia-float" data-chat-ia-root>
+  <button type="button" class="chat-ia-toggle" aria-label="Abrir chat de SmartHome" aria-expanded="false">
+    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+    <span class="chat-ia-toggle__text">Chat IA</span>
+  </button>
+
+  <section class="chat-ia-panel" aria-label="Asistente SmartHome" hidden>
+    <header class="chat-ia-panel__header">
+      <p class="chat-ia-panel__title">Asistente SmartHome</p>
+      <button type="button" class="chat-ia-panel__close" aria-label="Cerrar chat">Cerrar</button>
+    </header>
+
+    <div class="chat-ia-messages" aria-live="polite"></div>
+
+    <form class="chat-ia-form" novalidate>
+      <input
+        type="text"
+        class="chat-ia-input"
+        placeholder="Escribe tu consulta"
+        maxlength="700"
+        autocomplete="off"
+      >
+      <button type="submit" class="chat-ia-send">Enviar</button>
+    </form>
+  </section>
+</div>

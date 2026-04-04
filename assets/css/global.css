@@ -4699,6 +4699,181 @@ FOOTER
 }
 
 /* =========================================================
+   CHAT IA FLOTANTE
+========================================================= */
+
+.chat-ia-float {
+  position: fixed;
+  right: 22px;
+  bottom: 122px;
+  z-index: 9998;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.chat-ia-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: #0b5ed7;
+  color: #fff;
+  padding: 12px 16px;
+  box-shadow: 0 12px 22px rgba(11, 94, 215, 0.28);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-ia-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(11, 94, 215, 0.34);
+}
+
+.chat-ia-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.chat-ia-panel {
+  width: min(360px, calc(100vw - 28px));
+  height: 440px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  border: 1px solid #d7e0f5;
+  background: #fff;
+  box-shadow: 0 18px 34px rgba(9, 28, 60, 0.2);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+}
+
+.chat-ia-panel__header {
+  background: #0b5ed7;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.chat-ia-panel__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.chat-ia-panel__close {
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.chat-ia-messages {
+  padding: 12px;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #f7faff 0%, #ffffff 55%);
+}
+
+.chat-ia-msg {
+  max-width: 88%;
+  margin-bottom: 10px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.chat-ia-msg.is-user {
+  margin-left: auto;
+  background: #0b5ed7;
+  color: #fff;
+  border-bottom-right-radius: 5px;
+}
+
+.chat-ia-msg.is-bot {
+  margin-right: auto;
+  background: #eef3ff;
+  color: #1f2b45;
+  border-bottom-left-radius: 5px;
+}
+
+.chat-ia-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  border-top: 1px solid #e4e9f6;
+  background: #fff;
+  padding: 10px;
+}
+
+.chat-ia-input {
+  border: 1px solid #cdd8f2;
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 13px;
+}
+
+.chat-ia-input:focus-visible {
+  outline: 2px solid #7aa7ff;
+  outline-offset: 1px;
+}
+
+.chat-ia-send {
+  border: 0;
+  border-radius: 10px;
+  background: #0b5ed7;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.chat-ia-form.is-loading .chat-ia-send {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+@media (max-width: 991.98px) {
+  .chat-ia-float {
+    right: 18px;
+    bottom: 110px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .chat-ia-float {
+    right: 14px;
+    bottom: 102px;
+  }
+
+  .chat-ia-toggle {
+    padding: 11px 13px;
+    font-size: 13px;
+  }
+
+  .chat-ia-toggle__text {
+    display: none;
+  }
+
+  .chat-ia-panel {
+    width: min(350px, calc(100vw - 20px));
+    height: 62vh;
+    margin-bottom: 10px;
+  }
+}
+
+/* =========================================================
    Suavizar la apertura/cierre del collapse del menú en mobile
    - Aplica solo en anchos <= 991.98px para no interferir en desktop
    - Usa transición de max-height para un cierre más fluido
