@@ -4204,7 +4204,7 @@ async function cargarDetalleProductoKit() {
       updateMainImage(index);
     });
 
-    const baseWhatsapp = "https://api.whatsapp.com/send?phone=541134245573";
+    const baseWhatsapp = "https://api.whatsapp.com/send?phone=5492646304866";
     const mainMessage = encodeURIComponent(`Hola, quiero contratar el ${kit.title}.`);
     const adviceMessage = encodeURIComponent(`Hola, quiero asesoramiento sobre el ${kit.title}.`);
 
