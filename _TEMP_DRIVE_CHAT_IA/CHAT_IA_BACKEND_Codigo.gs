@@ -27,16 +27,42 @@ const OP_SHEETS = {
   LEADS: 'leads_precalificados'
 };
 
-function doGet() {
-  return jsonResponse_({
-    ok: true,
-    service: 'smarthome-chat-ia',
-    version: CHAT_VERSION,
-    timestamp: new Date().toISOString()
+function doGet(e) {
+  const params = (e && e.parameter) ? e.parameter : {};
+  const wantsChat = String(params.action || '').toLowerCase() === 'chat';
+
+  if (!wantsChat) {
+    return jsonResponse_({
+      ok: true,
+      service: 'smarthome-chat-ia',
+      version: CHAT_VERSION,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  const result = processChatRequest_({
+    sessionId: params.sessionId || '',
+    message: params.message || '',
+    sourcePage: params.sourcePage || '',
+    userAgent: params.userAgent || 'browser',
+    chatHistory: parseChatHistoryParam_(params.chatHistory || '')
   });
+
+  const callback = cleanJsonpCallback_(params.callback || '');
+  if (callback) {
+    return jsResponse_(callback + '(' + JSON.stringify(result) + ');');
+  }
+
+  return jsonResponse_(result);
 }
 
 function doPost(e) {
+  const payload = getRequestData_(e);
+  const result = processChatRequest_(payload);
+  return jsonResponse_(result);
+}
+
+function processChatRequest_(payload) {
   const lock = LockService.getScriptLock();
   let lockAcquired = false;
 
@@ -44,7 +70,6 @@ function doPost(e) {
     lockAcquired = lock.tryLock(1000);
 
     const props = getScriptProps_();
-    const payload = getRequestData_(e);
     const cfg = loadRuntimeConfig_(props);
 
     const ctx = buildContext_(payload, cfg);
@@ -67,7 +92,7 @@ function doPost(e) {
 
     const syncResult = maybeSyncLeadToForms_(ctx, signal, leadScore, leadStatus, props, cfg);
 
-    return jsonResponse_({
+    return {
       ok: true,
       reply: botReplyResult.replyText,
       mode: botReplyResult.mode,
@@ -80,15 +105,15 @@ function doPost(e) {
         syncedToOfficialLeads: syncResult.synced,
         syncDetail: syncResult.detail
       }
-    });
+    };
   } catch (err) {
     const msg = (err && err.message) ? String(err.message) : String(err);
     writeErrorSafe_(null, 'runtime_error', msg, 'n/a', false);
 
-    return jsonResponse_({
+    return {
       ok: false,
       message: msg || 'Error interno en chat IA'
-    });
+    };
   } finally {
     if (lockAcquired) {
       try {
@@ -96,6 +121,24 @@ function doPost(e) {
       } catch (_ignored) {}
     }
   }
+}
+
+function parseChatHistoryParam_(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return [];
+
+  try {
+    return JSON.parse(raw);
+  } catch (_err) {
+    return [];
+  }
+}
+
+function cleanJsonpCallback_(value) {
+  const cb = String(value || '').trim();
+  if (!cb) return '';
+  if (!/^[a-zA-Z_$][0-9a-zA-Z_$\.]{0,120}$/.test(cb)) return '';
+  return cb;
 }
 
 function getScriptProps_() {
@@ -159,6 +202,7 @@ function buildContext_(payload, cfg) {
     userMessage: cleanText_(payload.message),
     sourcePage: cleanText_(payload.sourcePage),
     userAgent: cleanText_(payload.userAgent),
+    chatHistory: normalizeChatHistory_(payload.chatHistory),
     consent: toBool_(lead.consentimientoContacto, false),
     lead: {
       nombre: cleanText_(lead.nombre),
@@ -173,6 +217,33 @@ function buildContext_(payload, cfg) {
     timestamp: new Date().toISOString(),
     cfg: cfg
   };
+}
+
+function normalizeChatHistory_(historyRaw) {
+  if (!Array.isArray(historyRaw)) return [];
+
+  return historyRaw
+    .slice(-8)
+    .map(function(item) {
+      return {
+        role: cleanText_(item && item.role),
+        text: cleanText_(item && item.text)
+      };
+    })
+    .filter(function(item) {
+      return (item.role === 'user' || item.role === 'bot') && !!item.text;
+    });
+}
+
+function formatHistoryForPrompt_(history) {
+  if (!history || !history.length) return 'Sin historial previo.';
+
+  return history
+    .map(function(item) {
+      const roleLabel = item.role === 'user' ? 'CLIENTE' : 'ASESOR';
+      return roleLabel + ': ' + item.text;
+    })
+    .join('\n');
 }
 
 function validateInput_(ctx, cfg) {
@@ -227,6 +298,7 @@ function classifyLeadStatus_(score, cfg) {
 
 function buildBotReply_(ctx, signal, props, cfg) {
   const docs = readKnowledgeDocs_(props);
+  const historyText = formatHistoryForPrompt_(ctx.chatHistory);
 
   const prompt = [
     docs.instructions,
@@ -234,18 +306,31 @@ function buildBotReply_(ctx, signal, props, cfg) {
     docs.knowledge,
     '\n\nEVENTOS:\n',
     docs.events,
+    '\n\nHISTORIAL RECIENTE:\n',
+    historyText,
     '\n\nMENSAJE CLIENTE:\n',
     ctx.userMessage,
     '\n\nDATOS LEAD PARCIALES:\n',
     JSON.stringify(ctx.lead),
     '\n\nINTENCION DETECTADA: ', signal.intent,
-    '\n\nREGLA: Responder en espanol, maximo 120 palabras, incluir siguiente paso comercial claro.'
+    '\n\nREGLAS DE RESPUESTA:',
+    '\n- No te vuelvas a presentar si ya hay historial.',
+    '\n- No repitas saludo inicial en cada turno.',
+    '\n- Responde en espanol, maximo 120 palabras.',
+    '\n- Evita frases de relleno como "hola de nuevo" o "estoy aqui para ayudarte" si no aportan informacion.',
+    '\n- Si ya hay historial, no saludes.',
+    '\n- No cierres con frases incompletas (ej: "para poder").',
+    '\n- Evita frases de relleno como "hola de nuevo" o "estoy aqui para ayudarte" si no aportan informacion.',
+    '\n- Escribe en tono humano y natural, sin formato markdown.',
+    '\n- No uses asteriscos, ni listas con guiones, ni encabezados tipo "Info util".',
+    '\n- Da una respuesta util y luego 1 pregunta puntual para avanzar comercialmente.',
+    '\n- Si piden alarma sin mas datos, pregunta si es para hogar o comercio y cantidad aproximada de ambientes o accesos.'
   ].join('');
 
   if (props.GEMINI_API_KEY) {
     try {
       const text = callGemini_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
-      return { mode: 'ia', replyText: text };
+      return { mode: 'ia', replyText: postProcessReply_(text, ctx) };
     } catch (err) {
       const errMsg = String(err);
       const providerCode = detectProviderCode_(errMsg);
@@ -282,8 +367,8 @@ function callGemini_(prompt, apiKey, modelName) {
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
-      temperature: 0.4,
-      maxOutputTokens: 350
+      temperature: 0.25,
+      maxOutputTokens: 500
     }
   };
 
@@ -302,30 +387,162 @@ function callGemini_(prompt, apiKey, modelName) {
   }
 
   const data = JSON.parse(txt);
-  const output = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+  const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+  const output = Array.isArray(parts)
+    ? parts.map(function(p) { return p && p.text ? String(p.text) : ''; }).join('')
+    : '';
+
   if (!output) throw new Error('Respuesta vacia de Gemini');
 
   return String(output).trim();
 }
 
+function postProcessReply_(text, ctx) {
+  let out = cleanText_(text);
+  if (!out) return 'Puedo ayudarte con una recomendacion concreta. Es para hogar o comercio?';
+
+  // Limpiar restos de markdown para que suene a chat humano.
+  out = out
+    .replace(/\*\*/g, '')
+    .replace(/__+/g, '')
+    .replace(/`+/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  if (ctx && ctx.chatHistory && ctx.chatHistory.length > 0) {
+    out = out.replace(/^\s*[¡!]*\s*(hola|hola de nuevo|buenas|buen dia|buenas tardes|buenas noches)[\s!,.:;-]*/i, '');
+    out = cleanText_(out);
+  }
+
+  // Reparaciones puntuales de cortes frecuentes observados en produccion.
+  out = out.replace(/si buscas seguridad para tu hogar\.$/i, 'si buscas seguridad para tu hogar o para tu comercio?');
+  out = out.replace(/base de alarma, sire\.$/i, 'base de alarma, sirena y sensores para proteger accesos clave.');
+
+  // Si termina con palabras de enlace o fragmentos demasiado cortos, completar con una pregunta util.
+  if (/(para|con|de|y|o|si|que|en|por|como|tu|su)\.$/i.test(out) || /,\s*[a-zA-Z]{1,7}\.$/.test(out)) {
+    const hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
+    if (hasTipo) {
+      out = out.replace(/\.?$/, '') + '. Para avanzar, decime cuantos accesos o ambientes queres cubrir?';
+    } else {
+      out = out.replace(/\.?$/, '') + '. Para avanzar, es para hogar o comercio y cuantos accesos o ambientes queres cubrir?';
+    }
+  }
+
+  // Si la respuesta termina en frase incompleta, completar con pregunta comercial util.
+  if (/(para poder|para ayudarte|necesito saber|necesito|para recomendarte)\.?$/i.test(out)) {
+    const hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
+    if (hasTipo) {
+      out = out.replace(/\.?$/,'') + ', decime aproximadamente cuantos ambientes o accesos queres cubrir?';
+    } else {
+      out = out.replace(/\.?$/,'') + ', es para hogar o comercio y cuantos ambientes o accesos queres cubrir?';
+    }
+  }
+
+  // Evitar finales tipo ",." o ":." generados por post-proceso sobre texto incompleto.
+  out = out.replace(/[,:;]+\.$/, '.');
+
+  // Completar nombres de kit comunes si quedaron truncados por el modelo.
+  out = out.replace(/\bKit Smart 1\.(?!\d)/g, 'Kit Smart 1.1');
+  out = out.replace(/\bKit Smart 2\.(?!\d)/g, 'Kit Smart 2.2');
+
+  if (!/[.!?]$/.test(out)) {
+    out += '.';
+  }
+
+  if (out.length < 24) {
+    out += ' Es para hogar o comercio?';
+  }
+
+  // Normalizar espacios y duplicados de puntuacion residuales.
+  out = out.replace(/\s{2,}/g, ' ').replace(/([!?.,])\1+/g, '$1').trim();
+
+  return out;
+}
+
 function buildFaqFallbackReply_(ctx, signal, knowledgeText, cfg) {
+  const userText = String(ctx.userMessage || '').toLowerCase();
+  const hasHistory = !!(ctx && ctx.chatHistory && ctx.chatHistory.length);
+
+  if (isTruncationComplaint_(userText)) {
+    const lastBot = getLastBotMessage_(ctx);
+    if (lastBot) {
+      return 'Gracias por avisar. Te lo repito claro: ' + ensureEndsWithQuestionOrDot_(lastBot);
+    }
+    return 'Gracias por avisar. Retomemos bien: es para hogar o comercio y cuantos accesos o ambientes queres cubrir?';
+  }
+
+  if (isStopIntent_(userText)) {
+    return 'Entiendo, no hay problema. Si mas adelante quieres retomar, aqui estoy para ayudarte con kits, planes y cotizacion.';
+  }
+
+  if (isGreetingOnly_(userText) && !hasHistory) {
+    return 'Hola, soy el asistente de SmartHome. Te puedo ayudar a elegir kit, plan y cotizacion segun tu caso. Si quieres, empezamos por esto: es para hogar o comercio?';
+  }
+
+  if (isConfusionTurn_(userText)) {
+    return 'Buena pregunta. Te ayudo a elegir una opcion de seguridad segun tu caso y presupuesto. Para orientarte bien, confirmame si es para hogar o comercio.';
+  }
+
+  if (isFrustrationTurn_(userText)) {
+    return 'Tenes razon, vamos simple y sin vueltas. Decime solo esto: es para hogar o comercio, y con eso te doy una recomendacion puntual.';
+  }
+
+  if (isOutOfScopeQuestion_(userText)) {
+    return 'Puedo ayudarte con seguridad para hogar o comercio (alarmas, camaras, monitoreo y cotizacion). Si quieres, te asesoro con una opcion concreta para tu caso.';
+  }
+
+  const inferredType = inferClientType_(ctx);
+  const inferredCoverage = inferCoverageNeed_(ctx);
+
+  if (/(precio|cuanto sale|cuanto cuesta|valor|costo|sale\?)/.test(userText)) {
+    if (!inferredType) {
+      return 'Claro. Para cotizarte bien, decime si es para hogar o comercio y cuantos accesos o ambientes queres cubrir.';
+    }
+    if (!inferredCoverage) {
+      return 'Perfecto. Para darte un valor estimado, necesito cuantos accesos o ambientes queres cubrir y en que localidad seria la instalacion.';
+    }
+    return 'Perfecto. Con esos datos te preparo una cotizacion estimada. Decime tu localidad y, si queres, un telefono de contacto para derivarte con un asesor.';
+  }
+
+  // Flujo guiado deterministico para evitar respuestas repetidas o ambiguas.
+  if (!inferredType) {
+    return avoidRepeatedBotReply_('Para recomendarte bien necesito un dato: es para hogar o comercio?', ctx);
+  }
+
+  if (!inferredCoverage) {
+    if (inferredType === 'comercio') {
+      return avoidRepeatedBotReply_('Excelente, para comercio. Para recomendarte bien, decime aproximadamente cuantos accesos o ambientes queres cubrir.', ctx);
+    }
+    return avoidRepeatedBotReply_('Genial, para hogar. Para recomendarte bien, decime aproximadamente cuantos ambientes o accesos queres cubrir.', ctx);
+  }
+
+  const deterministic = buildDeterministicRecommendation_(inferredType, inferredCoverage, signal.intent);
+  const safeReply = avoidRepeatedBotReply_(deterministic, ctx);
+  if (safeReply) return safeReply;
+
   const brief = extractRelevantKnowledge_(ctx.userMessage, knowledgeText);
+  const cta = buildFallbackCta_(ctx, signal, inferredType);
 
-  var cta = 'Si quieres, te ayudo a avanzar con una cotizacion ahora mismo.';
-  if (signal.intent === 'info') cta = 'Si te parece, te puedo orientar al kit y plan mas conveniente para tu caso.';
-
-  return [
-    cfg.mensajeFallbackUsuario,
-    '\n\nInfo util: ',
-    brief,
-    '\n\n',
-    cta
-  ].join('');
+  return avoidRepeatedBotReply_([brief, ' ', cta].join('').replace(/\s{2,}/g, ' ').trim(), ctx);
 }
 
 function extractRelevantKnowledge_(query, text) {
   const q = String(query || '').toLowerCase();
-  const lines = String(text || '').split(/\r?\n/).filter(Boolean);
+  const lines = String(text || '')
+    .split(/\r?\n/)
+    .map(function(line) {
+      return String(line || '')
+        .replace(/^\s*[-*]+\s*/,'')
+        .replace(/^\s*-\s*-\s*/, '')
+        .replace(/^\s*\d+\)\s*/, '')
+        .trim();
+    })
+    .filter(function(line) {
+      if (!line) return false;
+      if (/^\[[^\]]+\]$/.test(line)) return false;
+      if (line.length < 8) return false;
+      return true;
+    });
 
   const scored = lines.map(function(line) {
     const l = line.toLowerCase();
@@ -337,10 +554,214 @@ function extractRelevantKnowledge_(query, text) {
   });
 
   scored.sort(function(a, b) { return b.score - a.score; });
-  const top = scored.filter(function(s) { return s.score > 0; }).slice(0, 3).map(function(s) { return '- ' + s.line; });
+  const top = scored.filter(function(s) { return s.score > 0; }).slice(0, 2).map(function(s) { return normalizeKnowledgeLine_(s.line); });
 
-  if (!top.length) return 'Puedo brindarte informacion general y derivarte con un asesor comercial.';
-  return top.join('\n');
+  if (!top.length) return 'Te ayudo a elegir una opcion de seguridad segun tu necesidad y presupuesto.';
+  return top.join(' ');
+}
+
+function normalizeKnowledgeLine_(line) {
+  const t = String(line || '')
+    .replace(/^Segmento:\s*/i, 'Trabajamos para ')
+    .replace(/^Propuesta:\s*/i, 'La propuesta incluye ')
+    .replace(/^Nota:\s*/i, '')
+    .replace(/^No,\s*/i, '')
+    .trim();
+
+  if (!t) return '';
+  return /[.!?]$/.test(t) ? t : (t + '.');
+}
+
+function buildFallbackCta_(ctx, signal, inferredType) {
+  if (!inferredType) {
+    return 'Si te parece, empezamos por lo básico: es para hogar o comercio?';
+  }
+
+  if (signal.intent === 'cotizacion' || signal.intent === 'compra') {
+    return 'Si queres, avanzamos con una cotizacion estimada: decime cuantos accesos o ambientes queres cubrir.';
+  }
+
+  return 'Si queres, te recomiendo el kit y plan mas conveniente para tu caso.';
+}
+
+function inferClientType_(ctx) {
+  if (ctx && ctx.lead && (ctx.lead.tipoCliente === 'hogar' || ctx.lead.tipoCliente === 'comercio')) {
+    return ctx.lead.tipoCliente;
+  }
+
+  const fromCurrent = detectTypeInText_(ctx && ctx.userMessage);
+  if (fromCurrent) return fromCurrent;
+
+  const history = (ctx && ctx.chatHistory) || [];
+  for (var i = history.length - 1; i >= 0; i--) {
+    if (history[i].role !== 'user' && history[i].role !== 'bot') continue;
+    const t = detectTypeInText_(history[i].text);
+    if (t) return t;
+  }
+
+  return '';
+}
+
+function detectTypeInText_(text) {
+  const t = String(text || '').toLowerCase();
+  if (/\bcomercio\b|\bcomercial\b|\blocal\b|\bnegocio\b/.test(t)) return 'comercio';
+  if (/\bhogar\b|\bcasa\b|\bdepartamento\b/.test(t)) return 'hogar';
+  return '';
+}
+
+function inferCoverageNeed_(ctx) {
+  const candidates = [];
+  candidates.push(String((ctx && ctx.userMessage) || ''));
+
+  const history = (ctx && ctx.chatHistory) || [];
+  history.forEach(function(item) {
+    if (item.role === 'user') candidates.push(item.text || '');
+  });
+
+  var best = 0;
+  for (var i = 0; i < candidates.length; i++) {
+    const t = String(candidates[i] || '').toLowerCase();
+    if (!t) continue;
+
+    var explicitMax = 0;
+    var explicitSum = 0;
+    const rgx = /(\d{1,2})\s*(accesos|acceso|ambientes|ambiente|puertas|zonas|salones|salon)/g;
+    var m;
+    while ((m = rgx.exec(t)) !== null) {
+      const n = Number(m[1]) || 0;
+      if (n > explicitMax) explicitMax = n;
+      explicitSum += n;
+    }
+
+    var adjectiveFloor = 0;
+    if (/chico|pequeno|pequeño/.test(t)) adjectiveFloor = 2;
+    if (/mediano/.test(t)) adjectiveFloor = Math.max(adjectiveFloor, 4);
+    if (/grande/.test(t)) adjectiveFloor = Math.max(adjectiveFloor, 6);
+
+    var candidateCoverage = 0;
+    if (explicitSum > 0) {
+      // Cuando hay varios numeros relevantes (ej: 2 puertas y 2 salones), usar suma.
+      candidateCoverage = explicitSum;
+    } else if (explicitMax > 0) {
+      candidateCoverage = explicitMax;
+    }
+
+    if (adjectiveFloor > candidateCoverage) {
+      candidateCoverage = adjectiveFloor;
+    }
+
+    if (candidateCoverage > best) best = candidateCoverage;
+  }
+
+  return best;
+}
+
+function buildDeterministicRecommendation_(clientType, coverage, intent) {
+  const isHotIntent = intent === 'cotizacion' || intent === 'compra';
+
+  if (clientType === 'comercio') {
+    if (coverage <= 2) {
+      return isHotIntent
+        ? 'Para un comercio chico, te recomiendo empezar con un kit base para 1 o 2 accesos y escalar despues. Si queres, te cotizo una opcion inicial y otra intermedia para comparar.'
+        : 'Para un comercio chico, te recomiendo empezar con un kit base para 1 o 2 accesos y escalar despues. Si queres, te explico la diferencia con una opcion intermedia.';
+    }
+    if (coverage <= 4) {
+      return isHotIntent
+        ? 'Con esa cobertura, te conviene una opcion intermedia para comercio con monitoreo y gestion por app. Si queres, te cotizo rango estimado de instalacion y plan mensual.'
+        : 'Con esa cobertura, te conviene una opcion intermedia para comercio con monitoreo y gestion por app. Si queres, te digo pros y contras frente a una opcion basica.';
+    }
+    return isHotIntent
+      ? 'Para esa cobertura de comercio, te conviene una opcion robusta con expansion por zonas. Si queres, avanzamos con cotizacion estimada y luego derivacion a asesor.'
+      : 'Para esa cobertura de comercio, te conviene una opcion robusta con expansion por zonas. Si queres, te explico una configuracion sugerida paso a paso.';
+  }
+
+  if (coverage <= 2) {
+    return isHotIntent
+      ? 'Para hogar con cobertura chica, una opcion base suele alcanzar y permite crecer despues. Si queres, te cotizo una opcion inicial y una alternativa superior.'
+      : 'Para hogar con cobertura chica, una opcion base suele alcanzar y permite crecer despues. Si queres, te explico la diferencia con una alternativa superior.';
+  }
+
+  if (coverage <= 4) {
+    return isHotIntent
+      ? 'Para ese nivel de cobertura en hogar, conviene una opcion intermedia con mejor equilibrio entre costo y proteccion. Si queres, te paso una cotizacion estimada.'
+      : 'Para ese nivel de cobertura en hogar, conviene una opcion intermedia con mejor equilibrio entre costo y proteccion. Si queres, te cuento que incluye y que no incluye.';
+  }
+
+  return isHotIntent
+    ? 'Para cobertura amplia en hogar, te recomiendo una opcion escalable por zonas. Si queres, avanzamos con una cotizacion estimada segun tu localidad.'
+    : 'Para cobertura amplia en hogar, te recomiendo una opcion escalable por zonas. Si queres, te explico una propuesta por etapas para empezar sin sobredimensionar.';
+}
+
+function avoidRepeatedBotReply_(reply, ctx) {
+  const candidate = cleanText_(reply);
+  const history = (ctx && ctx.chatHistory) || [];
+
+  for (var i = history.length - 1; i >= 0; i--) {
+    if (history[i].role !== 'bot') continue;
+    const lastBot = cleanText_(history[i].text);
+    if (lastBot && lastBot.toLowerCase() === candidate.toLowerCase()) {
+      return candidate + ' Si queres, en el siguiente mensaje te hago una recomendacion puntual para tu caso.';
+    }
+    break;
+  }
+
+  return candidate;
+}
+
+function isOutOfScopeQuestion_(text) {
+  const t = String(text || '');
+  if (!t) return false;
+
+  const hasSecurityContext = /(alarma|camar|monitoreo|kit|plan|seguridad|hogar|comercio|cotiz|presupuesto|instal)/.test(t);
+  if (hasSecurityContext) return false;
+
+  const clearlyOffTopic = /(bebes|reptil|reptiloide|perro|gato|futbol|receta|astrolog|politic|distancia del sol|luna)/.test(t);
+  return clearlyOffTopic;
+}
+
+function isGreetingOnly_(text) {
+  const t = String(text || '').toLowerCase().trim();
+  if (!t) return false;
+  return /^(hola+|buenas|buen dia|buenas tardes|buenas noches|hello|hi|holi)[!.\s]*$/.test(t);
+}
+
+function isStopIntent_(text) {
+  const t = String(text || '').toLowerCase();
+  return /(no quiero nada|ya no quiero|no me interesa|dejalo ahi|deja ahi|cancelar|chau|adios|hasta luego)/.test(t);
+}
+
+function isConfusionTurn_(text) {
+  const t = String(text || '').toLowerCase();
+  if (!t) return false;
+  if (t.length <= 8 && /que+/.test(t)) return true;
+  return /(con que|con quee|en que me ayudas|en que ayudas|que haces|que ofreces)/.test(t);
+}
+
+function isFrustrationTurn_(text) {
+  const t = String(text || '').toLowerCase();
+  return /(fome|wea|wea fome|wea\s+fome|aburrido|malo|pesimo|horrible|broma|no sirve|errores por todos lados)/.test(t);
+}
+
+function isTruncationComplaint_(text) {
+  const t = String(text || '').toLowerCase();
+  return /(llego cortado|lleg[oó] cortado|mensaje cortado|se corto|quedo cortado|sale cortado|respuesta cortada)/.test(t);
+}
+
+function getLastBotMessage_(ctx) {
+  const history = (ctx && ctx.chatHistory) || [];
+  for (var i = history.length - 1; i >= 0; i--) {
+    if (history[i].role !== 'bot') continue;
+    const txt = cleanText_(history[i].text);
+    if (txt) return txt;
+  }
+  return '';
+}
+
+function ensureEndsWithQuestionOrDot_(text) {
+  const t = cleanText_(text);
+  if (!t) return '';
+  if (/[.!?]$/.test(t)) return t;
+  return t + '.';
 }
 
 function buildEvents_(signal, score, status, botReplyResult, ctx, cfg) {
@@ -582,6 +1003,12 @@ function jsonResponse_(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsResponse_(text) {
+  return ContentService
+    .createTextOutput(String(text || ''))
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
 function cleanText_(value) {

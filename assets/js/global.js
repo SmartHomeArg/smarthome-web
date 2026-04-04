@@ -2282,6 +2282,53 @@ function getChatSessionId_() {
   }
 }
 
+function sendChatByJsonp_(endpoint, payload) {
+  return new Promise((resolve, reject) => {
+    const callbackName = '__smarthomeChatCb_' + Math.random().toString(36).slice(2, 10);
+    const url = new URL(endpoint);
+
+    url.searchParams.set('action', 'chat');
+    url.searchParams.set('callback', callbackName);
+    url.searchParams.set('sessionId', payload.sessionId || '');
+    url.searchParams.set('message', payload.message || '');
+    url.searchParams.set('sourcePage', payload.sourcePage || '');
+    url.searchParams.set('userAgent', payload.userAgent || 'browser');
+    url.searchParams.set('chatHistory', JSON.stringify(payload.chatHistory || []));
+
+    let cleaned = false;
+
+    function cleanup() {
+      if (cleaned) return;
+      cleaned = true;
+      delete window[callbackName];
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+      clearTimeout(timer);
+    }
+
+    window[callbackName] = function (data) {
+      cleanup();
+      resolve(data || null);
+    };
+
+    const script = document.createElement('script');
+    script.src = url.toString();
+    script.async = true;
+    script.onerror = function () {
+      cleanup();
+      reject(new Error('JSONP load error'));
+    };
+
+    const timer = setTimeout(function () {
+      cleanup();
+      reject(new Error('JSONP timeout'));
+    }, 12000);
+
+    document.head.appendChild(script);
+  });
+}
+
 function cargarChatIAFloat() {
   const contenedor = ensureFloatingMount_('chat-ia-float');
 
@@ -2311,13 +2358,34 @@ function initChatIAWidget_(contenedor) {
 
   const sessionId = getChatSessionId_();
   let isBusy = false;
+  const conversationHistory = [];
 
-  function appendMessage(sender, text) {
+  function pushHistory_(role, text) {
+    const cleanRole = role === 'bot' ? 'bot' : 'user';
+    const cleanText = String(text || '').trim();
+    if (!cleanText) return;
+
+    conversationHistory.push({
+      role: cleanRole,
+      text: cleanText.slice(0, 120)
+    });
+
+    if (conversationHistory.length > 6) {
+      conversationHistory.splice(0, conversationHistory.length - 6);
+    }
+  }
+
+  function appendMessage(sender, text, trackHistory) {
     const msg = document.createElement('article');
     msg.className = 'chat-ia-msg is-' + sender;
-    msg.textContent = String(text || '').trim();
+    const cleanText = String(text || '').trim();
+    msg.textContent = cleanText;
     messages.appendChild(msg);
     messages.scrollTop = messages.scrollHeight;
+
+    if (trackHistory !== false) {
+      pushHistory_(sender, cleanText);
+    }
   }
 
   function setOpenState(isOpen) {
@@ -2337,7 +2405,7 @@ function initChatIAWidget_(contenedor) {
     sendBtn.disabled = nextBusy;
   }
 
-  appendMessage('bot', 'Hola, soy el asistente de SmartHome. Puedo ayudarte con kits, planes y cotizaciones.');
+  appendMessage('bot', 'Hola, soy el asistente de SmartHome. Puedo ayudarte con kits, planes y cotizaciones.', false);
 
   toggle.addEventListener('click', function () {
     const next = panel.hidden;
@@ -2372,27 +2440,37 @@ function initChatIAWidget_(contenedor) {
         sessionId: sessionId,
         message: userText,
         sourcePage: window.location.pathname || '/',
-        userAgent: navigator.userAgent || 'browser'
+        userAgent: navigator.userAgent || 'browser',
+        chatHistory: conversationHistory.slice(-4)
       };
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const bodyText = await res.text();
       let data = null;
 
       try {
-        data = JSON.parse(bodyText);
-      } catch (error) {
-        data = null;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const bodyText = await res.text();
+
+        try {
+          data = JSON.parse(bodyText);
+        } catch (error) {
+          data = null;
+        }
+
+        if (!res.ok) {
+          data = null;
+        }
+      } catch (_postError) {
+        data = await sendChatByJsonp_(endpoint, payload);
       }
 
-      if (!res.ok || !data || data.ok !== true) {
+      if (!data || data.ok !== true) {
         appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.');
       } else {
         appendMessage('bot', data.reply || 'Te leo. Si quieres, puedo ayudarte a cotizar ahora.');
