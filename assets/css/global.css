@@ -470,9 +470,14 @@ FOOTER
 
 .footer-container {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 40px;
+  grid-template-columns: minmax(220px, 1.3fr) repeat(3, minmax(170px, 1fr));
+  gap: 24px;
   align-items: start;
+}
+
+.footer-col-stack {
+  display: grid;
+  gap: 16px;
 }
 
 /* Enlace del logo: mantiene area clickeable limpia */
@@ -481,8 +486,8 @@ FOOTER
 }
 
 .footer-col h4 {
-  font-size: 18px;
-  margin-bottom: 20px;
+  font-size: 17px;
+  margin-bottom: 14px;
   font-weight: 600;
 }
 
@@ -493,7 +498,7 @@ FOOTER
 }
 
 .footer-col ul li {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .footer-col ul li a {
@@ -522,7 +527,7 @@ FOOTER
 
 .footer-brand p {
   color: #d6e1ff;
-  font-size: 14px;
+  font-size: 13px;
   margin: 0;
 }
 
@@ -553,6 +558,10 @@ FOOTER
 /* Contacto con labels visuales sutiles */
 .footer-contact li {
   color: #d6e1ff;
+}
+
+.footer-contact a {
+  overflow-wrap: anywhere;
 }
 
 .footer-contact-label {
@@ -599,10 +608,17 @@ FOOTER
 }
 
 /* TABLET */
+@media (max-width: 1199.98px) {
+  .footer-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
 @media (max-width: 991.98px) {
   .footer-container {
     grid-template-columns: repeat(2, 1fr);
-    gap: 30px;
+    gap: 22px;
   }
 }
 
