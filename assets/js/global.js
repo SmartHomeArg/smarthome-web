@@ -3511,6 +3511,28 @@ async function cargarKitsQueIncluye() {
         img.src = imageBase + fileName;
       });
 
+      const ctaWrapper = container.querySelector(".kit-incluye__cta");
+      const ctaLink = ctaWrapper ? ctaWrapper.querySelector(".kit-incluye__cta-btn[href]") : null;
+
+      if (ctaWrapper && ctaLink) {
+        try {
+          const currentUrl = new URL(window.location.href);
+          const targetUrl = new URL(ctaLink.getAttribute("href"), currentUrl);
+
+          const normalizePath = (path) => {
+            const clean = (path || "/").replace(/\/+$/g, "") || "/";
+            return clean.toLowerCase();
+          };
+
+          if (normalizePath(currentUrl.pathname) === normalizePath(targetUrl.pathname)) {
+            ctaWrapper.style.display = "none";
+            ctaWrapper.setAttribute("aria-hidden", "true");
+          }
+        } catch (e) {
+          // Si no se puede resolver la URL, conservamos el CTA visible.
+        }
+      }
+
       initKitIncluyeSliders(container);
     } catch (error) {
       console.error(`Error cargando ${containerId}:`, error);
@@ -3934,7 +3956,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-cam-plus"),
         title: "Kit Cam+",
         subtitle: "Ideal para hogares y comercios.",
-        planTitle: "Plan de Monitoreo Mensual VIDEO",
+        planTitle: "Plan VIDEO Mensual",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Camara incluida para visualizacion en tiempo real",
@@ -3962,7 +3984,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-smart-1-1"),
         title: "Kit Smart 1.1",
         subtitle: "Ideal para hogares y comercios.",
-        planTitle: "Plan de Monitoreo Mensual BASIC",
+        planTitle: "Plan BASIC Mensual",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Personaliza codigos de usuario para saber quien ingresa y sale",
@@ -3993,7 +4015,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-smart-2-2"),
         title: "Kit Smart 2.2",
         subtitle: "Ideal para hogares y comercios.",
-        planTitle: "Plan de Monitoreo Mensual PLUS",
+        planTitle: "Plan PLUS Mensual",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Personaliza codigos de usuario para saber quien ingresa y sale",
@@ -4024,7 +4046,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-smart-cam-2-2"),
         title: "Kit Smart Cam 2.2",
         subtitle: "Ideal para hogares y comercios.",
-        planTitle: "Plan de Monitoreo Mensual PRO",
+        planTitle: "Plan PRO Mensual",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Incluye camara para ver eventos en vivo",
@@ -4060,7 +4082,7 @@ async function cargarDetalleProductoKit() {
         pricing: getStorefrontKitPricing("kit-industrial"),
         title: "Kit Industrial",
         subtitle: "Ideal para industrias y grandes superficies.",
-        planTitle: "Plan de Monitoreo Mensual COMERCIAL",
+        planTitle: "Plan COMERCIAL Mensual",
         features: [
           "Monitoreo 24/7 con deteccion de sabotaje",
           "Cobertura ampliada para mayor superficie",
@@ -4132,7 +4154,7 @@ async function cargarDetalleProductoKit() {
     subtitle.textContent = kit.subtitle;
     price.textContent = kit.pricing.installationPriceFormatted;
     installments.textContent = kit.pricing.installmentsLabel;
-    planTitle.textContent = kit.planTitle || "Plan de Monitoreo Mensual";
+    planTitle.textContent = kit.planTitle || "Plan Mensual";
     planList.textContent = kit.pricing.planListFormatted;
     planSell.textContent = kit.pricing.planFinalFormatted;
     planPromo.textContent = kit.pricing.planPromoLabel;
