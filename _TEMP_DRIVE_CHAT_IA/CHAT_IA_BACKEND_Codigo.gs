@@ -34,10 +34,17 @@ var PROMPT_OPT = {
   MAX_KNOWLEDGE_CHARS: 1000,
   MAX_EVENTS_CHARS: 650,
   DOCS_CACHE_SECONDS: 300,
+  MODELS_CACHE_SECONDS: 900,
+  DISCOVERY_MAX_MODELS: 6,
   MAX_OUTPUT_TOKENS: 520,
   MIN_REPLY_CHARS: 45,
-  GEMINI_RETRY_ATTEMPTS: 3,
-  GEMINI_RETRY_BASE_MS: 450
+  GEMINI_RETRY_ATTEMPTS: 2,
+  GEMINI_RETRY_BASE_MS: 260,
+  GEMINI_TOTAL_TIMEOUT_MS: 6500,
+  GEMINI_MAX_MODELS_PER_REQUEST: 5,
+  GEMINI_RESCUE_TIMEOUT_MS: 3200,
+  GEMINI_RESCUE_MODELS: 4,
+  PROVIDER_CIRCUIT_SECONDS: 120
 };
 
 function doGet(e) {
@@ -97,6 +104,38 @@ function processChatRequest_(payload) {
     var leadStatus = classifyLeadStatus_(leadScore, cfg);
 
     var botReplyResult = buildBotReply_(ctx, signal, props, cfg);
+
+    // Si IA no estuvo disponible, responder rapido y evitar operaciones pesadas
+    // para no caer en timeout del frontend.
+    if (botReplyResult.mode !== 'ia') {
+      // Persistir estado minimo tambien en fallback para mantener continuidad
+      // sin ejecutar operaciones pesadas (Docs/Sheets/Drive).
+      try {
+        var fallbackState = buildNextSessionState_(ctx, signal, botReplyResult, prevState, { docId: '', docUrl: '' });
+        saveSessionState_(ctx.sessionId, fallbackState);
+      } catch (_fallbackStateErr) {}
+
+      return {
+        ok: true,
+        reply: botReplyResult.replyText,
+        mode: botReplyResult.mode,
+        data: {
+          sessionId: ctx.sessionId,
+          intent: signal.intent,
+          leadScore: leadScore,
+          leadStatus: leadStatus,
+          canDeriveToAdvisor: leadStatus !== 'frio',
+          fallbackReason: botReplyResult.fallbackReason || '',
+          providerCode: botReplyResult.providerCode || '',
+          providerMessage: botReplyResult.providerMessage || '',
+          syncedToOfficialLeads: false,
+          syncDetail: 'omitido_en_fallback',
+          transcriptDocId: '',
+          transcriptDocUrl: ''
+        }
+      };
+    }
+
     var transcript = { docId: '', docUrl: '' };
     var nextState = prevState || {};
     var syncResult = { synced: false, detail: 'sync_no_ejecutado' };
@@ -132,6 +171,8 @@ function processChatRequest_(payload) {
         leadStatus: leadStatus,
         canDeriveToAdvisor: leadStatus !== 'frio',
         fallbackReason: botReplyResult.fallbackReason || '',
+        providerCode: botReplyResult.providerCode || '',
+        providerMessage: botReplyResult.providerMessage || '',
         syncedToOfficialLeads: syncResult.synced,
         syncDetail: syncResult.detail,
         transcriptDocId: transcript.docId,
@@ -175,6 +216,8 @@ function cleanJsonpCallback_(value) {
 
 function getScriptProps_() {
   var p = PropertiesService.getScriptProperties();
+  var rawApiKey = p.getProperty('GEMINI_API_KEY');
+  var rawModel = p.getProperty('GEMINI_MODEL');
   var obj = {
     DOC_INSTRUCCIONES_ID: p.getProperty('DOC_INSTRUCCIONES_ID') || '',
     DOC_CONOCIMIENTO_ID: p.getProperty('DOC_CONOCIMIENTO_ID') || '',
@@ -182,8 +225,8 @@ function getScriptProps_() {
     SHEET_CONFIG_ID: p.getProperty('SHEET_CONFIG_ID') || '',
     SHEET_OPERACION_ID: p.getProperty('SHEET_OPERACION_ID') || '',
     ALERT_EMAIL: p.getProperty('ALERT_EMAIL') || '',
-    GEMINI_API_KEY: p.getProperty('GEMINI_API_KEY') || '',
-    GEMINI_MODEL: p.getProperty('GEMINI_MODEL') || 'gemini-2.5-flash',
+    GEMINI_API_KEY: cleanText_(rawApiKey),
+    GEMINI_MODEL: sanitizeGeminiModelName_(rawModel) || 'gemini-2.5-flash',
     FORMS_WEBAPP_URL: p.getProperty('FORMS_WEBAPP_URL') || '',
     CHAT_TRANSCRIPTS_FOLDER_ID: p.getProperty('CHAT_TRANSCRIPTS_FOLDER_ID') || ''
   };
@@ -570,7 +613,7 @@ function detectCommercialSignal_(text) {
 
   var hasQuote = /(precio|cotiza|cotizacion|presupuesto|cuanto sale|valor|plan)/.test(t);
   var hasUrgency = /(hoy|urgente|esta semana|ya|cuanto antes|rapido)/.test(t);
-  var hasInstallIntent = /(instalar|instalacion|contratar|quiero contratar|quiero poner)/.test(t);
+  var hasInstallIntent = /(instalar|instalacion|contratar|quiero contratar|quiero poner|quiero\s+.*(alarma|sistema|camara|monitoreo)|necesito\s+.*(alarma|sistema|camara|monitoreo))/.test(t);
   var asksAdvisor = /(asesor|llamenme|llamame|contactenme|me contactan)/.test(t);
 
   var intent = 'info';
@@ -605,13 +648,26 @@ function classifyLeadStatus_(score, cfg) {
 }
 
 function buildBotReply_(ctx, signal, props, cfg) {
-  var docs = readKnowledgeDocs_(props);
+  var docs = {
+    instructions: '',
+    knowledge: '',
+    events: ''
+  };
+
+  try {
+    docs = readKnowledgeDocs_(props);
+  } catch (docsErr) {
+    // Si falla la lectura documental, continuar con contexto minimo
+    // para no perder disponibilidad de respuesta IA.
+    writeErrorSafe_(ctx.sessionId, 'docs_read_error', String(docsErr), 'docs_error', true);
+  }
 
   var historyText = formatHistoryForPrompt_(ctx.chatHistory);
   var instructionsCompact = trimForPrompt_(docs.instructions, PROMPT_OPT.MAX_INSTRUCTIONS_CHARS);
   var knowledgeCompact = buildCompactKnowledgeContext_(docs.knowledge, ctx, signal);
   var eventsCompact = buildCompactEventsContext_(docs.events, ctx, signal);
   var knownFacts = buildKnownFactsForPrompt_(ctx);
+  var sessionCompact = buildSessionContextForPrompt_(ctx);
 
   var prompt = [
     instructionsCompact,
@@ -625,15 +681,19 @@ function buildBotReply_(ctx, signal, props, cfg) {
     ctx.userMessage,
     '\n\nDATOS CONFIRMADOS (NO REPREGUNTAR):\n',
     knownFacts,
+    '\n\nCONTEXTO DE SESION (CONTINUIDAD):\n',
+    sessionCompact,
     '\n\nDATOS LEAD PARCIALES:\n',
     JSON.stringify(ctx.lead),
     '\n\nINTENCION DETECTADA: ', signal.intent,
     '\n\nREGLAS DE RESPUESTA:',
     '\n- No te vuelvas a presentar si ya hay historial.',
+      '\n- No te vuelvas a presentar si ya hay historial o si CONTEXTO DE SESION indica turnos previos.',
     '\n- No repitas saludo inicial en cada turno.',
     '\n- Responde en espanol, maximo 120 palabras.',
     '\n- Evita frases de relleno como "hola de nuevo" o "estoy aqui para ayudarte" si no aportan informacion.',
     '\n- Si ya hay historial, no saludes.',
+      '\n- Si hay continuidad de sesion (turnCount > 0), no saludes ni reinicies conversacion.',
     '\n- No cierres con frases incompletas (ej: "para poder").',
     '\n- No pidas de nuevo datos ya confirmados (tipo de cliente, localidad, cobertura, contacto).',
     '\n- Usa CONOCIMIENTO y EVENTOS como fuente principal para responder con precision comercial.',
@@ -651,12 +711,15 @@ function buildBotReply_(ctx, signal, props, cfg) {
     return {
       mode: 'fallback_unavailable',
       replyText: IA_UNAVAILABLE_MESSAGE,
-      fallbackReason: 'no_api_key'
+      fallbackReason: 'no_api_key',
+      providerCode: 'provider_error',
+      providerMessage: 'GEMINI_API_KEY ausente'
     };
   }
 
   try {
     var text = callGeminiWithFallbackModels_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
+    noteProviderSuccess_();
     var processed = postProcessReply_(text, ctx);
     processed = refineAbruptReplyWithIa_(processed, ctx, signal, props);
 
@@ -665,7 +728,13 @@ function buildBotReply_(ctx, signal, props, cfg) {
     return { mode: 'ia', replyText: processed };
   } catch (err) {
     var errMsg = String(err);
+    var rescued = tryRescueIaReply_(prompt, ctx, signal, props, errMsg);
+    if (rescued && rescued.ok) {
+      return { mode: 'ia', replyText: rescued.replyText };
+    }
+
     var providerCode = detectProviderCode_(errMsg);
+    noteProviderFailure_(providerCode, errMsg);
     writeErrorSafe_(ctx.sessionId, 'ia_provider_error', errMsg, providerCode, false);
     var fallbackReason = classifyFallbackReason_(errMsg, props);
 
@@ -674,9 +743,59 @@ function buildBotReply_(ctx, signal, props, cfg) {
     return {
       mode: 'fallback_unavailable',
       replyText: IA_UNAVAILABLE_MESSAGE,
-      fallbackReason: fallbackReason
+      fallbackReason: fallbackReason,
+      providerCode: providerCode,
+      providerMessage: summarizeProviderError_(errMsg)
     };
   };
+}
+
+function tryRescueIaReply_(prompt, ctx, signal, props, originalErrMsg) {
+  if (!props || !props.GEMINI_API_KEY) return { ok: false };
+
+  var errMsg = String(originalErrMsg || '').toLowerCase();
+  var shouldSkipRescue = (errMsg.indexOf('no_api_key') !== -1);
+  if (shouldSkipRescue) return { ok: false };
+
+  try {
+    // Ultimo intento de rescate con prompt compacto y modelos alternativos.
+    Utilities.sleep(120);
+
+    var rescuePrompt = buildRescuePrompt_(ctx, signal);
+    var candidates = buildGeminiModelCandidates_(props.GEMINI_MODEL, props.GEMINI_API_KEY);
+    var maxModels = Math.max(1, toNumber_(PROMPT_OPT.GEMINI_RESCUE_MODELS, 2));
+    var rescueBudget = Math.max(2500, toNumber_(PROMPT_OPT.GEMINI_RESCUE_TIMEOUT_MS, 4200));
+    var start = Date.now();
+    var rescueText = '';
+
+    for (var i = 0; i < candidates.length && i < maxModels; i++) {
+      if ((Date.now() - start) >= rescueBudget) break;
+      try {
+        rescueText = callGeminiWithRetries_(
+          rescuePrompt,
+          props.GEMINI_API_KEY,
+          candidates[i],
+          2,
+          start,
+          rescueBudget
+        );
+        if (cleanText_(rescueText)) break;
+      } catch (_rescueModelErr) {}
+    }
+
+    if (!cleanText_(rescueText)) return { ok: false };
+
+    var processed = postProcessReply_(rescueText, ctx);
+    processed = refineAbruptReplyWithIa_(processed, ctx, signal, props);
+    processed = reconcileReplyWithKnownState_(processed, ctx, signal);
+    processed = avoidLoopingReply_(processed, ctx, signal, '');
+
+    if (cleanText_(processed)) {
+      return { ok: true, replyText: processed };
+    }
+  } catch (_rescueErr) {}
+
+  return { ok: false };
 }
 
 function avoidLoopingReply_(reply, ctx, signal, knowledgeText) {
@@ -799,19 +918,27 @@ function pickRelevantLinesByKeywords_(text, keywords, maxLines) {
 }
 
 function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
-  var models = buildGeminiModelCandidates_(preferredModel);
+  var models = buildGeminiModelCandidates_(preferredModel, apiKey);
+  var maxModels = Math.max(1, toNumber_(PROMPT_OPT.GEMINI_MAX_MODELS_PER_REQUEST, 2));
+  var startMs = Date.now();
+  var totalBudgetMs = Math.max(2500, toNumber_(PROMPT_OPT.GEMINI_TOTAL_TIMEOUT_MS, 7000));
   var errors = [];
 
-  for (var i = 0; i < models.length; i++) {
+  for (var i = 0; i < models.length && i < maxModels; i++) {
+    if ((Date.now() - startMs) >= totalBudgetMs) {
+      errors.push('timeout_budget_exceeded');
+      break;
+    }
+
     var model = models[i];
     try {
-      return callGeminiWithRetries_(prompt, apiKey, model, PROMPT_OPT.GEMINI_RETRY_ATTEMPTS);
+      return callGeminiWithRetries_(prompt, apiKey, model, PROMPT_OPT.GEMINI_RETRY_ATTEMPTS, startMs, totalBudgetMs);
     } catch (err) {
       var msg = String(err && err.message ? err.message : err);
       errors.push(model + ' -> ' + msg.slice(0, 220));
 
       // Si es un tema recuperable por rotacion de modelo, probar el siguiente.
-      if (isQuotaOrRateError_(msg) || isRetryableModelSelectionError_(msg) || isTransientProviderError_(msg)) {
+      if (isQuotaOrRateError_(msg) || isRetryableModelSelectionError_(msg) || isTransientProviderError_(msg) || isRetryableNoOutputError_(msg)) {
         continue;
       }
 
@@ -826,9 +953,22 @@ function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
 function callGeminiWithRetries_(prompt, apiKey, model, attempts) {
   var maxAttempts = Math.max(1, toNumber_(attempts, 3));
   var baseMs = Math.max(150, toNumber_(PROMPT_OPT.GEMINI_RETRY_BASE_MS, 450));
+  var startMs = Date.now();
+  var totalBudgetMs = Math.max(2500, toNumber_(PROMPT_OPT.GEMINI_TOTAL_TIMEOUT_MS, 7000));
   var lastErr = null;
 
+  if (arguments.length >= 5) {
+    startMs = toNumber_(arguments[4], startMs);
+  }
+  if (arguments.length >= 6) {
+    totalBudgetMs = Math.max(2500, toNumber_(arguments[5], totalBudgetMs));
+  }
+
   for (var i = 0; i < maxAttempts; i++) {
+    if ((Date.now() - startMs) >= totalBudgetMs) {
+      break;
+    }
+
     try {
       return callGemini_(prompt, apiKey, model);
     } catch (err) {
@@ -839,11 +979,15 @@ function callGeminiWithRetries_(prompt, apiKey, model, attempts) {
       if (!isRetryable || isLastAttempt) break;
 
       var waitMs = computeRetryBackoffMs_(i, baseMs);
+      var elapsed = Date.now() - startMs;
+      var remaining = totalBudgetMs - elapsed;
+      if (remaining <= 120) break;
+      if (waitMs > remaining - 60) waitMs = Math.max(60, remaining - 60);
       Utilities.sleep(waitMs);
     }
   }
 
-  throw lastErr || new Error('Gemini retry agotado sin detalle');
+  throw lastErr || new Error('Gemini retry agotado o timeout de presupuesto total');
 }
 
 function computeRetryBackoffMs_(attemptIndex, baseMs) {
@@ -864,26 +1008,98 @@ function isRetryableModelSelectionError_(errMsg) {
   );
 }
 
-function buildGeminiModelCandidates_(preferredModel) {
-  var primary = cleanText_(preferredModel) || 'gemini-2.5-flash';
-  var candidates = [
+function buildGeminiModelCandidates_(preferredModel, apiKey) {
+  var primary = sanitizeGeminiModelName_(preferredModel) || 'gemini-2.5-flash';
+
+  var staticCandidates = [
     primary,
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
     'gemini-2.0-flash-lite',
     'gemini-2.0-flash',
     'gemini-2.5-flash-lite',
     'gemini-2.5-pro'
   ];
 
+  var discovered = readAvailableGeminiModels_(apiKey);
+  var candidates = [];
+
+  // Priorizar modelo preferido si existe y luego discovered para evitar modelos no habilitados.
+  candidates.push(primary);
+  for (var d = 0; d < discovered.length; d++) {
+    candidates.push(discovered[d]);
+  }
+
+  // Mantener fallback estatico por compatibilidad si la discovery falla o trae pocos modelos.
+  for (var s = 0; s < staticCandidates.length; s++) {
+    candidates.push(staticCandidates[s]);
+  }
+
   var seen = {};
   var unique = [];
   for (var i = 0; i < candidates.length; i++) {
     var model = cleanText_(candidates[i]);
+    model = sanitizeGeminiModelName_(model);
     if (!model || seen[model]) continue;
     seen[model] = true;
     unique.push(model);
   }
 
   return unique;
+}
+
+function readAvailableGeminiModels_(apiKey) {
+  var key = cleanText_(apiKey);
+  if (!key) return [];
+
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'chat_models_' + Utilities.base64EncodeWebSafe(key).replace(/=+$/g, '').slice(0, 40);
+
+  try {
+    var cached = cache.get(cacheKey);
+    if (cached) {
+      var parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch (_cacheErr) {}
+
+  try {
+    var versions = ['v1', 'v1beta'];
+    var data = null;
+    for (var vi = 0; vi < versions.length; vi++) {
+      var url = 'https://generativelanguage.googleapis.com/' + versions[vi] + '/models?key=' + encodeURIComponent(key);
+      var res = UrlFetchApp.fetch(url, { method: 'get', muteHttpExceptions: true });
+      var code = res.getResponseCode();
+      if (code < 200 || code >= 300) continue;
+      var txt = res.getContentText() || '';
+      data = JSON.parse(txt);
+      break;
+    }
+    if (!data) return [];
+
+    var maxModels = Math.max(1, toNumber_(PROMPT_OPT.DISCOVERY_MAX_MODELS, 6));
+
+    var models = (data.models || [])
+      .filter(function(m) {
+        var methods = m && m.supportedGenerationMethods ? m.supportedGenerationMethods : [];
+        return methods.indexOf('generateContent') !== -1;
+      })
+      .map(function(m) {
+        return String(m && m.name ? m.name : '').replace(/^models\//, '').trim();
+      })
+      .filter(function(name) { return !!name; })
+      .slice(0, maxModels);
+
+    if (models.length) {
+      try {
+        cache.put(cacheKey, JSON.stringify(models), Math.max(60, toNumber_(PROMPT_OPT.MODELS_CACHE_SECONDS, 900)));
+      } catch (_cachePutErr) {}
+    }
+
+    return models;
+  } catch (_err) {
+    return [];
+  }
 }
 
 function isQuotaOrRateError_(errMsg) {
@@ -919,6 +1135,29 @@ function isTransientProviderError_(errMsg) {
     t.indexOf('socket') !== -1 ||
     t.indexOf('network') !== -1
   );
+}
+
+function isRetryableNoOutputError_(errMsg) {
+  var t = String(errMsg || '').toLowerCase();
+  return (
+    t.indexOf('respuesta vacia de gemini') !== -1 ||
+    t.indexOf('gemini salida sin texto') !== -1 ||
+    t.indexOf('finish_reason_unspecified') !== -1 ||
+    t.indexOf('safety') !== -1
+  );
+}
+
+function buildRescuePrompt_(ctx, signal) {
+  return [
+    'Responde como asesor comercial de Smarthome en espanol, de forma breve y clara.',
+    'No saludes si ya hay continuidad. No uses markdown.',
+    'Primero responde la duda del cliente y luego una sola pregunta de avance.',
+    'Maximo 80 palabras.',
+    'MENSAJE CLIENTE: ' + String((ctx && ctx.userMessage) || ''),
+    'INTENCION: ' + String((signal && signal.intent) || 'info'),
+    'DATOS CONFIRMADOS: ' + buildKnownFactsForPrompt_(ctx),
+    'CONTEXTO SESION: ' + buildSessionContextForPrompt_(ctx)
+  ].join('\n');
 }
 
 function readKnowledgeDocs_(props) {
@@ -961,8 +1200,7 @@ function buildDocsCacheKey_(props) {
 }
 
 function callGemini_(prompt, apiKey, modelName) {
-  var model = cleanText_(modelName) || 'gemini-2.5-flash';
-  var url = 'https://generativelanguage.googleapis.com/v1/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
+  var model = sanitizeGeminiModelName_(modelName) || 'gemini-2.5-flash';
   var body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
@@ -971,21 +1209,35 @@ function callGemini_(prompt, apiKey, modelName) {
     }
   };
 
-  var res = UrlFetchApp.fetch(url, {
-    method: 'post',
-    contentType: 'application/json',
-    payload: JSON.stringify(body),
-    muteHttpExceptions: true
-  });
+  var versions = ['v1', 'v1beta'];
+  var data = null;
+  var lastErr = '';
 
-  var code = res.getResponseCode();
-  var txt = res.getContentText() || '';
+  for (var vi = 0; vi < versions.length; vi++) {
+    var url = 'https://generativelanguage.googleapis.com/' + versions[vi] + '/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
+    var res = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(body),
+      muteHttpExceptions: true
+    });
 
-  if (code < 200 || code >= 300) {
-    throw new Error('Gemini HTTP ' + code + ': ' + txt.slice(0, 600));
+    var code = res.getResponseCode();
+    var txt = res.getContentText() || '';
+
+    if (code < 200 || code >= 300) {
+      lastErr = 'Gemini ' + versions[vi] + ' HTTP ' + code + ': ' + txt.slice(0, 600);
+      continue;
+    }
+
+    data = JSON.parse(txt);
+    break;
   }
 
-  var data = JSON.parse(txt);
+  if (!data) {
+    throw new Error(lastErr || 'Gemini sin respuesta valida en v1/v1beta');
+  }
+
   var firstCandidate = data && data.candidates && data.candidates[0];
   var finishReason = String((firstCandidate && firstCandidate.finishReason) || '').toUpperCase();
   var parts = firstCandidate && firstCandidate.content && firstCandidate.content.parts;
@@ -1005,6 +1257,55 @@ function callGemini_(prompt, apiKey, modelName) {
   return String(output).trim();
 }
 
+function sanitizeGeminiModelName_(value) {
+  var t = cleanText_(value);
+  if (!t) return '';
+  return t.replace(/^models\//i, '').trim();
+}
+
+function summarizeProviderError_(errMsg) {
+  var t = cleanText_(errMsg);
+  if (!t) return '';
+  return t.slice(0, 220);
+}
+
+function providerCircuitCacheKey_() {
+  return 'chat_provider_circuit_until';
+}
+
+function isProviderCircuitOpen_() {
+  try {
+    var cache = CacheService.getScriptCache();
+    var raw = cleanText_(cache.get(providerCircuitCacheKey_()));
+    if (!raw) return false;
+    var untilTs = Number(raw);
+    if (!untilTs) return false;
+    return Date.now() < untilTs;
+  } catch (_err) {
+    return false;
+  }
+}
+
+function noteProviderFailure_(providerCode, errMsg) {
+  try {
+    var cache = CacheService.getScriptCache();
+    var seconds = Math.max(20, toNumber_(PROMPT_OPT.PROVIDER_CIRCUIT_SECONDS, 120));
+    var untilTs = Date.now() + (seconds * 1000);
+    cache.put(providerCircuitCacheKey_(), String(untilTs), seconds);
+    cache.put('chat_provider_last_error_code', cleanText_(providerCode || 'provider_error'), seconds);
+    cache.put('chat_provider_last_error_msg', summarizeProviderError_(errMsg), seconds);
+  } catch (_err) {}
+}
+
+function noteProviderSuccess_() {
+  try {
+    var cache = CacheService.getScriptCache();
+    cache.remove(providerCircuitCacheKey_());
+    cache.remove('chat_provider_last_error_code');
+    cache.remove('chat_provider_last_error_msg');
+  } catch (_err) {}
+}
+
 function postProcessReply_(text, ctx) {
   var out = cleanText_(text);
   if (!out) return out;
@@ -1017,7 +1318,14 @@ function postProcessReply_(text, ctx) {
     .replace(/\s{2,}/g, ' ')
     .trim();
 
-  if (ctx && ctx.chatHistory && ctx.chatHistory.length > 0) {
+  var hadPriorTurns = !!(
+    ctx && (
+      (ctx.chatHistory && ctx.chatHistory.length > 0) ||
+      (ctx.sessionState && toNumber_(ctx.sessionState.turnCount, 0) > 0)
+    )
+  );
+
+  if (hadPriorTurns) {
     out = out.replace(/^\s*[!]*\s*(hola|hola de nuevo|buenas|buen dia|buenas tardes|buenas noches)[\s!,.:;-]*/i, '');
     out = cleanText_(out);
   }
@@ -1027,9 +1335,26 @@ function postProcessReply_(text, ctx) {
   }
 
   // Normalizar espacios y duplicados de puntuacion residuales.
-  out = out.replace(/\s{2,}/g, ' ').replace(/([!?.,])\1+/g, '$1').trim();
+  out = out
+    .replace(/,\s*\./g, '.')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/([!?.,])\1+/g, '$1')
+    .trim();
 
   return out;
+}
+
+function buildSessionContextForPrompt_(ctx) {
+  var state = (ctx && ctx.sessionState) || {};
+  var history = (ctx && ctx.chatHistory) || [];
+  var lastBot = cleanText_(getLastBotMessage_(ctx));
+
+  return [
+    'turnCount=' + String(toNumber_(state.turnCount, history.length > 0 ? 1 : 0)),
+    'lastIntent=' + cleanText_(state.lastIntent || 'no_definido'),
+    'lastBot=' + trimForPrompt_(lastBot || 'sin_dato', 140),
+    'hasHistory=' + (history.length > 0 ? 'si' : 'no')
+  ].join('; ');
 }
 
 function refineAbruptReplyWithIa_(reply, ctx, signal, props) {
@@ -1822,6 +2147,7 @@ function detectProviderCode_(errMsg) {
   if (t.indexOf('quota') !== -1 || t.indexOf('resource_exhausted') !== -1) return 'quota_exceeded';
   if (t.indexOf('429') !== -1) return 'rate_limited';
   if (t.indexOf('401') !== -1 || t.indexOf('403') !== -1) return 'auth_error';
+  if (t.indexOf('400') !== -1 || t.indexOf('invalid argument') !== -1 || t.indexOf('invalid model') !== -1) return 'invalid_request';
   return 'provider_error';
 }
 
