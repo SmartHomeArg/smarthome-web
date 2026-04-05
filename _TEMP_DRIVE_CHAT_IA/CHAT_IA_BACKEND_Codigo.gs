@@ -85,6 +85,7 @@ function processChatRequest_(payload) {
     var prevState = loadSessionState_(ctx.sessionId);
     hydrateContextFromState_(ctx, prevState);
     validateInput_(ctx, cfg);
+    enrichLeadFromMessage_(ctx, cfg);
 
     var signal = detectCommercialSignal_(ctx.userMessage);
     var leadScore = scoreLead_(signal, ctx, cfg);
@@ -218,13 +219,19 @@ function loadRuntimeConfig_(props) {
 
 function buildContext_(payload, cfg) {
   var lead = payload.leadData || {};
+  var sessionIdIncoming = cleanText_(payload.sessionId);
+  var userMessage = cleanText_(payload.message);
+  var normalizedHistory = normalizeChatHistory_(payload.chatHistory);
+  var forceNewConversation = shouldForceFreshConversation_(userMessage, normalizedHistory, lead);
 
   return {
-    sessionId: cleanText_(payload.sessionId) || ('sess_' + Utilities.getUuid().slice(0, 8)),
-    userMessage: cleanText_(payload.message),
+    sessionId: forceNewConversation
+      ? ('sess_' + Utilities.getUuid().slice(0, 8))
+      : (sessionIdIncoming || ('sess_' + Utilities.getUuid().slice(0, 8))),
+    userMessage: userMessage,
     sourcePage: cleanText_(payload.sourcePage),
     userAgent: cleanText_(payload.userAgent),
-    chatHistory: normalizeChatHistory_(payload.chatHistory),
+    chatHistory: forceNewConversation ? [] : normalizedHistory,
     consent: toBool_(lead.consentimientoContacto, false),
     lead: {
       nombre: cleanText_(lead.nombre),
@@ -236,9 +243,32 @@ function buildContext_(payload, cfg) {
       urgencia: cleanText_(lead.urgencia).toLowerCase(),
       franjaHoraria: cleanText_(lead.franjaHoraria)
     },
+    forceNewConversation: forceNewConversation,
+    originalSessionId: sessionIdIncoming,
     timestamp: new Date().toISOString(),
     cfg: cfg
   };
+}
+
+function shouldForceFreshConversation_(message, history, lead) {
+  var msg = String(message || '').toLowerCase().trim();
+  if (!msg) return false;
+
+  var isResetIntent = /^(hola+|buenas|buen dia|buenas tardes|buenas noches|hello|hi|holi|inicio|empezar|reiniciar|nueva conversacion|nuevo chat)$/.test(msg);
+  if (!isResetIntent) return false;
+
+  // Si ya vienen datos de lead en el payload, no forzar reset automatico.
+  var hasLeadData = !!(
+    cleanText_(lead && lead.nombre) ||
+    onlyDigits_(lead && lead.telefono).length >= 8 ||
+    isValidEmail_(lead && lead.email) ||
+    cleanText_(lead && lead.localidad) ||
+    cleanText_(lead && lead.tipoCliente)
+  );
+  if (hasLeadData) return false;
+
+  // Si llega saludo/reset y hay historial heredado del frontend, empezar limpio.
+  return true;
 }
 
 function loadSessionState_(sessionId) {
@@ -265,12 +295,39 @@ function saveSessionState_(sessionId, state) {
 }
 
 function hydrateContextFromState_(ctx, state) {
+  if (ctx && ctx.forceNewConversation) {
+    ctx.sessionState = {};
+    return;
+  }
+
+  if (shouldResetStateForNewChat_(ctx)) {
+    ctx.sessionState = {};
+    return;
+  }
+
   if (!state) return;
   if (!ctx.lead.tipoCliente && state.clientType && state.clientTypeLocked && isStateFresh_(state.lastUpdatedAt, 90)) {
     ctx.lead.tipoCliente = state.clientType;
   }
   if (!ctx.lead.localidad && state.localidad) ctx.lead.localidad = state.localidad;
+  if (!ctx.lead.telefono && state.contactPhone) ctx.lead.telefono = onlyDigits_(state.contactPhone);
+  if (!ctx.lead.email && state.contactEmail) ctx.lead.email = cleanText_(state.contactEmail).toLowerCase();
   ctx.sessionState = state;
+}
+
+function shouldResetStateForNewChat_(ctx) {
+  var hasHistory = !!(ctx && ctx.chatHistory && ctx.chatHistory.length);
+  if (hasHistory) return false;
+
+  var msg = String((ctx && ctx.userMessage) || '').toLowerCase().trim();
+  if (!msg) return false;
+
+  // Si no llega historial y el usuario abre una charla desde saludo/inicio,
+  // evitar heredar estado cacheado de una conversacion previa.
+  if (isGreetingOnly_(msg)) return true;
+  if (/^(inicio|empezar|reiniciar|nueva conversacion|nuevo chat)$/.test(msg)) return true;
+
+  return false;
 }
 
 function buildNextSessionState_(ctx, signal, botReplyResult, prevState, transcript) {
@@ -283,6 +340,8 @@ function buildNextSessionState_(ctx, signal, botReplyResult, prevState, transcri
     clientTypeLocked: !!prev.clientTypeLocked,
     coverage: toNumber_(prev.coverage, 0),
     localidad: prev.localidad || '',
+    contactPhone: prev.contactPhone || '',
+    contactEmail: prev.contactEmail || '',
     hasRecommendation: !!prev.hasRecommendation,
     awaitingLocalidad: !!prev.awaitingLocalidad,
     lastIntent: signal.intent,
@@ -310,6 +369,15 @@ function buildNextSessionState_(ctx, signal, botReplyResult, prevState, transcri
   var inferredLocalidad = inferLocalidadFromText_(ctx.userMessage || '');
   if (inferredLocalidad) next.localidad = inferredLocalidad;
 
+  if (ctx && ctx.lead) {
+    if (ctx.lead.telefono && onlyDigits_(ctx.lead.telefono).length >= 8) {
+      next.contactPhone = onlyDigits_(ctx.lead.telefono);
+    }
+    if (isValidEmail_(ctx.lead.email || '')) {
+      next.contactEmail = cleanText_(ctx.lead.email).toLowerCase();
+    }
+  }
+
   var replyText = String((botReplyResult && botReplyResult.replyText) || '').toLowerCase();
   if (/te conviene|te recomiendo|opcion intermedia|opcion base|cobertura/.test(replyText)) {
     next.hasRecommendation = true;
@@ -330,6 +398,47 @@ function inferLocalidadFromText_(text) {
   if (!candidate) return '';
 
   return candidate;
+}
+
+function enrichLeadFromMessage_(ctx, cfg) {
+  if (!ctx || !ctx.lead) return;
+
+  var msg = String(ctx.userMessage || '');
+  var minDigits = toNumber_(cfg && cfg.telefonoMinDigitos, 8);
+
+  if (!ctx.lead.telefono) {
+    var inferredPhone = extractPhoneFromText_(msg, minDigits);
+    if (inferredPhone) ctx.lead.telefono = inferredPhone;
+  }
+
+  if (!ctx.lead.email) {
+    var inferredEmail = extractEmailFromText_(msg);
+    if (inferredEmail) ctx.lead.email = inferredEmail;
+  }
+}
+
+function extractPhoneFromText_(text, minDigits) {
+  var t = String(text || '');
+  if (!t) return '';
+
+  var matches = t.match(/[+]?\d[\d\s()\-\.]{6,}\d/g) || [];
+  var best = '';
+  var min = Math.max(6, toNumber_(minDigits, 8));
+
+  for (var i = 0; i < matches.length; i++) {
+    var digits = onlyDigits_(matches[i]);
+    if (digits.length < min) continue;
+    if (digits.length > 15) continue;
+    if (digits.length > best.length) best = digits;
+  }
+
+  return best;
+}
+
+function extractEmailFromText_(text) {
+  var t = String(text || '').toLowerCase();
+  var m = t.match(/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i);
+  return m && m[0] ? cleanText_(m[0]).toLowerCase() : '';
 }
 
 function persistConversationTranscript_(ctx, botReplyText, props) {
@@ -396,7 +505,7 @@ function formatHistoryForPrompt_(history) {
   return history
     .map(function(item) {
       var roleLabel = item.role === 'user' ? 'CLIENTE' : 'ASESOR';
-      return roleLabel + ': ' + item.text;
+      return roleLabel + ': ' + trimForPrompt_(item.text, 220);
     })
     .join('\n');
 }
@@ -452,12 +561,21 @@ function classifyLeadStatus_(score, cfg) {
 }
 
 function buildBotReply_(ctx, signal, props, cfg) {
+  var deterministic = buildDeterministicFlowReply_(ctx, signal);
+  if (deterministic && deterministic.force && deterministic.reply) {
+    return {
+      mode: 'deterministic_flow',
+      replyText: cleanText_(deterministic.reply)
+    };
+  }
+
   var docs = readKnowledgeDocs_(props);
 
   var historyText = formatHistoryForPrompt_(ctx.chatHistory);
   var instructionsCompact = trimForPrompt_(docs.instructions, PROMPT_OPT.MAX_INSTRUCTIONS_CHARS);
   var knowledgeCompact = buildCompactKnowledgeContext_(docs.knowledge, ctx, signal);
   var eventsCompact = buildCompactEventsContext_(docs.events, ctx, signal);
+  var knownFacts = buildKnownFactsForPrompt_(ctx);
 
   var prompt = [
     instructionsCompact,
@@ -469,6 +587,8 @@ function buildBotReply_(ctx, signal, props, cfg) {
     historyText,
     '\n\nMENSAJE CLIENTE:\n',
     ctx.userMessage,
+    '\n\nDATOS CONFIRMADOS (NO REPREGUNTAR):\n',
+    knownFacts,
     '\n\nDATOS LEAD PARCIALES:\n',
     JSON.stringify(ctx.lead),
     '\n\nINTENCION DETECTADA: ', signal.intent,
@@ -480,6 +600,7 @@ function buildBotReply_(ctx, signal, props, cfg) {
     '\n- Si ya hay historial, no saludes.',
     '\n- No cierres con frases incompletas (ej: "para poder").',
     '\n- Evita frases de relleno como "hola de nuevo" o "estoy aqui para ayudarte" si no aportan informacion.',
+    '\n- No pidas de nuevo datos ya confirmados (tipo de cliente, localidad, cobertura, contacto).',
     '\n- Escribe en tono humano y natural, sin formato markdown.',
     '\n- No uses asteriscos, ni listas con guiones, ni encabezados tipo "Info util".',
     '\n- Da una respuesta util y luego 1 pregunta puntual para avanzar comercialmente.',
@@ -487,12 +608,16 @@ function buildBotReply_(ctx, signal, props, cfg) {
   ].join('');
 
   if (!props.GEMINI_API_KEY) {
-    throw new Error('IA no disponible: falta GEMINI_API_KEY en Script Properties');
+    return {
+      mode: 'fallback_faq',
+      replyText: postProcessReply_(buildFaqFallbackReply_(ctx, signal, docs.knowledge, cfg), ctx)
+    };
   }
 
   try {
     var text = callGeminiWithFallbackModels_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
     var processed = postProcessReply_(text, ctx);
+    processed = reconcileReplyWithKnownState_(processed, ctx, signal);
     if (looksWeakOrTruncatedReply_(processed)) {
       throw new Error('Respuesta IA debil o truncada');
     }
@@ -501,8 +626,57 @@ function buildBotReply_(ctx, signal, props, cfg) {
     var errMsg = String(err);
     var providerCode = detectProviderCode_(errMsg);
     writeErrorSafe_(ctx.sessionId, 'ia_provider_error', errMsg, providerCode, false);
-    throw err;
+    return {
+      mode: 'fallback_faq',
+      replyText: postProcessReply_(buildFaqFallbackReply_(ctx, signal, docs.knowledge, cfg), ctx)
+    };
   };
+}
+
+function buildKnownFactsForPrompt_(ctx) {
+  var state = (ctx && ctx.sessionState) || {};
+  var type = inferClientType_(ctx) || state.clientType || '';
+  var locality = (ctx && ctx.lead && ctx.lead.localidad) || state.localidad || '';
+  var coverage = inferCoverageNeed_(ctx);
+  var contact = hasAnyContactData_(ctx) ? 'si' : 'no';
+
+  return [
+    'tipo_cliente=' + (type || 'no_definido'),
+    'localidad=' + (locality || 'no_definida'),
+    'cobertura_aprox=' + (coverage > 0 ? String(coverage) : 'no_definida'),
+    'contacto=' + contact
+  ].join('; ');
+}
+
+function hasAnyContactData_(ctx) {
+  var lead = (ctx && ctx.lead) || {};
+  var hasPhone = onlyDigits_(lead.telefono || '').length >= 8;
+  var hasEmail = isValidEmail_(lead.email || '');
+  return !!(hasPhone || hasEmail);
+}
+
+function reconcileReplyWithKnownState_(reply, ctx, signal) {
+  var out = cleanText_(reply);
+  if (!out) return out;
+
+  var lower = out.toLowerCase();
+  var state = (ctx && ctx.sessionState) || {};
+  var knownType = !!(inferClientType_(ctx) || state.clientType);
+  var knownLocalidad = !!(((ctx && ctx.lead && ctx.lead.localidad) || state.localidad || '').trim());
+  var knownCoverage = inferCoverageNeed_(ctx) > 0;
+
+  var asksType = /(es para hogar o comercio|si es para hogar o comercio|hogar o comercio\?)/.test(lower);
+  var asksLocalidad = /(pasame tu localidad|decime tu localidad|confirmame tu localidad|cual es tu localidad)/.test(lower);
+  var asksCoverage = /(cuantos accesos|cuantos ambientes|cantidad de accesos|cantidad de ambientes)/.test(lower);
+
+  if ((knownType && asksType) || (knownLocalidad && asksLocalidad) || (knownCoverage && asksCoverage)) {
+    var deterministic = buildDeterministicFlowReply_(ctx, signal);
+    if (deterministic && deterministic.reply) {
+      return cleanText_(deterministic.reply);
+    }
+  }
+
+  return out;
 }
 
 function buildCompactKnowledgeContext_(knowledgeText, ctx, signal) {
@@ -894,7 +1068,7 @@ function buildDeterministicFlowReply_(ctx, signal) {
 
   if (isGreetingOnly_(userText)) {
     return {
-      force: false,
+      force: true,
       reply: buildGreetingReply_(ctx, state.clientType, state.coverage, userTurns)
     };
   }
@@ -976,7 +1150,7 @@ function buildDeterministicFlowReply_(ctx, signal) {
   }
 
   return {
-    force: false,
+    force: true,
     reply: buildDeterministicAdviceReply_(state)
   };
 }
@@ -1029,7 +1203,8 @@ function buildConversationState_(ctx, signal) {
   var lastBot = getLastBotMessage_(ctx);
   var state = (ctx && ctx.sessionState) || {};
   var localidadNow = inferLocalidadFromText_(userText) || (ctx && ctx.lead && ctx.lead.localidad) || state.localidad || '';
-  var shouldForceQuoteStep = !!state.awaitingLocalidad || !!localidadNow;
+  var shouldForceQuoteStep = !!(state.awaitingLocalidad && localidadNow);
+  var hasContact = hasAnyContactData_(ctx);
 
   var contradiction = isSizeCoverageContradiction_(size, coverage);
 
@@ -1038,6 +1213,7 @@ function buildConversationState_(ctx, signal) {
     clientType: type,
     coverage: coverage,
     localidad: localidadNow,
+    hasContact: hasContact,
     sizeWord: size,
     contradiction: contradiction,
     hotIntent: !!(shouldForceQuoteStep || (signal && (signal.intent === 'cotizacion' || signal.intent === 'compra' || /(precio|cuanto sale|cuanto cuesta|valor|costo|presupuesto)/.test(userText)))),
@@ -1093,6 +1269,9 @@ function buildDeterministicAdviceReply_(state) {
 
 function buildDeterministicQuoteReply_(state) {
   if (state.localidad) {
+    if (state.hasContact) {
+      return 'Excelente, ya tengo tu localidad y tu contacto. Si queres, te derivo ahora con un asesor para cerrar la cotizacion.';
+    }
     return 'Excelente, con localidad ' + state.localidad + ' te puedo preparar el rango estimado final. Si queres, pasame un telefono y te deriva un asesor para cerrar la cotizacion.';
   }
 
