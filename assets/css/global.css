@@ -4822,6 +4822,84 @@ FOOTER
   border-bottom-left-radius: 5px;
 }
 
+.chat-ia-support {
+  width: 92%;
+  border: 1px solid #d2def8;
+  background: #f8fbff;
+}
+
+.chat-ia-support__title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #18325f;
+}
+
+.chat-ia-support__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chat-ia-support__btn {
+  border: 0;
+  border-radius: 9px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-ia-support__btn.is-wa {
+  background: #25d366;
+  color: #fff;
+}
+
+.chat-ia-support__btn.is-form {
+  background: #0b5ed7;
+  color: #fff;
+}
+
+.chat-ia-support__btn.is-submit {
+  background: #173f88;
+  color: #fff;
+}
+
+.chat-ia-inline-form {
+  margin-top: 10px;
+  display: grid;
+  gap: 7px;
+}
+
+.chat-ia-inline-form input,
+.chat-ia-inline-form select {
+  border: 1px solid #bfd0f5;
+  border-radius: 8px;
+  padding: 8px 9px;
+  font-size: 12px;
+  background: #fff;
+  color: #22345a;
+}
+
+.chat-ia-inline-form__msg {
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #35548f;
+}
+
+.chat-ia-inline-form__msg.is-error {
+  color: #b42318;
+}
+
+.chat-ia-inline-form__msg.is-success {
+  color: #067647;
+}
+
 .chat-ia-msg__status {
   font-size: 10px;
   line-height: 1;

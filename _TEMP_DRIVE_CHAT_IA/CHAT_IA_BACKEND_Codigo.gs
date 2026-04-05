@@ -19,7 +19,7 @@
  */
 
 var CHAT_VERSION = '1.0.0';
-var IA_UNAVAILABLE_MESSAGE = 'En este momento no hay operador disponible. Por favor comunicate por WhatsApp y te asistimos a la brevedad.';
+var IA_UNAVAILABLE_MESSAGE = 'En este momento no hay operador disponible para atencion. Comunicate por WhatsApp o completa el formulario y te contactamos a la brevedad.';
 
 var OP_SHEETS = {
   CHAT_LOGS: 'chat_logs',
@@ -36,15 +36,15 @@ var PROMPT_OPT = {
   DOCS_CACHE_SECONDS: 300,
   MODELS_CACHE_SECONDS: 900,
   DISCOVERY_MAX_MODELS: 10,
-  ENABLE_MODEL_DISCOVERY: true,
+  ENABLE_MODEL_DISCOVERY: false,
   MAX_OUTPUT_TOKENS: 520,
   MIN_REPLY_CHARS: 45,
-  GEMINI_RETRY_ATTEMPTS: 2,
+  GEMINI_RETRY_ATTEMPTS: 1,
   GEMINI_RETRY_BASE_MS: 300,
   GEMINI_TOTAL_TIMEOUT_MS: 15000,
-  GEMINI_MAX_MODELS_PER_REQUEST: 5,
+  GEMINI_MAX_MODELS_PER_REQUEST: 2,
   GEMINI_RESCUE_TIMEOUT_MS: 8000,
-  GEMINI_RESCUE_MODELS: 3,
+  GEMINI_RESCUE_MODELS: 2,
   ENABLE_RESCUE_PASS: true,
   PROVIDER_CIRCUIT_SECONDS: 60
 };
@@ -655,8 +655,9 @@ function classifyLeadStatus_(score, cfg) {
 }
 
 function buildBotReply_(ctx, signal, props, cfg) {
-  // Circuit breaker: si el provider esta caido (ej: cuota 429), no quemar
-  // mas llamadas API que solo empeoran la situacion. Ir directo a fallback.
+  // Circuit breaker: si el provider esta caido (NO por cuota, sino por error real),
+  // no quemar mas llamadas. NOTA: NO activar circuit breaker para 429 porque
+  // cada modelo tiene cuota independiente y uno puede funcionar cuando otro no.
   if (isProviderCircuitOpen_()) {
     var cachedCode = '';
     var cachedMsg = '';
@@ -753,20 +754,29 @@ function buildBotReply_(ctx, signal, props, cfg) {
     var text = callGeminiWithFallbackModels_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
     noteProviderSuccess_();
     var processed = postProcessReply_(text, ctx);
-    processed = refineAbruptReplyWithIa_(processed, ctx, signal, props);
+    // Refinamiento deshabilitado: gasta 1 call API extra y en tier gratuito
+    // no vale la pena el riesgo de quemar cuota por pulir redaccion.
+    // processed = refineAbruptReplyWithIa_(processed, ctx, signal, props);
 
     processed = reconcileReplyWithKnownState_(processed, ctx, signal);
     processed = avoidLoopingReply_(processed, ctx, signal, docs.knowledge);
     return { mode: 'ia', replyText: processed };
   } catch (err) {
     var errMsg = String(err);
+
+    // ESTRATEGIA CLAVE: si el prompt completo fallo (puede ser por tamano,
+    // tokens, cuota, etc.), reintentar con un prompt MINIMO que tiene mucha
+    // mas chance de pasar bajo limites de cuota/tokens.
+    var lightRetry = tryLightPromptFallback_(ctx, signal, props);
+    if (lightRetry) {
+      return { mode: 'ia', replyText: lightRetry };
+    }
+
     var rescued = tryRescueIaReply_(prompt, ctx, signal, props, errMsg);
     if (rescued && rescued.ok) {
       return { mode: 'ia', replyText: rescued.replyText };
     }
 
-    // ULTIMO RECURSO ABSOLUTO: un solo call directo con el modelo mas comun
-    // y un prompt ultra-minimo. Si esto falla, recien ahi usar fallback estatico.
     var lastResort = tryLastResortDirectCall_(ctx, props);
     if (lastResort) {
       return { mode: 'ia', replyText: lastResort };
@@ -830,9 +840,7 @@ function tryRescueIaReply_(prompt, ctx, signal, props, originalErrMsg) {
   if (!props || !props.GEMINI_API_KEY) return { ok: false };
 
   var errMsg = String(originalErrMsg || '').toLowerCase();
-  // No reintentar si es cuota agotada o falta key - no va a cambiar en ms.
   if (errMsg.indexOf('no_api_key') !== -1) return { ok: false };
-  if (isQuotaOrRateError_(errMsg)) return { ok: false };
 
   try {
     // Ultimo intento de rescate con prompt compacto y modelos alternativos.
@@ -863,7 +871,6 @@ function tryRescueIaReply_(prompt, ctx, signal, props, originalErrMsg) {
     if (!cleanText_(rescueText)) return { ok: false };
 
     var processed = postProcessReply_(rescueText, ctx);
-    processed = refineAbruptReplyWithIa_(processed, ctx, signal, props);
     processed = reconcileReplyWithKnownState_(processed, ctx, signal);
     processed = avoidLoopingReply_(processed, ctx, signal, '');
 
@@ -883,20 +890,47 @@ function tryRescueIaReply_(prompt, ctx, signal, props, originalErrMsg) {
 function tryLastResortDirectCall_(ctx, props) {
   if (!props || !props.GEMINI_API_KEY) return null;
 
-  // Si ya sabemos que el provider esta caido por cuota, no quemar mas calls.
-  if (isProviderCircuitOpen_()) return null;
-
   var msg = cleanText_(ctx && ctx.userMessage) || 'hola';
   var miniPrompt = 'Sos un asesor comercial de Smarthome (alarmas, camaras, monitoreo 24/7). Responde breve en espanol al cliente: ' + msg;
 
-  // UN solo modelo, UN solo intento. Si falla, es cuota y no tiene sentido seguir.
+  // Ultimo intento con Flash Lite (tiene mas cuota disponible en capa gratuita).
   try {
-    var text = callGemini_(miniPrompt, props.GEMINI_API_KEY, 'gemini-2.0-flash-lite');
+    var text = callGemini_(miniPrompt, props.GEMINI_API_KEY, 'gemini-2.5-flash-lite');
     if (cleanText_(text)) {
       noteProviderSuccess_();
       return postProcessReply_(text, ctx);
     }
   } catch (_lastErr) {}
+
+  return null;
+}
+
+/**
+ * Cuando el prompt completo falla (por cuota, tokens, timeout, etc.),
+ * reintentar con un prompt MINIMO y el modelo mas liviano disponible.
+ * El prompt liviano tiene muchos menos tokens y pasa bajo limites
+ * mas restrictivos. Devuelve texto o null.
+ */
+function tryLightPromptFallback_(ctx, signal, props) {
+  if (!props || !props.GEMINI_API_KEY) return null;
+
+  var knownFacts = buildKnownFactsForPrompt_(ctx);
+  var sessionCompact = buildSessionContextForPrompt_(ctx);
+  var lightPrompt = buildLightIaPrompt_(ctx, signal, knownFacts, sessionCompact);
+
+  // Mismo orden: Flash -> Flash Lite con prompt liviano.
+  var modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+  for (var i = 0; i < modelsToTry.length; i++) {
+    try {
+      var text = callGemini_(lightPrompt, props.GEMINI_API_KEY, modelsToTry[i]);
+      if (cleanText_(text)) {
+        noteProviderSuccess_();
+        return postProcessReply_(text, ctx);
+      }
+    } catch (_lightErr) {
+      continue;
+    }
+  }
 
   return null;
 }
@@ -1026,17 +1060,15 @@ function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
   var startMs = Date.now();
   var totalBudgetMs = Math.max(5000, toNumber_(PROMPT_OPT.GEMINI_TOTAL_TIMEOUT_MS, 15000));
   var errors = [];
-  var hitQuotaLimit = false;
 
+  // IMPORTANTE: NO abortar ante 429 de un modelo. Cada modelo/familia tiene
+  // su propia cuota independiente. Si gemini-2.5-flash da 429, gemini-2.5-flash-lite
+  // puede tener cuota disponible. Siempre probar TODOS los candidatos.
   for (var i = 0; i < models.length && i < maxModels; i++) {
     if ((Date.now() - startMs) >= totalBudgetMs) {
       errors.push('timeout_budget_exceeded');
       break;
     }
-
-    // Si ya recibimos 429 (cuota), NO probar mas modelos: comparten la misma cuota.
-    // Cada intento adicional solo empeora la situacion de cuota.
-    if (hitQuotaLimit) break;
 
     var model = models[i];
     try {
@@ -1044,39 +1076,7 @@ function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
     } catch (err) {
       var msg = String(err && err.message ? err.message : err);
       errors.push(model + ' -> ' + msg.slice(0, 220));
-
-      if (isQuotaOrRateError_(msg)) {
-        hitQuotaLimit = true;
-        break;
-      }
-      // Solo continuar al siguiente modelo si NO es error de cuota
       continue;
-    }
-  }
-
-  // PASE 2: discovery forzada SOLO si no fue problema de cuota.
-  if (!hitQuotaLimit && (Date.now() - startMs) < totalBudgetMs) {
-    var discovered = readAvailableGeminiModels_(apiKey, true);
-    if (discovered.length) {
-      var alreadyTried = {};
-      for (var a = 0; a < models.length && a < maxModels; a++) {
-        alreadyTried[models[a]] = true;
-      }
-
-      for (var d = 0; d < discovered.length; d++) {
-        if ((Date.now() - startMs) >= totalBudgetMs) break;
-        var dm = sanitizeGeminiModelName_(discovered[d]);
-        if (!dm || alreadyTried[dm]) continue;
-        alreadyTried[dm] = true;
-        try {
-          return callGeminiWithRetries_(prompt, apiKey, dm, PROMPT_OPT.GEMINI_RETRY_ATTEMPTS, startMs, totalBudgetMs);
-        } catch (err2) {
-          var msg2 = String(err2 && err2.message ? err2.message : err2);
-          errors.push('discovery:' + dm + ' -> ' + msg2.slice(0, 220));
-          if (isQuotaOrRateError_(msg2)) break;
-          continue;
-        }
-      }
     }
   }
 
@@ -1144,43 +1144,10 @@ function isRetryableModelSelectionError_(errMsg) {
 }
 
 function buildGeminiModelCandidates_(preferredModel, apiKey) {
-  var primary = sanitizeGeminiModelName_(preferredModel) || 'gemini-2.5-flash';
-
-  // Solo modelos confirmados por el diagnostico (sin 1.5 que ya no existen)
-  var staticCandidates = [
-    primary,
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-2.5-flash',
-    'gemini-2.5-flash-lite',
-    'gemini-2.5-pro'
-  ];
-
-  var discovered = readAvailableGeminiModels_(apiKey);
-  var candidates = [];
-
-  // Priorizar modelo preferido si existe y luego discovered para evitar modelos no habilitados.
-  candidates.push(primary);
-  for (var d = 0; d < discovered.length; d++) {
-    candidates.push(discovered[d]);
-  }
-
-  // Mantener fallback estatico por compatibilidad si la discovery falla o trae pocos modelos.
-  for (var s = 0; s < staticCandidates.length; s++) {
-    candidates.push(staticCandidates[s]);
-  }
-
-  var seen = {};
-  var unique = [];
-  for (var i = 0; i < candidates.length; i++) {
-    var model = cleanText_(candidates[i]);
-    model = sanitizeGeminiModelName_(model);
-    if (!model || seen[model]) continue;
-    seen[model] = true;
-    unique.push(model);
-  }
-
-  return unique;
+  // Capa gratuita AI Studio: solo gemini-2.5-flash y gemini-2.5-flash-lite.
+  // Logica: intentar Flash (mejor calidad) -> Flash Lite (mas cuota).
+  // Cuando se pase a capa paga, agregar mas modelos aca.
+  return ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
 }
 
 function readAvailableGeminiModels_(apiKey, forceRefresh) {
@@ -1341,7 +1308,7 @@ function buildDocsCacheKey_(props) {
 }
 
 function callGemini_(prompt, apiKey, modelName) {
-  var model = sanitizeGeminiModelName_(modelName) || 'gemini-2.0-flash';
+  var model = sanitizeGeminiModelName_(modelName) || 'gemini-2.5-flash';
   var body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
@@ -1433,10 +1400,11 @@ function isProviderCircuitOpen_() {
 function noteProviderFailure_(providerCode, errMsg) {
   try {
     var cache = CacheService.getScriptCache();
-    // Para errores de cuota (429), circuit breaker mas largo (5 min)
-    // porque la cuota no se resetea rapido y cada call lo empeora.
-    var isQuota = isQuotaOrRateError_(errMsg);
-    var seconds = isQuota ? 300 : Math.max(20, toNumber_(PROMPT_OPT.PROVIDER_CIRCUIT_SECONDS, 60));
+    // Solo activar circuit breaker para errores NO de cuota.
+    // Los 429 de cuota son por modelo, no globales, asi que no debemos
+    // bloquear intentos con otros modelos.
+    if (isQuotaOrRateError_(errMsg)) return;
+    var seconds = Math.max(20, toNumber_(PROMPT_OPT.PROVIDER_CIRCUIT_SECONDS, 60));
     var untilTs = Date.now() + (seconds * 1000);
     cache.put(providerCircuitCacheKey_(), String(untilTs), seconds);
     cache.put('chat_provider_last_error_code', cleanText_(providerCode || 'provider_error'), seconds);
@@ -2608,7 +2576,7 @@ function diagnosticoCompleto() {
 
   // 3. Probar cada modelo individualmente
   log('--- 3. PRUEBA INDIVIDUAL POR MODELO ---');
-  var modelosAProbar = [configModel, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-pro', 'gemini-2.5-flash'];
+  var modelosAProbar = [configModel, 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
   var seen = {};
   var alguno_funciono = false;
 
@@ -2645,6 +2613,109 @@ function diagnosticoCompleto() {
   log('');
   log('=== FIN DIAGNOSTICO ===');
 
+  return resultados.join('\n');
+}
+
+/**
+ * TEST DE FLUJO COMPLETO: simula exactamente lo que hace el chat real.
+ * Primero "hola", despues "quiero una alarma para mi casa".
+ * Loguea CADA paso para identificar donde falla.
+ * Ejecutar desde el editor de Apps Script.
+ */
+function testChatFlow() {
+  var resultados = [];
+  var log = function(msg) { resultados.push(msg); Logger.log(msg); };
+
+  log('=== TEST CHAT FLOW (2 mensajes) ===');
+  log('Fecha: ' + new Date().toISOString());
+  log('');
+
+  var props, cfg;
+  try {
+    props = getScriptProps_();
+    cfg = loadRuntimeConfig_(props);
+    log('Props y Config: OK');
+    log('API Key: ' + (props.GEMINI_API_KEY ? 'presente' : '*** FALTA ***'));
+    log('Modelo configurado: ' + props.GEMINI_MODEL);
+  } catch (initErr) {
+    log('*** ERROR en init: ' + String(initErr));
+    return resultados.join('\n');
+  }
+
+  // --- MENSAJE 1: "hola" ---
+  log('');
+  log('--- MENSAJE 1: "hola" ---');
+  var result1;
+  try {
+    var start1 = Date.now();
+    result1 = processChatRequest_({
+      sessionId: 'test_flow_' + Utilities.getUuid().slice(0, 8),
+      message: 'hola',
+      sourcePage: 'test-flow',
+      userAgent: 'test',
+      chatHistory: []
+    });
+    var elapsed1 = Date.now() - start1;
+    log('Resultado: mode=' + (result1.mode || 'N/A') + ', ok=' + result1.ok + ', tiempo=' + elapsed1 + 'ms');
+    if (result1.reply) log('Reply: ' + String(result1.reply).slice(0, 200));
+    if (result1.data) {
+      log('fallbackReason: ' + (result1.data.fallbackReason || 'ninguno'));
+      log('providerCode: ' + (result1.data.providerCode || 'ninguno'));
+      log('providerMessage: ' + (result1.data.providerMessage || 'ninguno'));
+    }
+    if (result1.message && !result1.ok) {
+      log('Error message: ' + String(result1.message).slice(0, 200));
+      if (result1.data) log('Error detail: ' + (result1.data.providerMessage || ''));
+    }
+  } catch (err1) {
+    log('*** EXCEPCION msg 1: ' + String(err1));
+  }
+
+  var sessionId = (result1 && result1.data && result1.data.sessionId) || 'test_flow_fallback';
+
+  // --- MENSAJE 2: "quiero una alarma para mi casa" ---
+  log('');
+  log('--- MENSAJE 2: "quiero una alarma para mi casa" ---');
+  log('SessionId: ' + sessionId);
+
+  // Verificar circuit breaker antes del 2do mensaje
+  log('Circuit breaker abierto: ' + isProviderCircuitOpen_());
+
+  try {
+    var historial2 = [];
+    if (result1 && result1.ok && result1.reply) {
+      historial2 = [
+        { role: 'user', text: 'hola' },
+        { role: 'bot', text: result1.reply }
+      ];
+    }
+
+    var start2 = Date.now();
+    var result2 = processChatRequest_({
+      sessionId: sessionId,
+      message: 'quiero una alarma para mi casa',
+      sourcePage: 'test-flow',
+      userAgent: 'test',
+      chatHistory: historial2
+    });
+    var elapsed2 = Date.now() - start2;
+    log('Resultado: mode=' + (result2.mode || 'N/A') + ', ok=' + result2.ok + ', tiempo=' + elapsed2 + 'ms');
+    if (result2.reply) log('Reply: ' + String(result2.reply).slice(0, 200));
+    if (result2.data) {
+      log('fallbackReason: ' + (result2.data.fallbackReason || 'ninguno'));
+      log('providerCode: ' + (result2.data.providerCode || 'ninguno'));
+      log('providerMessage: ' + (result2.data.providerMessage || 'ninguno'));
+    }
+    if (result2.message && !result2.ok) {
+      log('Error message: ' + String(result2.message).slice(0, 200));
+      if (result2.data) log('Error detail: ' + (result2.data.providerMessage || ''));
+    }
+  } catch (err2) {
+    log('*** EXCEPCION msg 2: ' + String(err2));
+  }
+
+  log('');
+  log('=== FIN TEST CHAT FLOW ===');
   return resultados.join('\n');
 }
 

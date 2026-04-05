@@ -2369,6 +2369,7 @@ function initChatIAWidget_(contenedor) {
   if (!toggle || !panel || !closeBtn || !form || !input || !sendBtn || !messages) return;
 
   const sessionId = getChatSessionId_();
+  const CHAT_WHATSAPP_URL = 'https://wa.me/5492646304866?text=Hola%20vengo%20desde%20la%20web';
   let isBusy = false;
   const conversationHistory = [];
   let typingNode = null;
@@ -2447,6 +2448,168 @@ function initChatIAWidget_(contenedor) {
     }
 
     return msg;
+  }
+
+  function isFallbackMode_(data) {
+    if (!data || typeof data !== 'object') return false;
+    var mode = String(data.mode || '').toLowerCase();
+    return !!mode && mode !== 'ia';
+  }
+
+  function appendFallbackSupportCard_() {
+    const card = document.createElement('article');
+    card.className = 'chat-ia-msg is-bot chat-ia-support';
+    card.innerHTML = [
+      '<p class="chat-ia-support__title">Si queres, seguimos por estos canales:</p>',
+      '<div class="chat-ia-support__actions">',
+      '  <a class="chat-ia-support__btn is-wa" href="' + CHAT_WHATSAPP_URL + '" target="_blank" rel="noopener noreferrer">WhatsApp</a>',
+      '  <button type="button" class="chat-ia-support__btn is-form" data-chat-open-form>Completar formulario</button>',
+      '</div>',
+      '<form class="chat-ia-inline-form" data-chat-inline-form hidden novalidate>',
+      '  <input type="text" name="nombreApellido" placeholder="Nombre y apellido" maxlength="80" required>',
+      '  <input type="tel" name="telefono" placeholder="Telefono (10 digitos)" inputmode="numeric" maxlength="10" required>',
+      '  <select name="provincia" required>',
+      '    <option value="">Provincia</option>',
+      '    <option value="Buenos Aires">Buenos Aires</option>',
+      '    <option value="CABA">CABA</option>',
+      '    <option value="Catamarca">Catamarca</option>',
+      '    <option value="Chaco">Chaco</option>',
+      '    <option value="Chubut">Chubut</option>',
+      '    <option value="Cordoba">Cordoba</option>',
+      '    <option value="Corrientes">Corrientes</option>',
+      '    <option value="Entre Rios">Entre Rios</option>',
+      '    <option value="Formosa">Formosa</option>',
+      '    <option value="Jujuy">Jujuy</option>',
+      '    <option value="La Pampa">La Pampa</option>',
+      '    <option value="La Rioja">La Rioja</option>',
+      '    <option value="Mendoza">Mendoza</option>',
+      '    <option value="Misiones">Misiones</option>',
+      '    <option value="Neuquen">Neuquen</option>',
+      '    <option value="Rio Negro">Rio Negro</option>',
+      '    <option value="Salta">Salta</option>',
+      '    <option value="San Juan">San Juan</option>',
+      '    <option value="San Luis">San Luis</option>',
+      '    <option value="Santa Cruz">Santa Cruz</option>',
+      '    <option value="Santa Fe">Santa Fe</option>',
+      '    <option value="Santiago del Estero">Santiago del Estero</option>',
+      '    <option value="Tierra del Fuego">Tierra del Fuego</option>',
+      '    <option value="Tucuman">Tucuman</option>',
+      '  </select>',
+      '  <input type="email" name="mail" placeholder="Email" maxlength="120" required>',
+      '  <button type="submit" class="chat-ia-support__btn is-submit">Enviar formulario</button>',
+      '  <p class="chat-ia-inline-form__msg" data-chat-inline-form-msg></p>',
+      '</form>'
+    ].join('');
+
+    const openFormBtn = card.querySelector('[data-chat-open-form]');
+    const inlineForm = card.querySelector('[data-chat-inline-form]');
+    const inlineMsg = card.querySelector('[data-chat-inline-form-msg]');
+
+    function showInlineMsg(text, type) {
+      if (!inlineMsg) return;
+      inlineMsg.textContent = String(text || '');
+      inlineMsg.classList.remove('is-error', 'is-success');
+      if (type) inlineMsg.classList.add(type);
+    }
+
+    function emailIsValid_(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+    }
+
+    function digits_(value) {
+      return String(value || '').replace(/\D/g, '');
+    }
+
+    if (openFormBtn && inlineForm) {
+      openFormBtn.addEventListener('click', function () {
+        inlineForm.hidden = !inlineForm.hidden;
+        if (!inlineForm.hidden) {
+          const first = inlineForm.querySelector('input[name="nombreApellido"]');
+          if (first) first.focus();
+        }
+      });
+    }
+
+    if (inlineForm) {
+      const phoneInput = inlineForm.querySelector('input[name="telefono"]');
+      if (phoneInput) {
+        phoneInput.addEventListener('input', function () {
+          this.value = digits_(this.value).slice(0, 10);
+        });
+      }
+
+      inlineForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        showInlineMsg('', '');
+
+        const formData = new FormData(inlineForm);
+        const nombreApellido = String(formData.get('nombreApellido') || '').trim();
+        const telefono = digits_(formData.get('telefono')).slice(0, 10);
+        const provincia = String(formData.get('provincia') || '').trim();
+        const mail = String(formData.get('mail') || '').trim();
+
+        if (nombreApellido.length < 3) {
+          showInlineMsg('Ingresa nombre y apellido validos.', 'is-error');
+          return;
+        }
+        if (telefono.length !== 10) {
+          showInlineMsg('Ingresa 10 digitos de telefono, sin 0 y sin 15.', 'is-error');
+          return;
+        }
+        if (!provincia) {
+          showInlineMsg('Selecciona una provincia.', 'is-error');
+          return;
+        }
+        if (!emailIsValid_(mail)) {
+          showInlineMsg('Ingresa un email valido.', 'is-error');
+          return;
+        }
+
+        const submitBtn = inlineForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Enviando...';
+        }
+
+        const payload = {
+          nombreApellido: nombreApellido,
+          telefono: telefono,
+          provincia: provincia,
+          mail: mail,
+          website: '',
+          tiempoSegundos: 10,
+          pagina: 'chat_ia_fallback',
+          url: window.location.href,
+          userAgent: navigator.userAgent
+        };
+
+        try {
+          const response = await fetch(SHARED_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await response.json();
+          if (result && result.ok) {
+            showInlineMsg('Formulario enviado. Te contactamos a la brevedad.', 'is-success');
+            inlineForm.reset();
+          } else {
+            showInlineMsg('No se pudo enviar el formulario. Intenta nuevamente.', 'is-error');
+          }
+        } catch (_formErr) {
+          showInlineMsg('Error de conexion al enviar formulario. Intenta nuevamente.', 'is-error');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Enviar formulario';
+          }
+        }
+      });
+    }
+
+    messages.appendChild(card);
+    messages.scrollTop = messages.scrollHeight;
   }
 
   function setOpenState(isOpen) {
@@ -2541,20 +2704,26 @@ function initChatIAWidget_(contenedor) {
       if (!data) {
         setUserMessageStatus_(userMsgEl, 'No entregado');
         appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.');
+        appendFallbackSupportCard_();
       } else if (hasBackendMessage) {
         setUserMessageStatus_(userMsgEl, '✓✓ Leido');
         appendMessage('bot', data.reply || data.message);
+        if (isFallbackMode_(data)) {
+          appendFallbackSupportCard_();
+        }
       } else if (data.ok === true) {
         setUserMessageStatus_(userMsgEl, '✓✓ Leido');
         appendMessage('bot', data.reply || 'Te leo. Si quieres, puedo ayudarte a cotizar ahora.');
       } else {
         setUserMessageStatus_(userMsgEl, 'No entregado');
         appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.');
+        appendFallbackSupportCard_();
       }
     } catch (error) {
       hideTypingIndicator_();
       setUserMessageStatus_(userMsgEl, 'No entregado');
-      appendMessage('bot', 'No pude conectar con el asistente ahora. Puedes continuar por WhatsApp y te atendemos enseguida.');
+      appendMessage('bot', 'En este momento no hay operador disponible para atencion. Comunicate por WhatsApp o completa el formulario y te contactamos a la brevedad.');
+      appendFallbackSupportCard_();
       console.error('Error enviando mensaje al chat IA:', error);
     } finally {
       hideTypingIndicator_();
