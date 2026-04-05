@@ -451,6 +451,7 @@ FOOTER
 }
 
 .footer-disclaimer {
+  margin-top: 22px;
   margin-bottom: 18px;
   padding: 10px 14px;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -628,6 +629,7 @@ FOOTER
   }
 
   .footer-disclaimer {
+    margin-top: 18px;
     margin-bottom: 16px;
     padding: 9px 12px;
     border-radius: 10px;

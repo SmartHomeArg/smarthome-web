@@ -39,11 +39,11 @@ var PROMPT_OPT = {
   ENABLE_MODEL_DISCOVERY: false,
   MAX_OUTPUT_TOKENS: 520,
   MIN_REPLY_CHARS: 45,
-  GEMINI_RETRY_ATTEMPTS: 1,
-  GEMINI_RETRY_BASE_MS: 300,
-  GEMINI_TOTAL_TIMEOUT_MS: 15000,
+  GEMINI_RETRY_ATTEMPTS: 2,
+  GEMINI_RETRY_BASE_MS: 450,
+  GEMINI_TOTAL_TIMEOUT_MS: 22000,
   GEMINI_MAX_MODELS_PER_REQUEST: 2,
-  GEMINI_RESCUE_TIMEOUT_MS: 8000,
+  GEMINI_RESCUE_TIMEOUT_MS: 12000,
   GEMINI_RESCUE_MODELS: 2,
   ENABLE_RESCUE_PASS: true,
   PROVIDER_CIRCUIT_SECONDS: 60
@@ -89,7 +89,7 @@ function processChatRequest_(payload) {
   var lockAcquired = false;
 
   try {
-    lockAcquired = lock.tryLock(1000);
+    lockAcquired = lock.tryLock(2500);
 
     var props = getScriptProps_();
     var cfg = loadRuntimeConfig_(props);
