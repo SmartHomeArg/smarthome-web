@@ -2267,12 +2267,25 @@ function getChatBackendUrl_() {
   return CHAT_IA_WEBAPP_URL;
 }
 
-function getChatSessionId_() {
-  const key = 'smarthome_chat_ia_session_id';
-  const maxAgeMs = 45 * 60 * 1000;
+const CHAT_SESSION_ID_KEY = 'smarthome_chat_ia_session_id';
+const CHAT_WIDGET_STATE_KEY = 'smarthome_chat_ia_widget_state_v1';
+const CHAT_SESSION_MAX_AGE_MS = 45 * 60 * 1000;
+
+function createChatSessionId_() {
+  const newId = 'sess_web_' + Math.random().toString(36).slice(2, 10);
 
   try {
-    const existingRaw = sessionStorage.getItem(key);
+    sessionStorage.setItem(CHAT_SESSION_ID_KEY, JSON.stringify({ id: newId, createdAt: Date.now() }));
+  } catch (_err) {}
+
+  return newId;
+}
+
+function getChatSessionId_() {
+  const maxAgeMs = CHAT_SESSION_MAX_AGE_MS;
+
+  try {
+    const existingRaw = sessionStorage.getItem(CHAT_SESSION_ID_KEY);
     if (existingRaw) {
       try {
         const parsed = JSON.parse(existingRaw);
@@ -2286,12 +2299,18 @@ function getChatSessionId_() {
       }
     }
 
-    const newId = 'sess_web_' + Math.random().toString(36).slice(2, 10);
-    sessionStorage.setItem(key, JSON.stringify({ id: newId, createdAt: Date.now() }));
-    return newId;
+    return createChatSessionId_();
   } catch (error) {
     return 'sess_web_' + Math.random().toString(36).slice(2, 10);
   }
+}
+
+function resetChatSessionId_() {
+  try {
+    sessionStorage.removeItem(CHAT_SESSION_ID_KEY);
+  } catch (_err) {}
+
+  return createChatSessionId_();
 }
 
 function sendChatByJsonp_(endpoint, payload) {
@@ -2360,20 +2379,61 @@ function initChatIAWidget_(contenedor) {
 
   const toggle = root.querySelector('.chat-ia-toggle');
   const panel = root.querySelector('.chat-ia-panel');
+  const minimizeBtn = root.querySelector('.chat-ia-panel__minimize');
   const closeBtn = root.querySelector('.chat-ia-panel__close');
   const form = root.querySelector('.chat-ia-form');
   const input = root.querySelector('.chat-ia-input');
   const sendBtn = root.querySelector('.chat-ia-send');
   const messages = root.querySelector('.chat-ia-messages');
 
-  if (!toggle || !panel || !closeBtn || !form || !input || !sendBtn || !messages) return;
+  if (!toggle || !panel || !minimizeBtn || !closeBtn || !form || !input || !sendBtn || !messages) return;
 
-  const sessionId = getChatSessionId_();
+  let sessionId = getChatSessionId_();
   const CHAT_WHATSAPP_URL = 'https://wa.me/5492646304866?text=Hola%20vengo%20desde%20la%20web';
   let isBusy = false;
   const conversationHistory = [];
+  const renderedMessages = [];
   let typingNode = null;
   let typingTimer = null;
+  let panelAnchor = { right: 0, bottom: 0 };
+
+  function savePersistedWidgetState_() {
+    try {
+      const payload = {
+        sessionId: sessionId,
+        updatedAt: Date.now(),
+        messages: renderedMessages.slice(-60),
+        history: conversationHistory.slice(-12)
+      };
+      sessionStorage.setItem(CHAT_WIDGET_STATE_KEY, JSON.stringify(payload));
+    } catch (_err) {}
+  }
+
+  function loadPersistedWidgetState_() {
+    try {
+      const raw = sessionStorage.getItem(CHAT_WIDGET_STATE_KEY);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+
+      const updatedAt = Number(parsed.updatedAt || 0);
+      if (!updatedAt || (Date.now() - updatedAt > CHAT_SESSION_MAX_AGE_MS)) {
+        sessionStorage.removeItem(CHAT_WIDGET_STATE_KEY);
+        return null;
+      }
+
+      return parsed;
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  function clearPersistedWidgetState_() {
+    try {
+      sessionStorage.removeItem(CHAT_WIDGET_STATE_KEY);
+    } catch (_err) {}
+  }
 
   function pushHistory_(role, text) {
     const cleanRole = role === 'bot' ? 'bot' : 'user';
@@ -2395,6 +2455,7 @@ function initChatIAWidget_(contenedor) {
     const statusEl = msgEl.querySelector('.chat-ia-msg__status');
     if (!statusEl) return;
     statusEl.textContent = statusText || '';
+    savePersistedWidgetState_();
   }
 
   function showTypingIndicator_() {
@@ -2446,6 +2507,17 @@ function initChatIAWidget_(contenedor) {
     if (trackHistory !== false) {
       pushHistory_(sender, cleanText);
     }
+
+    renderedMessages.push({
+      sender: sender,
+      text: cleanText
+    });
+
+    if (renderedMessages.length > 60) {
+      renderedMessages.splice(0, renderedMessages.length - 60);
+    }
+
+    savePersistedWidgetState_();
 
     return msg;
   }
@@ -2612,12 +2684,82 @@ function initChatIAWidget_(contenedor) {
     messages.scrollTop = messages.scrollHeight;
   }
 
+  function updatePanelAnchorFromRoot_() {
+    const rect = root.getBoundingClientRect();
+    panelAnchor.right = Math.max(0, Math.round(window.innerWidth - rect.right));
+    panelAnchor.bottom = Math.max(0, Math.round(window.innerHeight - rect.bottom));
+  }
+
+  function placePanelFromAnchor_() {
+    panel.style.right = panelAnchor.right + 'px';
+    panel.style.bottom = panelAnchor.bottom + 'px';
+  }
+
+  function shouldAutoFocusInput_() {
+    // En mobile evitamos abrir teclado automaticamente al desplegar el panel.
+    return !window.matchMedia('(max-width: 767.98px)').matches;
+  }
+
+  function restoreWidgetState_() {
+    const persisted = loadPersistedWidgetState_();
+    if (!persisted) return;
+
+    if (persisted.sessionId) {
+      sessionId = String(persisted.sessionId);
+    }
+
+    const restoredHistory = Array.isArray(persisted.history) ? persisted.history : [];
+    const restoredMessages = Array.isArray(persisted.messages) ? persisted.messages : [];
+
+    conversationHistory.splice(0, conversationHistory.length);
+    renderedMessages.splice(0, renderedMessages.length);
+
+    restoredHistory.forEach(function (item) {
+      if (!item || (item.role !== 'user' && item.role !== 'bot')) return;
+      const text = String(item.text || '').trim();
+      if (!text) return;
+      conversationHistory.push({ role: item.role, text: text.slice(0, 320) });
+    });
+
+    restoredMessages.forEach(function (item) {
+      if (!item || (item.sender !== 'user' && item.sender !== 'bot')) return;
+      const text = String(item.text || '').trim();
+      if (!text) return;
+      appendMessage(item.sender, text, false);
+    });
+  }
+
+  function hardResetChat_() {
+    hideTypingIndicator_();
+    setBusyState(false);
+
+    messages.innerHTML = '';
+    input.value = '';
+
+    conversationHistory.splice(0, conversationHistory.length);
+    renderedMessages.splice(0, renderedMessages.length);
+
+    clearPersistedWidgetState_();
+    sessionId = resetChatSessionId_();
+    setOpenState(false);
+  }
+
   function setOpenState(isOpen) {
+    if (isOpen) {
+      updatePanelAnchorFromRoot_();
+      placePanelFromAnchor_();
+    }
+
     panel.hidden = !isOpen;
     root.classList.toggle('is-open', isOpen);
     toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 
-    if (isOpen) {
+    if (!isOpen) {
+      panel.style.right = '';
+      panel.style.bottom = '';
+    }
+
+    if (isOpen && shouldAutoFocusInput_()) {
       setTimeout(() => input.focus(), 30);
     }
   }
@@ -2634,9 +2776,21 @@ function initChatIAWidget_(contenedor) {
     setOpenState(next);
   });
 
-  closeBtn.addEventListener('click', function () {
+  minimizeBtn.addEventListener('click', function () {
     setOpenState(false);
   });
+
+  closeBtn.addEventListener('click', function () {
+    hardResetChat_();
+  });
+
+  window.addEventListener('resize', function () {
+    if (panel.hidden) return;
+    updatePanelAnchorFromRoot_();
+    placePanelFromAnchor_();
+  });
+
+  restoreWidgetState_();
 
   form.addEventListener('submit', async function (event) {
     event.preventDefault();

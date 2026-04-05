@@ -7,7 +7,14 @@
   <section class="chat-ia-panel" aria-label="Chat 24hs SmartHome" hidden>
     <header class="chat-ia-panel__header">
       <p class="chat-ia-panel__title">Chat 24hs SmartHome</p>
-      <button type="button" class="chat-ia-panel__close" aria-label="Cerrar chat">Cerrar</button>
+      <div class="chat-ia-panel__actions">
+        <button type="button" class="chat-ia-panel__minimize" aria-label="Minimizar chat">
+          <i class="bi bi-dash-lg" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="chat-ia-panel__close" aria-label="Cerrar chat">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </div>
     </header>
 
     <div class="chat-ia-messages" aria-live="polite"></div>
