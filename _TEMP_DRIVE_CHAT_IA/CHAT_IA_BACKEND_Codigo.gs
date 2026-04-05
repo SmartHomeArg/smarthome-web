@@ -19,6 +19,7 @@
  */
 
 var CHAT_VERSION = '1.0.0';
+var IA_UNAVAILABLE_MESSAGE = 'En este momento no hay operador disponible. Por favor comunicate por WhatsApp y te asistimos a la brevedad.';
 
 var OP_SHEETS = {
   CHAT_LOGS: 'chat_logs',
@@ -33,7 +34,10 @@ var PROMPT_OPT = {
   MAX_KNOWLEDGE_CHARS: 1000,
   MAX_EVENTS_CHARS: 650,
   DOCS_CACHE_SECONDS: 300,
-  MAX_OUTPUT_TOKENS: 280
+  MAX_OUTPUT_TOKENS: 520,
+  MIN_REPLY_CHARS: 45,
+  GEMINI_RETRY_ATTEMPTS: 3,
+  GEMINI_RETRY_BASE_MS: 450
 };
 
 function doGet(e) {
@@ -80,6 +84,7 @@ function processChatRequest_(payload) {
 
     var props = getScriptProps_();
     var cfg = loadRuntimeConfig_(props);
+    registerTurnAudit_(cfg);
 
     var ctx = buildContext_(payload, cfg);
     var prevState = loadSessionState_(ctx.sessionId);
@@ -92,21 +97,29 @@ function processChatRequest_(payload) {
     var leadStatus = classifyLeadStatus_(leadScore, cfg);
 
     var botReplyResult = buildBotReply_(ctx, signal, props, cfg);
-    var transcript = persistConversationTranscript_(ctx, botReplyResult.replyText, props);
+    var transcript = { docId: '', docUrl: '' };
+    var nextState = prevState || {};
+    var syncResult = { synced: false, detail: 'sync_no_ejecutado' };
 
-    var nextState = buildNextSessionState_(ctx, signal, botReplyResult, prevState, transcript);
-    saveSessionState_(ctx.sessionId, nextState);
+    try {
+      transcript = persistConversationTranscript_(ctx, botReplyResult.replyText, props);
 
-    var eventList = buildEvents_(signal, leadScore, leadStatus, botReplyResult, ctx, cfg);
-    var resumen = buildConversationSummary_(ctx, signal, leadScore, leadStatus);
+      nextState = buildNextSessionState_(ctx, signal, botReplyResult, prevState, transcript);
+      saveSessionState_(ctx.sessionId, nextState);
 
-    writeChatLog_(ctx, botReplyResult.replyText, signal.intent, leadScore, leadStatus, cfg, transcript, nextState);
-    writeEvents_(ctx.sessionId, eventList, transcript, nextState);
-    writeLeadPrequal_(ctx, signal, leadScore, leadStatus, resumen, cfg, transcript, nextState);
+      var eventList = buildEvents_(signal, leadScore, leadStatus, botReplyResult, ctx, cfg);
+      var resumen = buildConversationSummary_(ctx, signal, leadScore, leadStatus);
 
-    handleAlerts_(eventList, ctx, leadScore, props, cfg);
+      writeChatLog_(ctx, botReplyResult.replyText, signal.intent, leadScore, leadStatus, cfg, transcript, nextState);
+      writeEvents_(ctx.sessionId, eventList, transcript, nextState);
+      writeLeadPrequal_(ctx, signal, leadScore, leadStatus, resumen, cfg, transcript, nextState);
 
-    var syncResult = maybeSyncLeadToForms_(ctx, signal, leadScore, leadStatus, props, cfg);
+      handleAlerts_(eventList, ctx, leadScore, props, cfg);
+
+      syncResult = maybeSyncLeadToForms_(ctx, signal, leadScore, leadStatus, props, cfg);
+    } catch (opsErr) {
+      writeErrorSafe_(ctx.sessionId, 'post_reply_ops_error', String(opsErr), 'ops_error', true);
+    }
 
     return {
       ok: true,
@@ -118,6 +131,7 @@ function processChatRequest_(payload) {
         leadScore: leadScore,
         leadStatus: leadStatus,
         canDeriveToAdvisor: leadStatus !== 'frio',
+        fallbackReason: botReplyResult.fallbackReason || '',
         syncedToOfficialLeads: syncResult.synced,
         syncDetail: syncResult.detail,
         transcriptDocId: transcript.docId,
@@ -128,13 +142,9 @@ function processChatRequest_(payload) {
     var msg = (err && err.message) ? String(err.message) : String(err);
     writeErrorSafe_(null, 'runtime_error', msg, 'n/a', false);
 
-    var safeMessage = isIaUnavailableError_(msg)
-      ? 'En este momento no hay operador disponible. Por favor comunicate por WhatsApp y te asistimos a la brevedad.'
-      : (msg || 'Error interno en chat IA');
-
     return {
       ok: false,
-      message: safeMessage
+      message: IA_UNAVAILABLE_MESSAGE
     };
   } finally {
     if (lockAcquired) {
@@ -213,21 +223,30 @@ function loadRuntimeConfig_(props) {
     maxCaracteresPregunta: toNumber_(kv.max_caracteres_pregunta, 700),
     telefonoMinDigitos: toNumber_(kv.telefono_min_digitos, 8),
     requerirConsentimiento: toBool_(kv.requerir_consentimiento, true),
-    alertaCuotaCooldownMin: toNumber_(kv.alerta_cuota_cooldown_min, 360)
+    alertaCuotaCooldownMin: toNumber_(kv.alerta_cuota_cooldown_min, 360),
+    strictFallbackAudit: toBool_(kv.strict_fallback_audit, true),
+    strictFallbackWarnRatio: toNumber_(kv.strict_fallback_warn_ratio, 0.10),
+    strictFallbackMinTurns: toNumber_(kv.strict_fallback_min_turns, 20)
   };
 }
 
 function buildContext_(payload, cfg) {
   var lead = payload.leadData || {};
   var sessionIdIncoming = cleanText_(payload.sessionId);
+  var sessionIdResolved = resolveSessionAlias_(sessionIdIncoming);
   var userMessage = cleanText_(payload.message);
   var normalizedHistory = normalizeChatHistory_(payload.chatHistory);
   var forceNewConversation = shouldForceFreshConversation_(userMessage, normalizedHistory, lead);
+  var finalSessionId = forceNewConversation
+    ? ('sess_' + Utilities.getUuid().slice(0, 8))
+    : (sessionIdResolved || ('sess_' + Utilities.getUuid().slice(0, 8)));
+
+  if (forceNewConversation && sessionIdIncoming && sessionIdIncoming !== finalSessionId) {
+    registerSessionAlias_(sessionIdIncoming, finalSessionId);
+  }
 
   return {
-    sessionId: forceNewConversation
-      ? ('sess_' + Utilities.getUuid().slice(0, 8))
-      : (sessionIdIncoming || ('sess_' + Utilities.getUuid().slice(0, 8))),
+    sessionId: finalSessionId,
     userMessage: userMessage,
     sourcePage: cleanText_(payload.sourcePage),
     userAgent: cleanText_(payload.userAgent),
@@ -248,6 +267,31 @@ function buildContext_(payload, cfg) {
     timestamp: new Date().toISOString(),
     cfg: cfg
   };
+}
+
+function resolveSessionAlias_(sessionId) {
+  var sid = cleanText_(sessionId);
+  if (!sid) return '';
+
+  try {
+    var cache = CacheService.getScriptCache();
+    var mapped = cleanText_(cache.get('chat_sid_alias_' + sid));
+    return mapped || sid;
+  } catch (_err) {
+    return sid;
+  }
+}
+
+function registerSessionAlias_(oldSessionId, newSessionId) {
+  var oldSid = cleanText_(oldSessionId);
+  var newSid = cleanText_(newSessionId);
+  if (!oldSid || !newSid || oldSid === newSid) return;
+
+  try {
+    var cache = CacheService.getScriptCache();
+    cache.put('chat_sid_alias_' + oldSid, newSid, 21600);
+    cache.remove('chat_state_' + oldSid);
+  } catch (_err) {}
 }
 
 function shouldForceFreshConversation_(message, history, lead) {
@@ -561,14 +605,6 @@ function classifyLeadStatus_(score, cfg) {
 }
 
 function buildBotReply_(ctx, signal, props, cfg) {
-  var deterministic = buildDeterministicFlowReply_(ctx, signal);
-  if (deterministic && deterministic.force && deterministic.reply) {
-    return {
-      mode: 'deterministic_flow',
-      replyText: cleanText_(deterministic.reply)
-    };
-  }
-
   var docs = readKnowledgeDocs_(props);
 
   var historyText = formatHistoryForPrompt_(ctx.chatHistory);
@@ -599,38 +635,63 @@ function buildBotReply_(ctx, signal, props, cfg) {
     '\n- Evita frases de relleno como "hola de nuevo" o "estoy aqui para ayudarte" si no aportan informacion.',
     '\n- Si ya hay historial, no saludes.',
     '\n- No cierres con frases incompletas (ej: "para poder").',
-    '\n- Evita frases de relleno como "hola de nuevo" o "estoy aqui para ayudarte" si no aportan informacion.',
     '\n- No pidas de nuevo datos ya confirmados (tipo de cliente, localidad, cobertura, contacto).',
+    '\n- Usa CONOCIMIENTO y EVENTOS como fuente principal para responder con precision comercial.',
     '\n- Escribe en tono humano y natural, sin formato markdown.',
     '\n- No uses asteriscos, ni listas con guiones, ni encabezados tipo "Info util".',
     '\n- Da una respuesta util y luego 1 pregunta puntual para avanzar comercialmente.',
-    '\n- Si piden alarma sin mas datos, pregunta si es para hogar o comercio y cantidad aproximada de ambientes o accesos.'
+    '\n- Si el cliente pregunta que vendemos o no entiende la propuesta, primero explica en 1-2 frases que ofrece Smarthome (alarmas, camaras, monitoreo y planes) antes de pedir datos.',
+    '\n- No repitas textualmente la misma pregunta de turnos previos.',
+    '\n- Antes de pedir un dato, verifica si ya esta en DATOS CONFIRMADOS.',
+    '\n- Si el cliente esta confundido, responde primero su duda y recien despues hace una pregunta de avance.'
   ].join('');
 
   if (!props.GEMINI_API_KEY) {
+    registerFallbackAudit_(ctx, signal, 'no_api_key', 'GEMINI_API_KEY ausente', 'provider_error', false, cfg, props);
     return {
-      mode: 'fallback_faq',
-      replyText: postProcessReply_(buildFaqFallbackReply_(ctx, signal, docs.knowledge, cfg), ctx)
+      mode: 'fallback_unavailable',
+      replyText: IA_UNAVAILABLE_MESSAGE,
+      fallbackReason: 'no_api_key'
     };
   }
 
   try {
     var text = callGeminiWithFallbackModels_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
     var processed = postProcessReply_(text, ctx);
+    processed = refineAbruptReplyWithIa_(processed, ctx, signal, props);
+
     processed = reconcileReplyWithKnownState_(processed, ctx, signal);
-    if (looksWeakOrTruncatedReply_(processed)) {
-      throw new Error('Respuesta IA debil o truncada');
-    }
+    processed = avoidLoopingReply_(processed, ctx, signal, docs.knowledge);
     return { mode: 'ia', replyText: processed };
   } catch (err) {
     var errMsg = String(err);
     var providerCode = detectProviderCode_(errMsg);
     writeErrorSafe_(ctx.sessionId, 'ia_provider_error', errMsg, providerCode, false);
+    var fallbackReason = classifyFallbackReason_(errMsg, props);
+
+    registerFallbackAudit_(ctx, signal, fallbackReason, errMsg, providerCode, false, cfg, props);
+
     return {
-      mode: 'fallback_faq',
-      replyText: postProcessReply_(buildFaqFallbackReply_(ctx, signal, docs.knowledge, cfg), ctx)
+      mode: 'fallback_unavailable',
+      replyText: IA_UNAVAILABLE_MESSAGE,
+      fallbackReason: fallbackReason
     };
   };
+}
+
+function avoidLoopingReply_(reply, ctx, signal, knowledgeText) {
+  var out = cleanText_(reply);
+  if (!out) return out;
+
+  var lastBot = cleanText_(getLastBotMessage_(ctx));
+  if (!lastBot) return out;
+
+  if (out.toLowerCase() === lastBot.toLowerCase()) {
+    // En modo IA exitoso, no inyectar respuestas hardcodeadas: conservar salida del modelo.
+    return out;
+  }
+
+  return out;
 }
 
 function buildKnownFactsForPrompt_(ctx) {
@@ -670,10 +731,8 @@ function reconcileReplyWithKnownState_(reply, ctx, signal) {
   var asksCoverage = /(cuantos accesos|cuantos ambientes|cantidad de accesos|cantidad de ambientes)/.test(lower);
 
   if ((knownType && asksType) || (knownLocalidad && asksLocalidad) || (knownCoverage && asksCoverage)) {
-    var deterministic = buildDeterministicFlowReply_(ctx, signal);
-    if (deterministic && deterministic.reply) {
-      return cleanText_(deterministic.reply);
-    }
+    // Evitar override con texto fijo cuando IA respondio correctamente.
+    return out;
   }
 
   return out;
@@ -746,13 +805,13 @@ function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
   for (var i = 0; i < models.length; i++) {
     var model = models[i];
     try {
-      return callGemini_(prompt, apiKey, model);
+      return callGeminiWithRetries_(prompt, apiKey, model, PROMPT_OPT.GEMINI_RETRY_ATTEMPTS);
     } catch (err) {
       var msg = String(err && err.message ? err.message : err);
       errors.push(model + ' -> ' + msg.slice(0, 220));
 
-      // Si es un tema de cuota/rate-limit, probar siguiente modelo.
-      if (isQuotaOrRateError_(msg)) {
+      // Si es un tema recuperable por rotacion de modelo, probar el siguiente.
+      if (isQuotaOrRateError_(msg) || isRetryableModelSelectionError_(msg) || isTransientProviderError_(msg)) {
         continue;
       }
 
@@ -762,6 +821,47 @@ function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
   }
 
   throw new Error('Gemini sin cupo disponible en modelos probados: ' + errors.join(' || '));
+}
+
+function callGeminiWithRetries_(prompt, apiKey, model, attempts) {
+  var maxAttempts = Math.max(1, toNumber_(attempts, 3));
+  var baseMs = Math.max(150, toNumber_(PROMPT_OPT.GEMINI_RETRY_BASE_MS, 450));
+  var lastErr = null;
+
+  for (var i = 0; i < maxAttempts; i++) {
+    try {
+      return callGemini_(prompt, apiKey, model);
+    } catch (err) {
+      lastErr = err;
+      var msg = String(err && err.message ? err.message : err);
+      var isRetryable = isTransientProviderError_(msg) || isQuotaOrRateError_(msg);
+      var isLastAttempt = i >= (maxAttempts - 1);
+      if (!isRetryable || isLastAttempt) break;
+
+      var waitMs = computeRetryBackoffMs_(i, baseMs);
+      Utilities.sleep(waitMs);
+    }
+  }
+
+  throw lastErr || new Error('Gemini retry agotado sin detalle');
+}
+
+function computeRetryBackoffMs_(attemptIndex, baseMs) {
+  var exp = Math.pow(2, Math.max(0, toNumber_(attemptIndex, 0)));
+  var jitter = Math.floor(Math.random() * 120);
+  return Math.min(2500, (toNumber_(baseMs, 450) * exp) + jitter);
+}
+
+function isRetryableModelSelectionError_(errMsg) {
+  var t = String(errMsg || '').toLowerCase();
+  return (
+    t.indexOf('404') !== -1 ||
+    t.indexOf('model not found') !== -1 ||
+    t.indexOf('not found') !== -1 ||
+    t.indexOf('unsupported model') !== -1 ||
+    t.indexOf('invalid model') !== -1 ||
+    t.indexOf('permission denied') !== -1
+  );
 }
 
 function buildGeminiModelCandidates_(preferredModel) {
@@ -793,7 +893,31 @@ function isQuotaOrRateError_(errMsg) {
     t.indexOf('quota') !== -1 ||
     t.indexOf('resource_exhausted') !== -1 ||
     t.indexOf('rate limit') !== -1 ||
-    t.indexOf('rate_limited') !== -1
+    t.indexOf('rate_limited') !== -1 ||
+    t.indexOf('too many requests') !== -1 ||
+    t.indexOf('service invoked too many times') !== -1
+  );
+}
+
+function isTransientProviderError_(errMsg) {
+  var t = String(errMsg || '').toLowerCase();
+  return (
+    t.indexOf('408') !== -1 ||
+    t.indexOf('409') !== -1 ||
+    t.indexOf('425') !== -1 ||
+    t.indexOf('500') !== -1 ||
+    t.indexOf('502') !== -1 ||
+    t.indexOf('503') !== -1 ||
+    t.indexOf('504') !== -1 ||
+    t.indexOf('deadline exceeded') !== -1 ||
+    t.indexOf('timed out') !== -1 ||
+    t.indexOf('timeout') !== -1 ||
+    t.indexOf('temporarily unavailable') !== -1 ||
+    t.indexOf('internal error') !== -1 ||
+    t.indexOf('backend error') !== -1 ||
+    t.indexOf('connection reset') !== -1 ||
+    t.indexOf('socket') !== -1 ||
+    t.indexOf('network') !== -1
   );
 }
 
@@ -869,18 +993,21 @@ function callGemini_(prompt, apiKey, modelName) {
     ? parts.map(function(p) { return p && p.text ? String(p.text) : ''; }).join('')
     : '';
 
-  if (finishReason && finishReason !== 'STOP' && finishReason !== 'FINISH_REASON_UNSPECIFIED') {
-    throw new Error('Gemini salida incompleta (' + finishReason + '): ' + String(output || '').slice(0, 240));
+  // Si Gemini devuelve texto util aunque el finishReason no sea STOP (ej: MAX_TOKENS),
+  // priorizamos continuidad conversacional y evitamos fallback innecesario.
+  if (!output) {
+    if (finishReason && finishReason !== 'STOP' && finishReason !== 'FINISH_REASON_UNSPECIFIED') {
+      throw new Error('Gemini salida sin texto (' + finishReason + ')');
+    }
+    throw new Error('Respuesta vacia de Gemini');
   }
-
-  if (!output) throw new Error('Respuesta vacia de Gemini');
 
   return String(output).trim();
 }
 
 function postProcessReply_(text, ctx) {
   var out = cleanText_(text);
-  if (!out) return 'Puedo ayudarte con una recomendacion concreta. Es para hogar o comercio?';
+  if (!out) return out;
 
   // Limpiar restos de markdown para que suene a chat humano.
   out = out
@@ -895,58 +1022,61 @@ function postProcessReply_(text, ctx) {
     out = cleanText_(out);
   }
 
-  // Reparaciones puntuales de cortes frecuentes observados en produccion.
-  out = out.replace(/si buscas seguridad para tu hogar\.$/i, 'si buscas seguridad para tu hogar o para tu comercio?');
-  out = out.replace(/base de alarma, sire\.$/i, 'base de alarma, sirena y sensores para proteger accesos clave.');
-
-  // Si termina con palabras de enlace o fragmentos demasiado cortos, completar con una pregunta util.
-  if (/(para|con|de|y|o|si|que|en|por|como|tu|su)\.$/i.test(out) || /,\s*[a-zA-Z]{1,7}\.$/.test(out)) {
-    var hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
-    if (hasTipo) {
-      out = out.replace(/\.?$/, '') + '. Para avanzar, decime cuantos accesos o ambientes queres cubrir?';
-    } else {
-      out = out.replace(/\.?$/, '') + '. Para avanzar, es para hogar o comercio y cuantos accesos o ambientes queres cubrir?';
-    }
-  }
-
-  // Si la respuesta termina en frase incompleta, completar con pregunta comercial util.
-  if (/(para poder|para ayudarte|necesito saber|necesito|para recomendarte)\.?$/i.test(out)) {
-    var hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
-    if (hasTipo) {
-      out = out.replace(/\.?$/,'') + ', decime aproximadamente cuantos ambientes o accesos queres cubrir?';
-    } else {
-      out = out.replace(/\.?$/,'') + ', es para hogar o comercio y cuantos ambientes o accesos queres cubrir?';
-    }
-  }
-
-  // Evitar finales tipo ",." o ":." generados por post-proceso sobre texto incompleto.
-  out = out.replace(/[,:;]+\.$/, '.');
-
-  // Completar nombres de kit comunes si quedaron truncados por el modelo.
-  out = out.replace(/\bKit Smart 1\.(?!\d)/g, 'Kit Smart 1.1');
-  out = out.replace(/\bKit Smart 2\.(?!\d)/g, 'Kit Smart 2.2');
-
-  if (hasAbruptEnding_(out)) {
-    var hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
-    if (hasTipo) {
-      out = out.replace(/\.?$/, '') + '. Si queres, te paso las opciones recomendadas para tu caso y el rango estimado de precio.';
-    } else {
-      out = out.replace(/\.?$/, '') + '. Si queres, te paso opciones recomendadas y un rango estimado de precio para hogar o comercio.';
-    }
-  }
-
   if (!/[.!?]$/.test(out)) {
     out += '.';
-  }
-
-  if (out.length < 24) {
-    out += ' Es para hogar o comercio?';
   }
 
   // Normalizar espacios y duplicados de puntuacion residuales.
   out = out.replace(/\s{2,}/g, ' ').replace(/([!?.,])\1+/g, '$1').trim();
 
   return out;
+}
+
+function refineAbruptReplyWithIa_(reply, ctx, signal, props) {
+  var draft = cleanText_(reply);
+  if (!draft) return draft;
+  if (!needsReplyRepair_(draft, ctx)) return draft;
+  if (!props || !props.GEMINI_API_KEY) return draft;
+
+  var repairPrompt = [
+    'Reescribe la respuesta para que quede completa, clara y comercialmente util, sin inventar datos.',
+    'Primero responde la duda puntual del cliente y luego deja 1 pregunta final para avanzar.',
+    'Si el cliente pregunta por costo/precio, da orientacion concreta (que depende de cobertura, tipo de cliente y localidad) antes de preguntar el dato faltante.',
+    'Maximo 110 palabras. Sin markdown.',
+    '\nMENSAJE CLIENTE:\n' + String((ctx && ctx.userMessage) || ''),
+    '\nINTENCION:\n' + String((signal && signal.intent) || 'info'),
+    '\nDATOS CONFIRMADOS:\n' + buildKnownFactsForPrompt_(ctx),
+    '\nRESPUESTA INCOMPLETA:\n' + draft
+  ].join('\n');
+
+  try {
+    var fixed = callGeminiWithFallbackModels_(repairPrompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
+    var cleaned = postProcessReply_(fixed, ctx);
+    if (cleaned && !needsReplyRepair_(cleaned, ctx)) return cleaned;
+  } catch (_repairErr) {}
+
+  return draft;
+}
+
+function needsReplyRepair_(text, ctx) {
+  var t = cleanText_(text);
+  if (!t) return true;
+
+  if (hasAbruptEnding_(t)) return true;
+
+  var lower = t.toLowerCase();
+  var minChars = toNumber_(PROMPT_OPT.MIN_REPLY_CHARS, 45);
+  var asksPrice = /(precio|cuanto cuesta|cuanto sale|valor|costo)/.test(String((ctx && ctx.userMessage) || '').toLowerCase());
+
+  if (t.length < minChars && !/[?]$/.test(t)) return true;
+
+  // Verbos de apertura comercial que no deberian cerrar una respuesta por si solos.
+  if (/(ofrecemos|incluye|incluyen|especializamos|protegemos|ayudamos|contamos)\.$/.test(lower)) return true;
+
+  // Si preguntan precio y la respuesta es muy breve, rehacer para que no quede evasiva.
+  if (asksPrice && t.length < 70) return true;
+
+  return false;
 }
 
 function trimForPrompt_(text, maxChars) {
@@ -969,189 +1099,21 @@ function hasAbruptEnding_(text) {
   // Conectores colgando al final.
   if (/\s+(o|y|de|con|para|por)\.$/.test(t)) return true;
 
+  // Cierres tipicos de respuesta inconclusa detectados en produccion.
+  if (/(ofrecemos|incluye|incluyen|especializamos|protegemos)\.$/.test(t)) return true;
+  if (/\.\.\.$/.test(t)) return true;
+
   return false;
 }
 
 function buildFaqFallbackReply_(ctx, signal, knowledgeText, cfg) {
-  var deterministic = buildDeterministicFlowReply_(ctx, signal);
-  if (deterministic && deterministic.force && deterministic.reply) {
-    return deterministic.reply;
-  }
-
-  var userText = String(ctx.userMessage || '').toLowerCase();
-  var hasHistory = !!(ctx && ctx.chatHistory && ctx.chatHistory.length);
-
-  if (isTruncationComplaint_(userText)) {
-    var lastBot = getLastBotMessage_(ctx);
-    if (lastBot) {
-      return 'Gracias por avisar. Te lo repito claro: ' + ensureEndsWithQuestionOrDot_(lastBot);
-    }
-    return 'Gracias por avisar. Retomemos bien: es para hogar o comercio y cuantos accesos o ambientes queres cubrir?';
-  }
-
-  if (isStopIntent_(userText)) {
-    return 'Entiendo, no hay problema. Si mas adelante quieres retomar, aqui estoy para ayudarte con kits, planes y cotizacion.';
-  }
-
-  if (isGreetingOnly_(userText)) {
-    return buildGreetingReply_(ctx, inferClientType_(ctx), inferCoverageNeed_(ctx));
-  }
-
-  if (isConfusionTurn_(userText)) {
-    return 'Buena pregunta. Te ayudo a elegir una opcion de seguridad segun tu caso y presupuesto. Para orientarte bien, confirmame si es para hogar o comercio.';
-  }
-
-  if (isFrustrationTurn_(userText)) {
-    return 'Tenes razon, vamos simple y sin vueltas. Decime solo esto: es para hogar o comercio, y con eso te doy una recomendacion puntual.';
-  }
-
-  if (isOutOfScopeQuestion_(userText)) {
-    return 'Puedo ayudarte con seguridad para hogar o comercio (alarmas, camaras, monitoreo y cotizacion). Si quieres, te asesoro con una opcion concreta para tu caso.';
-  }
-
-  var inferredType = inferClientType_(ctx);
-  var inferredCoverage = inferCoverageNeed_(ctx);
-
-  if (/(precio|cuanto sale|cuanto cuesta|valor|costo|sale\?)/.test(userText)) {
-    if (!inferredType) {
-      return 'Claro. Para cotizarte bien, decime si es para hogar o comercio y cuantos accesos o ambientes queres cubrir.';
-    }
-    if (!inferredCoverage) {
-      return 'Perfecto. Para darte un valor estimado, necesito cuantos accesos o ambientes queres cubrir y en que localidad seria la instalacion.';
-    }
-    return 'Perfecto. Con esos datos te preparo una cotizacion estimada. Decime tu localidad y, si queres, un telefono de contacto para derivarte con un asesor.';
-  }
-
-  // Flujo guiado deterministico para evitar respuestas repetidas o ambiguas.
-  if (!inferredType) {
-    return avoidRepeatedBotReply_('Para recomendarte bien necesito un dato: es para hogar o comercio?', ctx);
-  }
-
-  if (!inferredCoverage) {
-    if (inferredType === 'comercio') {
-      return avoidRepeatedBotReply_('Excelente, para comercio. Para recomendarte bien, decime aproximadamente cuantos accesos o ambientes queres cubrir.', ctx);
-    }
-    return avoidRepeatedBotReply_('Genial, para hogar. Para recomendarte bien, decime aproximadamente cuantos ambientes o accesos queres cubrir.', ctx);
-  }
-
-  var deterministicRec = buildDeterministicRecommendation_(inferredType, inferredCoverage, signal.intent);
-  var safeReply = avoidRepeatedBotReply_(deterministicRec, ctx);
-  if (safeReply) return safeReply;
-
-  var brief = extractRelevantKnowledge_(ctx.userMessage, knowledgeText);
-  var cta = buildFallbackCta_(ctx, signal, inferredType);
-
-  return avoidRepeatedBotReply_([brief, ' ', cta].join('').replace(/\s{2,}/g, ' ').trim(), ctx);
+  return IA_UNAVAILABLE_MESSAGE;
 }
 
 function buildDeterministicFlowReply_(ctx, signal) {
-  var userText = String((ctx && ctx.userMessage) || '').toLowerCase();
-  var state = buildConversationState_(ctx, signal);
-  var progress = analyzeConversationProgress_(ctx);
-  var userTurns = countUserTurns_(ctx);
-
-  if (isStopIntent_(userText)) {
-    return {
-      force: true,
-      reply: 'Entiendo, no hay problema. Si mas adelante queres retomar, te ayudo cuando quieras.'
-    };
-  }
-
-  if (isTruncationComplaint_(userText)) {
-    return {
-      force: true,
-      reply: state.lastBot
-        ? ('Gracias por avisar. Te lo repito claro: ' + ensureEndsWithQuestionOrDot_(state.lastBot))
-        : 'Gracias por avisar. Retomemos desde cero: es para hogar o comercio?'
-    };
-  }
-
-  if (isGreetingOnly_(userText)) {
-    return {
-      force: true,
-      reply: buildGreetingReply_(ctx, state.clientType, state.coverage, userTurns)
-    };
-  }
-
-  if (isConfusionTurn_(userText)) {
-    return {
-      force: true,
-      reply: 'Te ayudo a definir una opcion concreta de seguridad segun tu caso y presupuesto. Arrancamos por un dato: es para hogar o comercio?'
-    };
-  }
-
-  if (isTypeDisputeTurn_(userText)) {
-    return {
-      force: true,
-      reply: 'Tenes razon, mala mia por asumirlo. Confirmame por favor si es para hogar o comercio y seguimos desde ahi.'
-    };
-  }
-
-  if (isGreetingComplaintTurn_(userText)) {
-    return {
-      force: true,
-      reply: 'Tenes razon, disculpas por eso. Hola y gracias por escribirnos. Para ayudarte bien, confirmame si es para hogar o comercio.'
-    };
-  }
-
-  if (isFrustrationTurn_(userText)) {
-    return {
-      force: true,
-      reply: 'Tenes razon. Vamos directo y sin vueltas: decime si es hogar o comercio, y despues te pido solo un dato mas para recomendarte algo puntual.'
-    };
-  }
-
-  if (isOutOfScopeQuestion_(userText)) {
-    return {
-      force: true,
-      reply: 'Puedo ayudarte con seguridad para hogar o comercio: alarmas, camaras, monitoreo y cotizacion. Si queres, empezamos por tu caso concreto.'
-    };
-  }
-
-  if (isAcknowledgementTurn_(userText) && state.coverage > 0 && progress.hasRecommendation) {
-    return {
-      force: true,
-      reply: 'Perfecto. Si queres, seguimos con una cotizacion estimada: pasame tu localidad y te comparto un rango de instalacion y plan mensual.'
-    };
-  }
-
-  if (!state.clientType) {
-    return {
-      force: true,
-      reply: avoidRepeatedBotReply_('Para recomendarte bien necesito un dato: es para hogar o comercio?', ctx)
-    };
-  }
-
-  if (!state.coverage) {
-    if (state.clientType === 'comercio') {
-      return {
-        force: true,
-        reply: avoidRepeatedBotReply_('Perfecto, para comercio. Decime cuantos accesos o ambientes queres cubrir (por ejemplo: 2 puertas y 2 salones).', ctx)
-      };
-    }
-    return {
-      force: true,
-      reply: avoidRepeatedBotReply_('Perfecto, para hogar. Decime cuantos accesos o ambientes queres cubrir (por ejemplo: 2 puertas y living-comedor).', ctx)
-    };
-  }
-
-  if (state.contradiction) {
-    return {
-      force: true,
-      reply: 'Para no recomendarte mal, veo datos mezclados: dijiste lugar grande, pero los ambientes/accesos detectados dan cobertura media. Confirmame si queres cubrir mas zonas o si avanzamos con cobertura media.'
-    };
-  }
-
-  if (state.hotIntent) {
-    return {
-      force: true,
-      reply: buildDeterministicQuoteReply_(state)
-    };
-  }
-
   return {
-    force: true,
-    reply: buildDeterministicAdviceReply_(state)
+    force: false,
+    reply: ''
   };
 }
 
@@ -1172,26 +1134,7 @@ function countUserTurns_(ctx) {
 }
 
 function buildGreetingReply_(ctx, clientType, coverage, userTurns) {
-  var turns = toNumber_(userTurns, countUserTurns_(ctx));
-  var openers = [
-    'Hola, gracias por escribirnos.',
-    'Hola, bienvenido a SmartHome.',
-    'Hola, un gusto ayudarte con seguridad.'
-  ];
-  var opener = openers[Math.abs(turns) % openers.length];
-
-  if (!clientType) {
-    return opener + ' Para orientarte bien desde el inicio, confirmame si es para hogar o comercio.';
-  }
-
-  if (!coverage) {
-    if (clientType === 'comercio') {
-      return opener + ' Perfecto, es para comercio. Decime cuantos accesos o ambientes queres cubrir y te recomiendo una opcion concreta.';
-    }
-    return opener + ' Perfecto, es para hogar. Decime cuantos accesos o ambientes queres cubrir y te recomiendo una opcion concreta.';
-  }
-
-  return opener + ' Si queres, con los datos que ya tenemos te doy una recomendacion puntual y luego una cotizacion estimada.';
+  return IA_UNAVAILABLE_MESSAGE;
 }
 
 function buildConversationState_(ctx, signal) {
@@ -1246,53 +1189,11 @@ function isSizeCoverageContradiction_(sizeWord, coverage) {
 }
 
 function buildDeterministicAdviceReply_(state) {
-  var segment = coverageSegment_(state.coverage);
-
-  if (state.clientType === 'comercio') {
-    if (segment === 'small') {
-      return 'Para comercio con cobertura chica, te conviene una opcion base escalable. Si queres, te explico que incluye una opcion inicial y una intermedia para comparar.';
-    }
-    if (segment === 'medium') {
-      return 'Para comercio con esa cobertura, te conviene una opcion intermedia con monitoreo y gestion por app. Si queres, te detallo que incluye y que no incluye.';
-    }
-    return 'Para comercio con cobertura amplia, conviene una solucion robusta y escalable por zonas. Si queres, te propongo una configuracion recomendada por etapas.';
-  }
-
-  if (segment === 'small') {
-    return 'Para hogar con cobertura chica, una opcion base suele funcionar bien y luego podes escalar. Si queres, te explico diferencia con una alternativa superior.';
-  }
-  if (segment === 'medium') {
-    return 'Para hogar con esa cobertura, te conviene una opcion intermedia por equilibrio entre costo y proteccion. Si queres, te detallo componentes y plan sugerido.';
-  }
-  return 'Para hogar con cobertura amplia, te conviene una opcion escalable por zonas para proteger mejor sin sobredimensionar de entrada. Si queres, te paso propuesta por etapas.';
+  return IA_UNAVAILABLE_MESSAGE;
 }
 
 function buildDeterministicQuoteReply_(state) {
-  if (state.localidad) {
-    if (state.hasContact) {
-      return 'Excelente, ya tengo tu localidad y tu contacto. Si queres, te derivo ahora con un asesor para cerrar la cotizacion.';
-    }
-    return 'Excelente, con localidad ' + state.localidad + ' te puedo preparar el rango estimado final. Si queres, pasame un telefono y te deriva un asesor para cerrar la cotizacion.';
-  }
-
-  var segment = coverageSegment_(state.coverage);
-  if (state.clientType === 'comercio') {
-    if (segment === 'small') {
-      return 'Para cotizar comercio con cobertura chica, preparo dos alternativas: base e intermedia. Si queres, te pido localidad y te paso rango estimado de instalacion y plan mensual.';
-    }
-    if (segment === 'medium') {
-      return 'Para cotizar comercio con cobertura media, te preparo una opcion intermedia con monitoreo. Pasame localidad y te comparto rango estimado de instalacion y plan mensual.';
-    }
-    return 'Para cotizar comercio con cobertura amplia, conviene armar propuesta por zonas. Si queres, pasame localidad y te doy rango estimado para avanzar con asesor.';
-  }
-
-  if (segment === 'small') {
-    return 'Para cotizar hogar con cobertura chica, te puedo pasar dos opciones: inicial y superior. Decime localidad y te doy rango estimado de instalacion y plan mensual.';
-  }
-  if (segment === 'medium') {
-    return 'Para cotizar hogar con cobertura media, te conviene opcion intermedia. Pasame localidad y te comparto rango estimado de instalacion y plan mensual.';
-  }
-  return 'Para cotizar hogar con cobertura amplia, te recomiendo una propuesta escalable por zonas. Si queres, pasame localidad y te doy rango estimado para avanzar.';
+  return IA_UNAVAILABLE_MESSAGE;
 }
 
 function coverageSegment_(coverage) {
@@ -1304,10 +1205,10 @@ function coverageSegment_(coverage) {
 function looksWeakOrTruncatedReply_(text) {
   var t = cleanText_(text).toLowerCase();
   if (!t) return true;
-  if (t.length < 26) return true;
-  // Solo marcar como debil cuando ademas sea relativamente corta.
-  // Evita falsos positivos en respuestas validas que terminan con palabras comunes.
-  if (t.length < 70 && /(para poder|para ayudarte|necesito|y\.|de\.|con\.)$/.test(t)) return true;
+  if (t.length < 10) return true;
+  if (hasAbruptEnding_(t)) return true;
+  // Marcar como debil si queda cerrada en conector/comienzo de frase util pero incompleta.
+  if (t.length < 90 && /(para poder|para ayudarte|necesito|y\.|de\.|con\.)$/.test(t)) return true;
   return false;
 }
 
@@ -1341,7 +1242,7 @@ function extractRelevantKnowledge_(query, text) {
   scored.sort(function(a, b) { return b.score - a.score; });
   var top = scored.filter(function(s) { return s.score > 0; }).slice(0, 2).map(function(s) { return normalizeKnowledgeLine_(s.line); });
 
-  if (!top.length) return 'Te ayudo a elegir una opcion de seguridad segun tu necesidad y presupuesto.';
+  if (!top.length) return '';
   return top.join(' ');
 }
 
@@ -1358,15 +1259,7 @@ function normalizeKnowledgeLine_(line) {
 }
 
 function buildFallbackCta_(ctx, signal, inferredType) {
-  if (!inferredType) {
-    return 'Si te parece, empezamos por lo basico: es para hogar o comercio?';
-  }
-
-  if (signal.intent === 'cotizacion' || signal.intent === 'compra') {
-    return 'Si queres, avanzamos con una cotizacion estimada: decime cuantos accesos o ambientes queres cubrir.';
-  }
-
-  return 'Si queres, te recomiendo el kit y plan mas conveniente para tu caso.';
+  return '';
 }
 
 function inferClientType_(ctx) {
@@ -1471,39 +1364,7 @@ function extractCoverageFromText_(text) {
 }
 
 function buildDeterministicRecommendation_(clientType, coverage, intent) {
-  var isHotIntent = intent === 'cotizacion' || intent === 'compra';
-
-  if (clientType === 'comercio') {
-    if (coverage <= 2) {
-      return isHotIntent
-        ? 'Para un comercio chico, te recomiendo empezar con un kit base para 1 o 2 accesos y escalar despues. Si queres, te cotizo una opcion inicial y otra intermedia para comparar.'
-        : 'Para un comercio chico, te recomiendo empezar con un kit base para 1 o 2 accesos y escalar despues. Si queres, te explico la diferencia con una opcion intermedia.';
-    }
-    if (coverage <= 4) {
-      return isHotIntent
-        ? 'Con esa cobertura, te conviene una opcion intermedia para comercio con monitoreo y gestion por app. Si queres, te cotizo rango estimado de instalacion y plan mensual.'
-        : 'Con esa cobertura, te conviene una opcion intermedia para comercio con monitoreo y gestion por app. Si queres, te digo pros y contras frente a una opcion basica.';
-    }
-    return isHotIntent
-      ? 'Para esa cobertura de comercio, te conviene una opcion robusta con expansion por zonas. Si queres, avanzamos con cotizacion estimada y luego derivacion a asesor.'
-      : 'Para esa cobertura de comercio, te conviene una opcion robusta con expansion por zonas. Si queres, te explico una configuracion sugerida paso a paso.';
-  }
-
-  if (coverage <= 2) {
-    return isHotIntent
-      ? 'Para hogar con cobertura chica, una opcion base suele alcanzar y permite crecer despues. Si queres, te cotizo una opcion inicial y una alternativa superior.'
-      : 'Para hogar con cobertura chica, una opcion base suele alcanzar y permite crecer despues. Si queres, te explico la diferencia con una alternativa superior.';
-  }
-
-  if (coverage <= 4) {
-    return isHotIntent
-      ? 'Para ese nivel de cobertura en hogar, conviene una opcion intermedia con mejor equilibrio entre costo y proteccion. Si queres, te paso una cotizacion estimada.'
-      : 'Para ese nivel de cobertura en hogar, conviene una opcion intermedia con mejor equilibrio entre costo y proteccion. Si queres, te cuento que incluye y que no incluye.';
-  }
-
-  return isHotIntent
-    ? 'Para cobertura amplia en hogar, te recomiendo una opcion escalable por zonas. Si queres, avanzamos con una cotizacion estimada segun tu localidad.'
-    : 'Para cobertura amplia en hogar, te recomiendo una opcion escalable por zonas. Si queres, te explico una propuesta por etapas para empezar sin sobredimensionar.';
+  return '';
 }
 
 function avoidRepeatedBotReply_(reply, ctx) {
@@ -1513,9 +1374,7 @@ function avoidRepeatedBotReply_(reply, ctx) {
   for (var i = history.length - 1; i >= 0; i--) {
     if (history[i].role !== 'bot') continue;
     var lastBot = cleanText_(history[i].text);
-    if (lastBot && lastBot.toLowerCase() === candidate.toLowerCase()) {
-      return candidate + ' Si queres, en el siguiente mensaje te hago una recomendacion puntual para tu caso.';
-    }
+    if (lastBot && lastBot.toLowerCase() === candidate.toLowerCase()) return candidate;
     break;
   }
 
@@ -1640,11 +1499,98 @@ function buildEvents_(signal, score, status, botReplyResult, ctx, cfg) {
     events.push({ type: 'cierre_probable', payload: { intent: signal.intent, urgencia: ctx.lead.urgencia } });
   }
 
-  if (botReplyResult.mode === 'fallback_faq') {
-    events.push({ type: 'fallback_activado', payload: { reason: 'ia_no_disponible_o_desactivada' } });
+  if (botReplyResult.mode !== 'ia') {
+    events.push({ type: 'fallback_activado', payload: { reason: botReplyResult.fallbackReason || 'ia_no_disponible_o_desactivada' } });
   }
 
   return events;
+}
+
+function classifyFallbackReason_(errMsg, props) {
+  var text = String(errMsg || '').toLowerCase();
+  if (!props || !props.GEMINI_API_KEY) return 'no_api_key';
+  if (text.indexOf('respuesta ia debil o truncada') !== -1) return 'ia_weak_or_truncated';
+  if (text.indexOf('429') !== -1 || text.indexOf('rate') !== -1) return 'provider_rate_limit';
+  if (text.indexOf('quota') !== -1 || text.indexOf('resource_exhausted') !== -1) return 'provider_quota';
+  if (text.indexOf('401') !== -1 || text.indexOf('403') !== -1) return 'provider_auth';
+  if (text.indexOf('http') !== -1 || text.indexOf('gemini') !== -1) return 'provider_error';
+  return 'unknown_error';
+}
+
+function registerTurnAudit_(cfg) {
+  try {
+    var cache = CacheService.getScriptCache();
+    var key = buildAuditWindowKey_('turns');
+    var current = toNumber_(cache.get(key), 0);
+    cache.put(key, String(current + 1), 7200);
+  } catch (_err) {}
+}
+
+function registerFallbackAudit_(ctx, signal, reason, errMsg, providerCode, usedDeterministicReply, cfg, props) {
+  try {
+    appendRow_(OP_SHEETS.ERRORES, [
+      new Date(),
+      (ctx && ctx.sessionId) || 'runtime',
+      'fallback_audit',
+      JSON.stringify({
+        reason: reason || 'unknown',
+        providerCode: providerCode || '',
+        deterministicReply: !!usedDeterministicReply,
+        intent: (signal && signal.intent) || 'info',
+        sourcePage: (ctx && ctx.sourcePage) || 'n/a',
+        error: String(errMsg || '').slice(0, 350)
+      }),
+      providerCode || '',
+      true,
+      new Date().toISOString()
+    ]);
+  } catch (_appendErr) {
+    writeErrorSafe_((ctx && ctx.sessionId) || null, 'fallback_audit_write_error', String(_appendErr), 'audit_error', true);
+  }
+
+  if (!(cfg && cfg.strictFallbackAudit)) return;
+
+  try {
+    var cache = CacheService.getScriptCache();
+    var fallbackKey = buildAuditWindowKey_('fallback');
+    var turnsKey = buildAuditWindowKey_('turns');
+    var fallbackCount = toNumber_(cache.get(fallbackKey), 0) + 1;
+    var turnCount = Math.max(1, toNumber_(cache.get(turnsKey), 0));
+    cache.put(fallbackKey, String(fallbackCount), 7200);
+
+    var ratio = fallbackCount / turnCount;
+    var minTurns = Math.max(1, toNumber_(cfg.strictFallbackMinTurns, 20));
+    var ratioLimit = Math.max(0, toNumber_(cfg.strictFallbackWarnRatio, 0.10));
+
+    if (turnCount >= minTurns && ratio >= ratioLimit) {
+      var lastAlertKey = 'chat_fb_alert_' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMddHH');
+      if (!cache.get(lastAlertKey)) {
+        cache.put(lastAlertKey, '1', 3600);
+        var destination = (cfg && cfg.emailDestinoAlertas) || (props && props.ALERT_EMAIL) || '';
+        if (destination) {
+          MailApp.sendEmail({
+            to: destination,
+            subject: '[Smarthome Chat IA] Alerta modo estricto: fallback alto',
+            body: [
+              'Modo estricto detecto tasa alta de fallback en la ventana actual.',
+              'Fallbacks: ' + fallbackCount,
+              'Turnos: ' + turnCount,
+              'Ratio: ' + ratio.toFixed(3),
+              'Umbral: ' + ratioLimit.toFixed(3),
+              'Timestamp UTC: ' + new Date().toISOString()
+            ].join('\n')
+          });
+        }
+      }
+    }
+  } catch (_strictErr) {
+    writeErrorSafe_((ctx && ctx.sessionId) || null, 'fallback_strict_monitor_error', String(_strictErr), 'audit_error', true);
+  }
+}
+
+function buildAuditWindowKey_(kind) {
+  var hourBucket = Utilities.formatDate(new Date(), 'UTC', 'yyyyMMddHH');
+  return 'chat_audit_' + String(kind || 'generic') + '_' + hourBucket;
 }
 
 function buildConversationSummary_(ctx, signal, score, status) {
