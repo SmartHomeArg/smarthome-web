@@ -27,6 +27,15 @@ var OP_SHEETS = {
   LEADS: 'leads_precalificados'
 };
 
+var PROMPT_OPT = {
+  HISTORY_ITEMS: 6,
+  MAX_INSTRUCTIONS_CHARS: 1400,
+  MAX_KNOWLEDGE_CHARS: 1000,
+  MAX_EVENTS_CHARS: 650,
+  DOCS_CACHE_SECONDS: 300,
+  MAX_OUTPUT_TOKENS: 280
+};
+
 function doGet(e) {
   var params = (e && e.parameter) ? e.parameter : {};
   var wantsChat = String(params.action || '').toLowerCase() === 'chat';
@@ -369,7 +378,7 @@ function normalizeChatHistory_(historyRaw) {
   if (!Array.isArray(historyRaw)) return [];
 
   return historyRaw
-    .slice(-8)
+    .slice(-PROMPT_OPT.HISTORY_ITEMS)
     .map(function(item) {
       return {
         role: cleanText_(item && item.role),
@@ -446,13 +455,16 @@ function buildBotReply_(ctx, signal, props, cfg) {
   var docs = readKnowledgeDocs_(props);
 
   var historyText = formatHistoryForPrompt_(ctx.chatHistory);
+  var instructionsCompact = trimForPrompt_(docs.instructions, PROMPT_OPT.MAX_INSTRUCTIONS_CHARS);
+  var knowledgeCompact = buildCompactKnowledgeContext_(docs.knowledge, ctx, signal);
+  var eventsCompact = buildCompactEventsContext_(docs.events, ctx, signal);
 
   var prompt = [
-    docs.instructions,
+    instructionsCompact,
     '\n\nCONOCIMIENTO:\n',
-    docs.knowledge,
+    knowledgeCompact,
     '\n\nEVENTOS:\n',
-    docs.events,
+    eventsCompact,
     '\n\nHISTORIAL RECIENTE:\n',
     historyText,
     '\n\nMENSAJE CLIENTE:\n',
@@ -479,7 +491,7 @@ function buildBotReply_(ctx, signal, props, cfg) {
   }
 
   try {
-    var text = callGemini_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
+    var text = callGeminiWithFallbackModels_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
     var processed = postProcessReply_(text, ctx);
     if (looksWeakOrTruncatedReply_(processed)) {
       throw new Error('Respuesta IA debil o truncada');
@@ -493,12 +505,161 @@ function buildBotReply_(ctx, signal, props, cfg) {
   };
 }
 
+function buildCompactKnowledgeContext_(knowledgeText, ctx, signal) {
+  var q = [
+    String((ctx && ctx.userMessage) || ''),
+    String((signal && signal.intent) || ''),
+    String((ctx && ctx.lead && ctx.lead.tipoCliente) || ''),
+    String((ctx && ctx.lead && ctx.lead.interes) || '')
+  ].join(' ').trim();
+
+  var extracted = extractRelevantKnowledge_(q, knowledgeText);
+  return trimForPrompt_(extracted, PROMPT_OPT.MAX_KNOWLEDGE_CHARS);
+}
+
+function buildCompactEventsContext_(eventsText, ctx, signal) {
+  var keywords = [
+    String((signal && signal.intent) || ''),
+    String((ctx && ctx.lead && ctx.lead.urgencia) || ''),
+    'cotizacion',
+    'compra',
+    'asesor',
+    'whatsapp',
+    'lead'
+  ];
+
+  var picked = pickRelevantLinesByKeywords_(eventsText, keywords, 6);
+  if (!picked) picked = 'Priorizar respuesta comercial clara y derivacion a asesor cuando corresponda.';
+  return trimForPrompt_(picked, PROMPT_OPT.MAX_EVENTS_CHARS);
+}
+
+function pickRelevantLinesByKeywords_(text, keywords, maxLines) {
+  var lines = String(text || '')
+    .split(/\r?\n/)
+    .map(function(line) { return cleanText_(line); })
+    .filter(function(line) { return line && line.length >= 8; });
+
+  if (!lines.length) return '';
+
+  var kws = (keywords || [])
+    .map(function(k) { return String(k || '').toLowerCase(); })
+    .filter(function(k) { return !!k; });
+
+  var scored = lines.map(function(line) {
+    var l = line.toLowerCase();
+    var score = 0;
+    for (var i = 0; i < kws.length; i++) {
+      if (l.indexOf(kws[i]) !== -1) score += 2;
+    }
+    if (/cotiz|precio|plan|kit|asesor|lead|urgencia|contacto/.test(l)) score += 1;
+    return { line: line, score: score };
+  });
+
+  scored.sort(function(a, b) { return b.score - a.score; });
+
+  var top = scored
+    .filter(function(item) { return item.score > 0; })
+    .slice(0, Math.max(1, toNumber_(maxLines, 6)))
+    .map(function(item) { return item.line; });
+
+  return top.join(' ');
+}
+
+function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
+  var models = buildGeminiModelCandidates_(preferredModel);
+  var errors = [];
+
+  for (var i = 0; i < models.length; i++) {
+    var model = models[i];
+    try {
+      return callGemini_(prompt, apiKey, model);
+    } catch (err) {
+      var msg = String(err && err.message ? err.message : err);
+      errors.push(model + ' -> ' + msg.slice(0, 220));
+
+      // Si es un tema de cuota/rate-limit, probar siguiente modelo.
+      if (isQuotaOrRateError_(msg)) {
+        continue;
+      }
+
+      // Errores no relacionados a cuota se propagan de inmediato.
+      throw err;
+    }
+  }
+
+  throw new Error('Gemini sin cupo disponible en modelos probados: ' + errors.join(' || '));
+}
+
+function buildGeminiModelCandidates_(preferredModel) {
+  var primary = cleanText_(preferredModel) || 'gemini-2.5-flash';
+  var candidates = [
+    primary,
+    'gemini-2.0-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-2.5-pro'
+  ];
+
+  var seen = {};
+  var unique = [];
+  for (var i = 0; i < candidates.length; i++) {
+    var model = cleanText_(candidates[i]);
+    if (!model || seen[model]) continue;
+    seen[model] = true;
+    unique.push(model);
+  }
+
+  return unique;
+}
+
+function isQuotaOrRateError_(errMsg) {
+  var t = String(errMsg || '').toLowerCase();
+  return (
+    t.indexOf('429') !== -1 ||
+    t.indexOf('quota') !== -1 ||
+    t.indexOf('resource_exhausted') !== -1 ||
+    t.indexOf('rate limit') !== -1 ||
+    t.indexOf('rate_limited') !== -1
+  );
+}
+
 function readKnowledgeDocs_(props) {
-  return {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = buildDocsCacheKey_(props);
+
+  try {
+    var cached = cache.get(cacheKey);
+    if (cached) {
+      var parsed = JSON.parse(cached);
+      if (parsed && parsed.instructions && parsed.knowledge && parsed.events) {
+        return parsed;
+      }
+    }
+  } catch (_cacheReadErr) {}
+
+  var docs = {
     instructions: DocumentApp.openById(props.DOC_INSTRUCCIONES_ID).getBody().getText(),
     knowledge: DocumentApp.openById(props.DOC_CONOCIMIENTO_ID).getBody().getText(),
     events: DocumentApp.openById(props.DOC_EVENTOS_ID).getBody().getText()
   };
+
+  try {
+    cache.put(cacheKey, JSON.stringify(docs), PROMPT_OPT.DOCS_CACHE_SECONDS);
+  } catch (_cacheWriteErr) {}
+
+  return docs;
+}
+
+function buildDocsCacheKey_(props) {
+  var seed = [
+    props.DOC_INSTRUCCIONES_ID,
+    props.DOC_CONOCIMIENTO_ID,
+    props.DOC_EVENTOS_ID,
+    CHAT_VERSION
+  ].join('|');
+
+  var enc = Utilities.base64EncodeWebSafe(seed).replace(/=+$/g, '');
+  return 'chat_docs_' + enc.slice(0, 120);
 }
 
 function callGemini_(prompt, apiKey, modelName) {
@@ -508,7 +669,7 @@ function callGemini_(prompt, apiKey, modelName) {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.25,
-      maxOutputTokens: 500
+      maxOutputTokens: PROMPT_OPT.MAX_OUTPUT_TOKENS
     }
   };
 
@@ -527,10 +688,16 @@ function callGemini_(prompt, apiKey, modelName) {
   }
 
   var data = JSON.parse(txt);
-  var parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+  var firstCandidate = data && data.candidates && data.candidates[0];
+  var finishReason = String((firstCandidate && firstCandidate.finishReason) || '').toUpperCase();
+  var parts = firstCandidate && firstCandidate.content && firstCandidate.content.parts;
   var output = Array.isArray(parts)
     ? parts.map(function(p) { return p && p.text ? String(p.text) : ''; }).join('')
     : '';
+
+  if (finishReason && finishReason !== 'STOP' && finishReason !== 'FINISH_REASON_UNSPECIFIED') {
+    throw new Error('Gemini salida incompleta (' + finishReason + '): ' + String(output || '').slice(0, 240));
+  }
 
   if (!output) throw new Error('Respuesta vacia de Gemini');
 
@@ -585,6 +752,15 @@ function postProcessReply_(text, ctx) {
   out = out.replace(/\bKit Smart 1\.(?!\d)/g, 'Kit Smart 1.1');
   out = out.replace(/\bKit Smart 2\.(?!\d)/g, 'Kit Smart 2.2');
 
+  if (hasAbruptEnding_(out)) {
+    var hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
+    if (hasTipo) {
+      out = out.replace(/\.?$/, '') + '. Si queres, te paso las opciones recomendadas para tu caso y el rango estimado de precio.';
+    } else {
+      out = out.replace(/\.?$/, '') + '. Si queres, te paso opciones recomendadas y un rango estimado de precio para hogar o comercio.';
+    }
+  }
+
   if (!/[.!?]$/.test(out)) {
     out += '.';
   }
@@ -597,6 +773,29 @@ function postProcessReply_(text, ctx) {
   out = out.replace(/\s{2,}/g, ' ').replace(/([!?.,])\1+/g, '$1').trim();
 
   return out;
+}
+
+function trimForPrompt_(text, maxChars) {
+  var t = cleanText_(text);
+  var max = toNumber_(maxChars, 1200);
+  if (!t) return '';
+  if (t.length <= max) return t;
+  return t.slice(0, Math.max(100, max)).replace(/\s+\S*$/, '').trim();
+}
+
+function hasAbruptEnding_(text) {
+  var t = cleanText_(text).toLowerCase();
+  if (!t) return false;
+
+  // Finales cortados observados en produccion.
+  if (/\s+[a-z]\.$/.test(t)) return true; // ejemplo: "... o."
+  if (/\bmonit\.$/.test(t)) return true; // ejemplo: "... monit."
+  if (/\b(opcion|kit|plan)\s+[a-z]\.$/.test(t)) return true;
+
+  // Conectores colgando al final.
+  if (/\s+(o|y|de|con|para|por)\.$/.test(t)) return true;
+
+  return false;
 }
 
 function buildFaqFallbackReply_(ctx, signal, knowledgeText, cfg) {
@@ -927,7 +1126,9 @@ function looksWeakOrTruncatedReply_(text) {
   var t = cleanText_(text).toLowerCase();
   if (!t) return true;
   if (t.length < 26) return true;
-  if (/(para poder|para ayudarte|necesito|y\.|de\.|con\.)$/.test(t)) return true;
+  // Solo marcar como debil cuando ademas sea relativamente corta.
+  // Evita falsos positivos en respuestas validas que terminan con palabras comunes.
+  if (t.length < 70 && /(para poder|para ayudarte|necesito|y\.|de\.|con\.)$/.test(t)) return true;
   return false;
 }
 
@@ -1645,6 +1846,96 @@ function testListGeminiModels() {
 
   Logger.log(JSON.stringify(models, null, 2));
   return models;
+}
+
+/**
+ * Smoke test de Gemini sin pasar por todo el pipeline de chat.
+ * Sirve para verificar conectividad, modelo y formato de salida.
+ */
+function testGeminiSmoke() {
+  var p = PropertiesService.getScriptProperties();
+  var apiKey = p.getProperty('GEMINI_API_KEY') || '';
+  var model = p.getProperty('GEMINI_MODEL') || 'gemini-2.5-flash';
+  if (!apiKey) throw new Error('Falta GEMINI_API_KEY en Script Properties');
+
+  var prompt = 'Responde en una sola frase: confirmo que Gemini esta operativo.';
+  var raw = callGemini_(prompt, apiKey, model);
+
+  var out = {
+    ok: true,
+    model: model,
+    rawLength: String(raw || '').length,
+    rawPreview: String(raw || '').slice(0, 200),
+    timestamp: new Date().toISOString()
+  };
+
+  Logger.log(JSON.stringify(out, null, 2));
+  return out;
+}
+
+/**
+ * Test diagnostico del post-proceso y detector de truncado.
+ */
+function testBuildBotReplyDebug() {
+  var props = getScriptProps_();
+  var cfg = loadRuntimeConfig_(props);
+
+  var payload = {
+    sessionId: 'test_debug_' + Utilities.getUuid().slice(0, 8),
+    message: 'hola',
+    sourcePage: 'apps-script-test',
+    userAgent: 'apps-script-test',
+    chatHistory: []
+  };
+
+  var ctx = buildContext_(payload, cfg);
+  var signal = detectCommercialSignal_(ctx.userMessage);
+  var docs = readKnowledgeDocs_(props);
+  var historyText = formatHistoryForPrompt_(ctx.chatHistory);
+  var prompt = [
+    docs.instructions,
+    '\n\nCONOCIMIENTO:\n',
+    docs.knowledge,
+    '\n\nEVENTOS:\n',
+    docs.events,
+    '\n\nHISTORIAL RECIENTE:\n',
+    historyText,
+    '\n\nMENSAJE CLIENTE:\n',
+    ctx.userMessage,
+    '\n\nDATOS LEAD PARCIALES:\n',
+    JSON.stringify(ctx.lead),
+    '\n\nINTENCION DETECTADA: ', signal.intent
+  ].join('');
+
+  try {
+    var raw = callGemini_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
+    var processed = postProcessReply_(raw, ctx);
+    var weak = looksWeakOrTruncatedReply_(processed);
+
+    var out = {
+      ok: !weak,
+      model: props.GEMINI_MODEL,
+      rawLength: String(raw || '').length,
+      processedLength: String(processed || '').length,
+      weakOrTruncated: weak,
+      rawPreview: String(raw || '').slice(0, 260),
+      processedPreview: String(processed || '').slice(0, 260),
+      timestamp: new Date().toISOString()
+    };
+
+    Logger.log(JSON.stringify(out, null, 2));
+    return out;
+  } catch (err) {
+    var outErr = {
+      ok: false,
+      model: props.GEMINI_MODEL,
+      error: String(err && err.message ? err.message : err),
+      timestamp: new Date().toISOString()
+    };
+
+    Logger.log(JSON.stringify(outErr, null, 2));
+    return outErr;
+  }
 }
 
 
