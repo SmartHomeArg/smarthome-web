@@ -35,16 +35,18 @@ var PROMPT_OPT = {
   MAX_EVENTS_CHARS: 650,
   DOCS_CACHE_SECONDS: 300,
   MODELS_CACHE_SECONDS: 900,
-  DISCOVERY_MAX_MODELS: 6,
+  DISCOVERY_MAX_MODELS: 10,
+  ENABLE_MODEL_DISCOVERY: true,
   MAX_OUTPUT_TOKENS: 520,
   MIN_REPLY_CHARS: 45,
   GEMINI_RETRY_ATTEMPTS: 2,
-  GEMINI_RETRY_BASE_MS: 260,
-  GEMINI_TOTAL_TIMEOUT_MS: 6500,
+  GEMINI_RETRY_BASE_MS: 300,
+  GEMINI_TOTAL_TIMEOUT_MS: 15000,
   GEMINI_MAX_MODELS_PER_REQUEST: 5,
-  GEMINI_RESCUE_TIMEOUT_MS: 3200,
-  GEMINI_RESCUE_MODELS: 4,
-  PROVIDER_CIRCUIT_SECONDS: 120
+  GEMINI_RESCUE_TIMEOUT_MS: 8000,
+  GEMINI_RESCUE_MODELS: 3,
+  ENABLE_RESCUE_PASS: true,
+  PROVIDER_CIRCUIT_SECONDS: 60
 };
 
 function doGet(e) {
@@ -185,7 +187,12 @@ function processChatRequest_(payload) {
 
     return {
       ok: false,
-      message: IA_UNAVAILABLE_MESSAGE
+      message: IA_UNAVAILABLE_MESSAGE,
+      data: {
+        fallbackReason: 'runtime_error',
+        providerCode: 'runtime',
+        providerMessage: msg.slice(0, 300)
+      }
     };
   } finally {
     if (lockAcquired) {
@@ -648,18 +655,41 @@ function classifyLeadStatus_(score, cfg) {
 }
 
 function buildBotReply_(ctx, signal, props, cfg) {
+  // Circuit breaker: si el provider esta caido (ej: cuota 429), no quemar
+  // mas llamadas API que solo empeoran la situacion. Ir directo a fallback.
+  if (isProviderCircuitOpen_()) {
+    var cachedCode = '';
+    var cachedMsg = '';
+    try {
+      var cbCache = CacheService.getScriptCache();
+      cachedCode = cleanText_(cbCache.get('chat_provider_last_error_code')) || 'circuit_open';
+      cachedMsg = cleanText_(cbCache.get('chat_provider_last_error_msg')) || 'Circuit breaker activo por error previo';
+    } catch (_cbErr) {}
+
+    return {
+      mode: 'fallback_unavailable',
+      replyText: IA_UNAVAILABLE_MESSAGE,
+      fallbackReason: 'circuit_breaker_open',
+      providerCode: cachedCode,
+      providerMessage: cachedMsg
+    };
+  }
+
+  var useLightPrompt = shouldUseLightIaPrompt_(ctx, signal);
   var docs = {
     instructions: '',
     knowledge: '',
     events: ''
   };
 
-  try {
-    docs = readKnowledgeDocs_(props);
-  } catch (docsErr) {
-    // Si falla la lectura documental, continuar con contexto minimo
-    // para no perder disponibilidad de respuesta IA.
-    writeErrorSafe_(ctx.sessionId, 'docs_read_error', String(docsErr), 'docs_error', true);
+  if (!useLightPrompt) {
+    try {
+      docs = readKnowledgeDocs_(props);
+    } catch (docsErr) {
+      // Si falla la lectura documental, continuar con contexto minimo
+      // para no perder disponibilidad de respuesta IA.
+      writeErrorSafe_(ctx.sessionId, 'docs_read_error', String(docsErr), 'docs_error', true);
+    }
   }
 
   var historyText = formatHistoryForPrompt_(ctx.chatHistory);
@@ -669,42 +699,44 @@ function buildBotReply_(ctx, signal, props, cfg) {
   var knownFacts = buildKnownFactsForPrompt_(ctx);
   var sessionCompact = buildSessionContextForPrompt_(ctx);
 
-  var prompt = [
-    instructionsCompact,
-    '\n\nCONOCIMIENTO:\n',
-    knowledgeCompact,
-    '\n\nEVENTOS:\n',
-    eventsCompact,
-    '\n\nHISTORIAL RECIENTE:\n',
-    historyText,
-    '\n\nMENSAJE CLIENTE:\n',
-    ctx.userMessage,
-    '\n\nDATOS CONFIRMADOS (NO REPREGUNTAR):\n',
-    knownFacts,
-    '\n\nCONTEXTO DE SESION (CONTINUIDAD):\n',
-    sessionCompact,
-    '\n\nDATOS LEAD PARCIALES:\n',
-    JSON.stringify(ctx.lead),
-    '\n\nINTENCION DETECTADA: ', signal.intent,
-    '\n\nREGLAS DE RESPUESTA:',
-    '\n- No te vuelvas a presentar si ya hay historial.',
-      '\n- No te vuelvas a presentar si ya hay historial o si CONTEXTO DE SESION indica turnos previos.',
-    '\n- No repitas saludo inicial en cada turno.',
-    '\n- Responde en espanol, maximo 120 palabras.',
-    '\n- Evita frases de relleno como "hola de nuevo" o "estoy aqui para ayudarte" si no aportan informacion.',
-    '\n- Si ya hay historial, no saludes.',
-      '\n- Si hay continuidad de sesion (turnCount > 0), no saludes ni reinicies conversacion.',
-    '\n- No cierres con frases incompletas (ej: "para poder").',
-    '\n- No pidas de nuevo datos ya confirmados (tipo de cliente, localidad, cobertura, contacto).',
-    '\n- Usa CONOCIMIENTO y EVENTOS como fuente principal para responder con precision comercial.',
-    '\n- Escribe en tono humano y natural, sin formato markdown.',
-    '\n- No uses asteriscos, ni listas con guiones, ni encabezados tipo "Info util".',
-    '\n- Da una respuesta util y luego 1 pregunta puntual para avanzar comercialmente.',
-    '\n- Si el cliente pregunta que vendemos o no entiende la propuesta, primero explica en 1-2 frases que ofrece Smarthome (alarmas, camaras, monitoreo y planes) antes de pedir datos.',
-    '\n- No repitas textualmente la misma pregunta de turnos previos.',
-    '\n- Antes de pedir un dato, verifica si ya esta en DATOS CONFIRMADOS.',
-    '\n- Si el cliente esta confundido, responde primero su duda y recien despues hace una pregunta de avance.'
-  ].join('');
+  var prompt = useLightPrompt
+    ? buildLightIaPrompt_(ctx, signal, knownFacts, sessionCompact)
+    : [
+      instructionsCompact,
+      '\n\nCONOCIMIENTO:\n',
+      knowledgeCompact,
+      '\n\nEVENTOS:\n',
+      eventsCompact,
+      '\n\nHISTORIAL RECIENTE:\n',
+      historyText,
+      '\n\nMENSAJE CLIENTE:\n',
+      ctx.userMessage,
+      '\n\nDATOS CONFIRMADOS (NO REPREGUNTAR):\n',
+      knownFacts,
+      '\n\nCONTEXTO DE SESION (CONTINUIDAD):\n',
+      sessionCompact,
+      '\n\nDATOS LEAD PARCIALES:\n',
+      JSON.stringify(ctx.lead),
+      '\n\nINTENCION DETECTADA: ', signal.intent,
+      '\n\nREGLAS DE RESPUESTA:',
+      '\n- No te vuelvas a presentar si ya hay historial.',
+        '\n- No te vuelvas a presentar si ya hay historial o si CONTEXTO DE SESION indica turnos previos.',
+      '\n- No repitas saludo inicial en cada turno.',
+      '\n- Responde en espanol, maximo 120 palabras.',
+      '\n- Evita frases de relleno como "hola de nuevo" o "estoy aqui para ayudarte" si no aportan informacion.',
+      '\n- Si ya hay historial, no saludes.',
+        '\n- Si hay continuidad de sesion (turnCount > 0), no saludes ni reinicies conversacion.',
+      '\n- No cierres con frases incompletas (ej: "para poder").',
+      '\n- No pidas de nuevo datos ya confirmados (tipo de cliente, localidad, cobertura, contacto).',
+      '\n- Usa CONOCIMIENTO y EVENTOS como fuente principal para responder con precision comercial.',
+      '\n- Escribe en tono humano y natural, sin formato markdown.',
+      '\n- No uses asteriscos, ni listas con guiones, ni encabezados tipo "Info util".',
+      '\n- Da una respuesta util y luego 1 pregunta puntual para avanzar comercialmente.',
+      '\n- Si el cliente pregunta que vendemos o no entiende la propuesta, primero explica en 1-2 frases que ofrece Smarthome (alarmas, camaras, monitoreo y planes) antes de pedir datos.',
+      '\n- No repitas textualmente la misma pregunta de turnos previos.',
+      '\n- Antes de pedir un dato, verifica si ya esta en DATOS CONFIRMADOS.',
+      '\n- Si el cliente esta confundido, responde primero su duda y recien despues hace una pregunta de avance.'
+    ].join('');
 
   if (!props.GEMINI_API_KEY) {
     registerFallbackAudit_(ctx, signal, 'no_api_key', 'GEMINI_API_KEY ausente', 'provider_error', false, cfg, props);
@@ -733,6 +765,13 @@ function buildBotReply_(ctx, signal, props, cfg) {
       return { mode: 'ia', replyText: rescued.replyText };
     }
 
+    // ULTIMO RECURSO ABSOLUTO: un solo call directo con el modelo mas comun
+    // y un prompt ultra-minimo. Si esto falla, recien ahi usar fallback estatico.
+    var lastResort = tryLastResortDirectCall_(ctx, props);
+    if (lastResort) {
+      return { mode: 'ia', replyText: lastResort };
+    }
+
     var providerCode = detectProviderCode_(errMsg);
     noteProviderFailure_(providerCode, errMsg);
     writeErrorSafe_(ctx.sessionId, 'ia_provider_error', errMsg, providerCode, false);
@@ -750,12 +789,50 @@ function buildBotReply_(ctx, signal, props, cfg) {
   };
 }
 
+function shouldUseLightIaPrompt_(ctx, signal) {
+  var history = (ctx && ctx.chatHistory) || [];
+  var state = (ctx && ctx.sessionState) || {};
+  var msg = cleanText_(ctx && ctx.userMessage).toLowerCase();
+  var turnCount = toNumber_(state.turnCount, 0);
+  var isEarlyConversation = (history.length === 0 && turnCount <= 0);
+  var isLowContextTurn = (history.length <= 1 && turnCount <= 1 && msg.length > 0 && msg.length <= 120);
+  var hasCommercialIntent = !!(signal && (signal.intent === 'cotizacion' || signal.intent === 'compra'));
+  var hasLeadContext = !!(
+    (ctx && ctx.lead && cleanText_(ctx.lead.tipoCliente)) ||
+    (ctx && ctx.lead && cleanText_(ctx.lead.localidad)) ||
+    (ctx && ctx.lead && cleanText_(ctx.lead.interes))
+  );
+
+  // Estrategia robusta por etapa: usar prompt liviano en turnos tempranos o
+  // de bajo contexto, salvo cuando ya hay senales comerciales fuertes.
+  if (isEarlyConversation) return true;
+  if (isLowContextTurn && !hasCommercialIntent && !hasLeadContext) return true;
+
+  return false;
+}
+
+function buildLightIaPrompt_(ctx, signal, knownFacts, sessionCompact) {
+  return [
+    'Responde como asesor comercial de Smarthome en espanol, en tono humano y natural.',
+    'No uses markdown ni listas con guiones.',
+    'Si es primer saludo, responde breve y despues hace 1 pregunta comercial para avanzar.',
+    'Si ya hay continuidad de sesion, no saludes ni reinicies la conversacion.',
+    'Maximo 80 palabras.',
+    'MENSAJE CLIENTE: ' + String((ctx && ctx.userMessage) || ''),
+    'INTENCION: ' + String((signal && signal.intent) || 'info'),
+    'DATOS CONFIRMADOS: ' + String(knownFacts || ''),
+    'CONTEXTO SESION: ' + String(sessionCompact || '')
+  ].join('\n');
+}
+
 function tryRescueIaReply_(prompt, ctx, signal, props, originalErrMsg) {
+  if (!toBool_(PROMPT_OPT.ENABLE_RESCUE_PASS, false)) return { ok: false };
   if (!props || !props.GEMINI_API_KEY) return { ok: false };
 
   var errMsg = String(originalErrMsg || '').toLowerCase();
-  var shouldSkipRescue = (errMsg.indexOf('no_api_key') !== -1);
-  if (shouldSkipRescue) return { ok: false };
+  // No reintentar si es cuota agotada o falta key - no va a cambiar en ms.
+  if (errMsg.indexOf('no_api_key') !== -1) return { ok: false };
+  if (isQuotaOrRateError_(errMsg)) return { ok: false };
 
   try {
     // Ultimo intento de rescate con prompt compacto y modelos alternativos.
@@ -796,6 +873,32 @@ function tryRescueIaReply_(prompt, ctx, signal, props, originalErrMsg) {
   } catch (_rescueErr) {}
 
   return { ok: false };
+}
+
+/**
+ * Ultimo recurso absoluto: intenta UN solo call directo a Gemini
+ * con cada modelo conocido y un prompt ultra-minimo.
+ * Solo se llama si TODO lo demas fallo. Devuelve texto o null.
+ */
+function tryLastResortDirectCall_(ctx, props) {
+  if (!props || !props.GEMINI_API_KEY) return null;
+
+  // Si ya sabemos que el provider esta caido por cuota, no quemar mas calls.
+  if (isProviderCircuitOpen_()) return null;
+
+  var msg = cleanText_(ctx && ctx.userMessage) || 'hola';
+  var miniPrompt = 'Sos un asesor comercial de Smarthome (alarmas, camaras, monitoreo 24/7). Responde breve en espanol al cliente: ' + msg;
+
+  // UN solo modelo, UN solo intento. Si falla, es cuota y no tiene sentido seguir.
+  try {
+    var text = callGemini_(miniPrompt, props.GEMINI_API_KEY, 'gemini-2.0-flash-lite');
+    if (cleanText_(text)) {
+      noteProviderSuccess_();
+      return postProcessReply_(text, ctx);
+    }
+  } catch (_lastErr) {}
+
+  return null;
 }
 
 function avoidLoopingReply_(reply, ctx, signal, knowledgeText) {
@@ -919,16 +1022,21 @@ function pickRelevantLinesByKeywords_(text, keywords, maxLines) {
 
 function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
   var models = buildGeminiModelCandidates_(preferredModel, apiKey);
-  var maxModels = Math.max(1, toNumber_(PROMPT_OPT.GEMINI_MAX_MODELS_PER_REQUEST, 2));
+  var maxModels = Math.max(1, toNumber_(PROMPT_OPT.GEMINI_MAX_MODELS_PER_REQUEST, 5));
   var startMs = Date.now();
-  var totalBudgetMs = Math.max(2500, toNumber_(PROMPT_OPT.GEMINI_TOTAL_TIMEOUT_MS, 7000));
+  var totalBudgetMs = Math.max(5000, toNumber_(PROMPT_OPT.GEMINI_TOTAL_TIMEOUT_MS, 15000));
   var errors = [];
+  var hitQuotaLimit = false;
 
   for (var i = 0; i < models.length && i < maxModels; i++) {
     if ((Date.now() - startMs) >= totalBudgetMs) {
       errors.push('timeout_budget_exceeded');
       break;
     }
+
+    // Si ya recibimos 429 (cuota), NO probar mas modelos: comparten la misma cuota.
+    // Cada intento adicional solo empeora la situacion de cuota.
+    if (hitQuotaLimit) break;
 
     var model = models[i];
     try {
@@ -937,13 +1045,38 @@ function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
       var msg = String(err && err.message ? err.message : err);
       errors.push(model + ' -> ' + msg.slice(0, 220));
 
-      // Si es un tema recuperable por rotacion de modelo, probar el siguiente.
-      if (isQuotaOrRateError_(msg) || isRetryableModelSelectionError_(msg) || isTransientProviderError_(msg) || isRetryableNoOutputError_(msg)) {
-        continue;
+      if (isQuotaOrRateError_(msg)) {
+        hitQuotaLimit = true;
+        break;
+      }
+      // Solo continuar al siguiente modelo si NO es error de cuota
+      continue;
+    }
+  }
+
+  // PASE 2: discovery forzada SOLO si no fue problema de cuota.
+  if (!hitQuotaLimit && (Date.now() - startMs) < totalBudgetMs) {
+    var discovered = readAvailableGeminiModels_(apiKey, true);
+    if (discovered.length) {
+      var alreadyTried = {};
+      for (var a = 0; a < models.length && a < maxModels; a++) {
+        alreadyTried[models[a]] = true;
       }
 
-      // Errores no relacionados a cuota se propagan de inmediato.
-      throw err;
+      for (var d = 0; d < discovered.length; d++) {
+        if ((Date.now() - startMs) >= totalBudgetMs) break;
+        var dm = sanitizeGeminiModelName_(discovered[d]);
+        if (!dm || alreadyTried[dm]) continue;
+        alreadyTried[dm] = true;
+        try {
+          return callGeminiWithRetries_(prompt, apiKey, dm, PROMPT_OPT.GEMINI_RETRY_ATTEMPTS, startMs, totalBudgetMs);
+        } catch (err2) {
+          var msg2 = String(err2 && err2.message ? err2.message : err2);
+          errors.push('discovery:' + dm + ' -> ' + msg2.slice(0, 220));
+          if (isQuotaOrRateError_(msg2)) break;
+          continue;
+        }
+      }
     }
   }
 
@@ -952,9 +1085,9 @@ function callGeminiWithFallbackModels_(prompt, apiKey, preferredModel) {
 
 function callGeminiWithRetries_(prompt, apiKey, model, attempts) {
   var maxAttempts = Math.max(1, toNumber_(attempts, 3));
-  var baseMs = Math.max(150, toNumber_(PROMPT_OPT.GEMINI_RETRY_BASE_MS, 450));
+  var baseMs = Math.max(150, toNumber_(PROMPT_OPT.GEMINI_RETRY_BASE_MS, 300));
   var startMs = Date.now();
-  var totalBudgetMs = Math.max(2500, toNumber_(PROMPT_OPT.GEMINI_TOTAL_TIMEOUT_MS, 7000));
+  var totalBudgetMs = Math.max(5000, toNumber_(PROMPT_OPT.GEMINI_TOTAL_TIMEOUT_MS, 15000));
   var lastErr = null;
 
   if (arguments.length >= 5) {
@@ -974,7 +1107,9 @@ function callGeminiWithRetries_(prompt, apiKey, model, attempts) {
     } catch (err) {
       lastErr = err;
       var msg = String(err && err.message ? err.message : err);
-      var isRetryable = isTransientProviderError_(msg) || isQuotaOrRateError_(msg);
+      // 429 (cuota) NO es retryable a nivel de reintentos inmediatos:
+      // la cuota no se resetea en milisegundos. Propagar para probar otro modelo.
+      var isRetryable = isTransientProviderError_(msg);
       var isLastAttempt = i >= (maxAttempts - 1);
       if (!isRetryable || isLastAttempt) break;
 
@@ -1011,12 +1146,12 @@ function isRetryableModelSelectionError_(errMsg) {
 function buildGeminiModelCandidates_(preferredModel, apiKey) {
   var primary = sanitizeGeminiModelName_(preferredModel) || 'gemini-2.5-flash';
 
+  // Solo modelos confirmados por el diagnostico (sin 1.5 que ya no existen)
   var staticCandidates = [
     primary,
-    'gemini-1.5-flash',
-    'gemini-1.5-pro',
-    'gemini-2.0-flash-lite',
     'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-2.5-flash',
     'gemini-2.5-flash-lite',
     'gemini-2.5-pro'
   ];
@@ -1048,20 +1183,26 @@ function buildGeminiModelCandidates_(preferredModel, apiKey) {
   return unique;
 }
 
-function readAvailableGeminiModels_(apiKey) {
+function readAvailableGeminiModels_(apiKey, forceRefresh) {
   var key = cleanText_(apiKey);
   if (!key) return [];
+  var force = !!forceRefresh;
 
   var cache = CacheService.getScriptCache();
   var cacheKey = 'chat_models_' + Utilities.base64EncodeWebSafe(key).replace(/=+$/g, '').slice(0, 40);
 
-  try {
-    var cached = cache.get(cacheKey);
-    if (cached) {
-      var parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
-    }
-  } catch (_cacheErr) {}
+  if (!force) {
+    try {
+      var cached = cache.get(cacheKey);
+      if (cached) {
+        var parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch (_cacheErr) {}
+  }
+
+  // Evitar fetch adicional a /models en tiempo de request para reducir latencia.
+  if (!force && !toBool_(PROMPT_OPT.ENABLE_MODEL_DISCOVERY, false)) return [];
 
   try {
     var versions = ['v1', 'v1beta'];
@@ -1200,7 +1341,7 @@ function buildDocsCacheKey_(props) {
 }
 
 function callGemini_(prompt, apiKey, modelName) {
-  var model = sanitizeGeminiModelName_(modelName) || 'gemini-2.5-flash';
+  var model = sanitizeGeminiModelName_(modelName) || 'gemini-2.0-flash';
   var body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
@@ -1227,6 +1368,9 @@ function callGemini_(prompt, apiKey, modelName) {
 
     if (code < 200 || code >= 300) {
       lastErr = 'Gemini ' + versions[vi] + ' HTTP ' + code + ': ' + txt.slice(0, 600);
+      // Si es 429 (cuota) o 401/403 (auth), NO probar otra version de API:
+      // la otra version dara el mismo error y quemamos cuota/tiempo.
+      if (code === 429 || code === 401 || code === 403) break;
       continue;
     }
 
@@ -1289,7 +1433,10 @@ function isProviderCircuitOpen_() {
 function noteProviderFailure_(providerCode, errMsg) {
   try {
     var cache = CacheService.getScriptCache();
-    var seconds = Math.max(20, toNumber_(PROMPT_OPT.PROVIDER_CIRCUIT_SECONDS, 120));
+    // Para errores de cuota (429), circuit breaker mas largo (5 min)
+    // porque la cuota no se resetea rapido y cada call lo empeora.
+    var isQuota = isQuotaOrRateError_(errMsg);
+    var seconds = isQuota ? 300 : Math.max(20, toNumber_(PROMPT_OPT.PROVIDER_CIRCUIT_SECONDS, 60));
     var untilTs = Date.now() + (seconds * 1000);
     cache.put(providerCircuitCacheKey_(), String(untilTs), seconds);
     cache.put('chat_provider_last_error_code', cleanText_(providerCode || 'provider_error'), seconds);
@@ -2387,6 +2534,118 @@ function testBuildBotReplyDebug() {
     Logger.log(JSON.stringify(outErr, null, 2));
     return outErr;
   }
+}
+
+/**
+ * DIAGNOSTICO COMPLETO - Ejecutar desde el editor de Apps Script.
+ * Verifica API key, modelos disponibles, y prueba cada modelo individualmente.
+ * Muestra en Logger todo lo que funciona y lo que no.
+ */
+function diagnosticoCompleto() {
+  var resultados = [];
+  var log = function(msg) { resultados.push(msg); Logger.log(msg); };
+
+  log('=== DIAGNOSTICO COMPLETO SMARTHOME CHAT IA ===');
+  log('Fecha: ' + new Date().toISOString());
+  log('');
+
+  // 1. Verificar Script Properties
+  log('--- 1. SCRIPT PROPERTIES ---');
+  var p = PropertiesService.getScriptProperties();
+  var apiKey = cleanText_(p.getProperty('GEMINI_API_KEY'));
+  var configModel = cleanText_(p.getProperty('GEMINI_MODEL')) || 'gemini-2.5-flash';
+  log('GEMINI_API_KEY: ' + (apiKey ? 'PRESENTE (' + apiKey.length + ' chars, empieza con ' + apiKey.slice(0, 6) + '...)' : '*** FALTA ***'));
+  log('GEMINI_MODEL: ' + configModel);
+  log('DOC_INSTRUCCIONES_ID: ' + (p.getProperty('DOC_INSTRUCCIONES_ID') ? 'OK' : 'FALTA'));
+  log('DOC_CONOCIMIENTO_ID: ' + (p.getProperty('DOC_CONOCIMIENTO_ID') ? 'OK' : 'FALTA'));
+  log('DOC_EVENTOS_ID: ' + (p.getProperty('DOC_EVENTOS_ID') ? 'OK' : 'FALTA'));
+  log('SHEET_CONFIG_ID: ' + (p.getProperty('SHEET_CONFIG_ID') ? 'OK' : 'FALTA'));
+  log('SHEET_OPERACION_ID: ' + (p.getProperty('SHEET_OPERACION_ID') ? 'OK' : 'FALTA'));
+  log('');
+
+  if (!apiKey) {
+    log('*** ERROR CRITICO: No hay GEMINI_API_KEY. El chat NUNCA va a funcionar sin API key.');
+    log('Solucion: Ir a Configuracion del proyecto > Propiedades del script > Agregar GEMINI_API_KEY');
+    return resultados.join('\n');
+  }
+
+  // 2. Descubrir modelos disponibles
+  log('--- 2. DISCOVERY DE MODELOS ---');
+  var modelosDisponibles = [];
+  try {
+    var versions = ['v1', 'v1beta'];
+    for (var vi = 0; vi < versions.length; vi++) {
+      var url = 'https://generativelanguage.googleapis.com/' + versions[vi] + '/models?key=' + encodeURIComponent(apiKey);
+      var res = UrlFetchApp.fetch(url, { method: 'get', muteHttpExceptions: true });
+      var code = res.getResponseCode();
+
+      if (code === 200) {
+        var data = JSON.parse(res.getContentText());
+        var models = (data.models || [])
+          .filter(function(m) {
+            return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1;
+          })
+          .map(function(m) {
+            return String(m.name || '').replace(/^models\//, '');
+          });
+        log(versions[vi] + ' - ' + models.length + ' modelos con generateContent:');
+        for (var mi = 0; mi < models.length; mi++) {
+          log('  ' + models[mi]);
+          modelosDisponibles.push(models[mi]);
+        }
+        break;
+      } else {
+        log(versions[vi] + ' - HTTP ' + code + ': ' + res.getContentText().slice(0, 200));
+        if (code === 400 || code === 401 || code === 403) {
+          log('*** La API key puede ser invalida o la API no esta habilitada en el proyecto GCP.');
+        }
+      }
+    }
+  } catch (discoveryErr) {
+    log('Error en discovery: ' + String(discoveryErr));
+  }
+  log('');
+
+  // 3. Probar cada modelo individualmente
+  log('--- 3. PRUEBA INDIVIDUAL POR MODELO ---');
+  var modelosAProbar = [configModel, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-pro', 'gemini-2.5-flash'];
+  var seen = {};
+  var alguno_funciono = false;
+
+  for (var ti = 0; ti < modelosAProbar.length; ti++) {
+    var testModel = sanitizeGeminiModelName_(modelosAProbar[ti]);
+    if (!testModel || seen[testModel]) continue;
+    seen[testModel] = true;
+
+    try {
+      var startMs = Date.now();
+      var testResult = callGemini_('Responde solo: OK', apiKey, testModel);
+      var elapsed = Date.now() - startMs;
+      log('  ' + testModel + ': OK (' + elapsed + 'ms) -> "' + String(testResult).slice(0, 80) + '"');
+      alguno_funciono = true;
+    } catch (testErr) {
+      var errStr = String(testErr && testErr.message ? testErr.message : testErr);
+      log('  ' + testModel + ': FALLO -> ' + errStr.slice(0, 200));
+    }
+  }
+  log('');
+
+  if (!alguno_funciono) {
+    log('*** ERROR CRITICO: NINGUN modelo respondio. Posibles causas:');
+    log('  1. API key invalida o expirada');
+    log('  2. "Generative Language API" no habilitada en console.cloud.google.com');
+    log('  3. Restricciones de facturacion/cuota en el proyecto GCP');
+    log('  4. La API key tiene restricciones de IP/referrer que bloquean Apps Script');
+    log('');
+    log('Solucion: Ir a https://console.cloud.google.com > APIs & Services > verificar que');
+    log('"Generative Language API" este habilitada y que la API key no tenga restricciones.');
+  } else {
+    log('Al menos un modelo funciono. El chat deberia responder con IA.');
+  }
+  log('');
+  log('=== FIN DIAGNOSTICO ===');
+
+  return resultados.join('\n');
 }
 
 
