@@ -4735,7 +4735,7 @@ FOOTER
   transform: translateY(18px) scale(0.9);
   animation:
     whatsappEntrance 0.6s ease forwards,
-    whatsappBounce 3.5s ease-in-out 1.2s infinite;
+    whatsappBounce 3.5s ease-in-out 1.5s infinite;
   transition: transform 0.25s ease;
 }
 
