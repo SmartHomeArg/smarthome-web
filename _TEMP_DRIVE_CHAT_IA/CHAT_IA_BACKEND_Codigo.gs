@@ -18,9 +18,9 @@
  * - FORMS_WEBAPP_URL (opcional)
  */
 
-const CHAT_VERSION = '1.0.0';
+var CHAT_VERSION = '1.0.0';
 
-const OP_SHEETS = {
+var OP_SHEETS = {
   CHAT_LOGS: 'chat_logs',
   EVENTOS: 'eventos_chat',
   ERRORES: 'errores_chat',
@@ -28,8 +28,8 @@ const OP_SHEETS = {
 };
 
 function doGet(e) {
-  const params = (e && e.parameter) ? e.parameter : {};
-  const wantsChat = String(params.action || '').toLowerCase() === 'chat';
+  var params = (e && e.parameter) ? e.parameter : {};
+  var wantsChat = String(params.action || '').toLowerCase() === 'chat';
 
   if (!wantsChat) {
     return jsonResponse_({
@@ -40,7 +40,7 @@ function doGet(e) {
     });
   }
 
-  const result = processChatRequest_({
+  var result = processChatRequest_({
     sessionId: params.sessionId || '',
     message: params.message || '',
     sourcePage: params.sourcePage || '',
@@ -48,7 +48,7 @@ function doGet(e) {
     chatHistory: parseChatHistoryParam_(params.chatHistory || '')
   });
 
-  const callback = cleanJsonpCallback_(params.callback || '');
+  var callback = cleanJsonpCallback_(params.callback || '');
   if (callback) {
     return jsResponse_(callback + '(' + JSON.stringify(result) + ');');
   }
@@ -57,40 +57,46 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  const payload = getRequestData_(e);
-  const result = processChatRequest_(payload);
+  var payload = getRequestData_(e);
+  var result = processChatRequest_(payload);
   return jsonResponse_(result);
 }
 
 function processChatRequest_(payload) {
-  const lock = LockService.getScriptLock();
-  let lockAcquired = false;
+  var lock = LockService.getScriptLock();
+  var lockAcquired = false;
 
   try {
     lockAcquired = lock.tryLock(1000);
 
-    const props = getScriptProps_();
-    const cfg = loadRuntimeConfig_(props);
+    var props = getScriptProps_();
+    var cfg = loadRuntimeConfig_(props);
 
-    const ctx = buildContext_(payload, cfg);
+    var ctx = buildContext_(payload, cfg);
+    var prevState = loadSessionState_(ctx.sessionId);
+    hydrateContextFromState_(ctx, prevState);
     validateInput_(ctx, cfg);
 
-    const signal = detectCommercialSignal_(ctx.userMessage);
-    const leadScore = scoreLead_(signal, ctx, cfg);
-    const leadStatus = classifyLeadStatus_(leadScore, cfg);
+    var signal = detectCommercialSignal_(ctx.userMessage);
+    var leadScore = scoreLead_(signal, ctx, cfg);
+    var leadStatus = classifyLeadStatus_(leadScore, cfg);
 
-    const botReplyResult = buildBotReply_(ctx, signal, props, cfg);
+    var botReplyResult = buildBotReply_(ctx, signal, props, cfg);
+    var transcript = persistConversationTranscript_(ctx, botReplyResult.replyText, props);
 
-    const eventList = buildEvents_(signal, leadScore, leadStatus, botReplyResult, ctx, cfg);
-    const resumen = buildConversationSummary_(ctx, signal, leadScore, leadStatus);
+    var nextState = buildNextSessionState_(ctx, signal, botReplyResult, prevState, transcript);
+    saveSessionState_(ctx.sessionId, nextState);
 
-    writeChatLog_(ctx, botReplyResult.replyText, signal.intent, leadScore, leadStatus, cfg);
-    writeEvents_(ctx.sessionId, eventList);
-    writeLeadPrequal_(ctx, signal, leadScore, leadStatus, resumen, cfg);
+    var eventList = buildEvents_(signal, leadScore, leadStatus, botReplyResult, ctx, cfg);
+    var resumen = buildConversationSummary_(ctx, signal, leadScore, leadStatus);
+
+    writeChatLog_(ctx, botReplyResult.replyText, signal.intent, leadScore, leadStatus, cfg, transcript, nextState);
+    writeEvents_(ctx.sessionId, eventList, transcript, nextState);
+    writeLeadPrequal_(ctx, signal, leadScore, leadStatus, resumen, cfg, transcript, nextState);
 
     handleAlerts_(eventList, ctx, leadScore, props, cfg);
 
-    const syncResult = maybeSyncLeadToForms_(ctx, signal, leadScore, leadStatus, props, cfg);
+    var syncResult = maybeSyncLeadToForms_(ctx, signal, leadScore, leadStatus, props, cfg);
 
     return {
       ok: true,
@@ -103,16 +109,22 @@ function processChatRequest_(payload) {
         leadStatus: leadStatus,
         canDeriveToAdvisor: leadStatus !== 'frio',
         syncedToOfficialLeads: syncResult.synced,
-        syncDetail: syncResult.detail
+        syncDetail: syncResult.detail,
+        transcriptDocId: transcript.docId,
+        transcriptDocUrl: transcript.docUrl
       }
     };
   } catch (err) {
-    const msg = (err && err.message) ? String(err.message) : String(err);
+    var msg = (err && err.message) ? String(err.message) : String(err);
     writeErrorSafe_(null, 'runtime_error', msg, 'n/a', false);
+
+    var safeMessage = isIaUnavailableError_(msg)
+      ? 'En este momento no hay operador disponible. Por favor comunicate por WhatsApp y te asistimos a la brevedad.'
+      : (msg || 'Error interno en chat IA');
 
     return {
       ok: false,
-      message: msg || 'Error interno en chat IA'
+      message: safeMessage
     };
   } finally {
     if (lockAcquired) {
@@ -124,7 +136,7 @@ function processChatRequest_(payload) {
 }
 
 function parseChatHistoryParam_(value) {
-  const raw = String(value || '').trim();
+  var raw = String(value || '').trim();
   if (!raw) return [];
 
   try {
@@ -135,15 +147,15 @@ function parseChatHistoryParam_(value) {
 }
 
 function cleanJsonpCallback_(value) {
-  const cb = String(value || '').trim();
+  var cb = String(value || '').trim();
   if (!cb) return '';
   if (!/^[a-zA-Z_$][0-9a-zA-Z_$\.]{0,120}$/.test(cb)) return '';
   return cb;
 }
 
 function getScriptProps_() {
-  const p = PropertiesService.getScriptProperties();
-  const obj = {
+  var p = PropertiesService.getScriptProperties();
+  var obj = {
     DOC_INSTRUCCIONES_ID: p.getProperty('DOC_INSTRUCCIONES_ID') || '',
     DOC_CONOCIMIENTO_ID: p.getProperty('DOC_CONOCIMIENTO_ID') || '',
     DOC_EVENTOS_ID: p.getProperty('DOC_EVENTOS_ID') || '',
@@ -152,10 +164,11 @@ function getScriptProps_() {
     ALERT_EMAIL: p.getProperty('ALERT_EMAIL') || '',
     GEMINI_API_KEY: p.getProperty('GEMINI_API_KEY') || '',
     GEMINI_MODEL: p.getProperty('GEMINI_MODEL') || 'gemini-2.5-flash',
-    FORMS_WEBAPP_URL: p.getProperty('FORMS_WEBAPP_URL') || ''
+    FORMS_WEBAPP_URL: p.getProperty('FORMS_WEBAPP_URL') || '',
+    CHAT_TRANSCRIPTS_FOLDER_ID: p.getProperty('CHAT_TRANSCRIPTS_FOLDER_ID') || ''
   };
 
-  const required = ['DOC_INSTRUCCIONES_ID', 'DOC_CONOCIMIENTO_ID', 'DOC_EVENTOS_ID', 'SHEET_CONFIG_ID', 'SHEET_OPERACION_ID', 'ALERT_EMAIL'];
+  var required = ['DOC_INSTRUCCIONES_ID', 'DOC_CONOCIMIENTO_ID', 'DOC_EVENTOS_ID', 'SHEET_CONFIG_ID', 'SHEET_OPERACION_ID', 'ALERT_EMAIL'];
   required.forEach(function(k) {
     if (!obj[k]) throw new Error('Falta Script Property: ' + k);
   });
@@ -164,13 +177,13 @@ function getScriptProps_() {
 }
 
 function loadRuntimeConfig_(props) {
-  const cfgSheet = SpreadsheetApp.openById(props.SHEET_CONFIG_ID).getSheets()[0];
-  const rows = cfgSheet.getDataRange().getValues();
+  var cfgSheet = SpreadsheetApp.openById(props.SHEET_CONFIG_ID).getSheets()[0];
+  var rows = cfgSheet.getDataRange().getValues();
 
-  const kv = {};
+  var kv = {};
   for (var i = 1; i < rows.length; i++) {
-    const key = cleanText_(rows[i][0]);
-    const valueRaw = rows[i][1];
+    var key = cleanText_(rows[i][0]);
+    var valueRaw = rows[i][1];
     if (!key) continue;
     kv[key] = normalizeConfigValue_(valueRaw);
   }
@@ -195,7 +208,7 @@ function loadRuntimeConfig_(props) {
 }
 
 function buildContext_(payload, cfg) {
-  const lead = payload.leadData || {};
+  var lead = payload.leadData || {};
 
   return {
     sessionId: cleanText_(payload.sessionId) || ('sess_' + Utilities.getUuid().slice(0, 8)),
@@ -219,6 +232,139 @@ function buildContext_(payload, cfg) {
   };
 }
 
+function loadSessionState_(sessionId) {
+  try {
+    if (!sessionId) return {};
+    var raw = CacheService.getScriptCache().get('chat_state_' + sessionId);
+    if (!raw) return {};
+    var parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch (_err) {
+    return {};
+  }
+}
+
+function saveSessionState_(sessionId, state) {
+  try {
+    if (!sessionId) return;
+    CacheService.getScriptCache().put(
+      'chat_state_' + sessionId,
+      JSON.stringify(state || {}),
+      21600
+    );
+  } catch (_err) {}
+}
+
+function hydrateContextFromState_(ctx, state) {
+  if (!state) return;
+  if (!ctx.lead.tipoCliente && state.clientType && state.clientTypeLocked && isStateFresh_(state.lastUpdatedAt, 90)) {
+    ctx.lead.tipoCliente = state.clientType;
+  }
+  if (!ctx.lead.localidad && state.localidad) ctx.lead.localidad = state.localidad;
+  ctx.sessionState = state;
+}
+
+function buildNextSessionState_(ctx, signal, botReplyResult, prevState, transcript) {
+  var prev = prevState || {};
+  var next = {
+    sessionId: ctx.sessionId,
+    turnCount: toNumber_(prev.turnCount, 0) + 1,
+    lastUpdatedAt: new Date().toISOString(),
+    clientType: prev.clientType || '',
+    clientTypeLocked: !!prev.clientTypeLocked,
+    coverage: toNumber_(prev.coverage, 0),
+    localidad: prev.localidad || '',
+    hasRecommendation: !!prev.hasRecommendation,
+    awaitingLocalidad: !!prev.awaitingLocalidad,
+    lastIntent: signal.intent,
+    transcriptDocId: transcript.docId || prev.transcriptDocId || '',
+    transcriptDocUrl: transcript.docUrl || prev.transcriptDocUrl || ''
+  };
+
+  var inferredType = inferClientType_(ctx);
+  if (inferredType) next.clientType = inferredType;
+
+  var explicitTypeNow = detectTypeInText_(ctx.userMessage || '');
+  if (explicitTypeNow) {
+    next.clientType = explicitTypeNow;
+    next.clientTypeLocked = true;
+  }
+
+  if (isTypeDisputeTurn_(ctx.userMessage || '')) {
+    next.clientType = '';
+    next.clientTypeLocked = false;
+  }
+
+  var inferredCoverage = inferCoverageNeed_(ctx);
+  if (inferredCoverage > 0) next.coverage = inferredCoverage;
+
+  var inferredLocalidad = inferLocalidadFromText_(ctx.userMessage || '');
+  if (inferredLocalidad) next.localidad = inferredLocalidad;
+
+  var replyText = String((botReplyResult && botReplyResult.replyText) || '').toLowerCase();
+  if (/te conviene|te recomiendo|opcion intermedia|opcion base|cobertura/.test(replyText)) {
+    next.hasRecommendation = true;
+  }
+  next.awaitingLocalidad = /pasame tu localidad|decime tu localidad|localidad/.test(replyText);
+
+  return next;
+}
+
+function inferLocalidadFromText_(text) {
+  var t = String(text || '').trim();
+  if (!t) return '';
+
+  var m = t.match(/(?:soy de|estoy en|vivo en|desde)\s+([a-zA-Z\s\-\.]{2,40})/i);
+  if (!m || !m[1]) return '';
+
+  var candidate = cleanText_(m[1]).replace(/[.,;:!?]+$/, '');
+  if (!candidate) return '';
+
+  return candidate;
+}
+
+function persistConversationTranscript_(ctx, botReplyText, props) {
+  var out = { docId: '', docUrl: '' };
+
+  try {
+    var state = loadSessionState_(ctx.sessionId);
+    var docId = state.transcriptDocId || '';
+    var doc;
+
+    if (docId) {
+      doc = DocumentApp.openById(docId);
+    } else {
+      var title = 'chat_' + ctx.sessionId;
+      doc = DocumentApp.create(title);
+      docId = doc.getId();
+
+      if (props.CHAT_TRANSCRIPTS_FOLDER_ID) {
+        try {
+          var file = DriveApp.getFileById(docId);
+          var folder = DriveApp.getFolderById(props.CHAT_TRANSCRIPTS_FOLDER_ID);
+          folder.addFile(file);
+          DriveApp.getRootFolder().removeFile(file);
+        } catch (_moveErr) {}
+      }
+
+      var head = doc.getBody();
+      head.appendParagraph('Session: ' + ctx.sessionId);
+      head.appendParagraph('Creado UTC: ' + new Date().toISOString());
+      head.appendParagraph('Pagina origen: ' + (ctx.sourcePage || 'n/a'));
+      head.appendParagraph('---');
+    }
+
+    var body = doc.getBody();
+    body.appendParagraph('[' + new Date().toISOString() + '] CLIENTE: ' + (ctx.userMessage || ''));
+    body.appendParagraph('[' + new Date().toISOString() + '] ASESOR: ' + (botReplyText || ''));
+
+    out.docId = docId;
+    out.docUrl = 'https://docs.google.com/document/d/' + docId + '/edit';
+  } catch (_err) {}
+
+  return out;
+}
+
 function normalizeChatHistory_(historyRaw) {
   if (!Array.isArray(historyRaw)) return [];
 
@@ -240,7 +386,7 @@ function formatHistoryForPrompt_(history) {
 
   return history
     .map(function(item) {
-      const roleLabel = item.role === 'user' ? 'CLIENTE' : 'ASESOR';
+      var roleLabel = item.role === 'user' ? 'CLIENTE' : 'ASESOR';
       return roleLabel + ': ' + item.text;
     })
     .join('\n');
@@ -258,14 +404,14 @@ function validateInput_(ctx, cfg) {
 }
 
 function detectCommercialSignal_(text) {
-  const t = String(text || '').toLowerCase();
+  var t = String(text || '').toLowerCase();
 
-  const hasQuote = /(precio|cotiza|cotizacion|presupuesto|cuanto sale|valor|plan)/.test(t);
-  const hasUrgency = /(hoy|urgente|esta semana|ya|cuanto antes|rapido)/.test(t);
-  const hasInstallIntent = /(instalar|instalacion|contratar|quiero contratar|quiero poner)/.test(t);
-  const asksAdvisor = /(asesor|llamenme|llamame|contactenme|me contactan)/.test(t);
+  var hasQuote = /(precio|cotiza|cotizacion|presupuesto|cuanto sale|valor|plan)/.test(t);
+  var hasUrgency = /(hoy|urgente|esta semana|ya|cuanto antes|rapido)/.test(t);
+  var hasInstallIntent = /(instalar|instalacion|contratar|quiero contratar|quiero poner)/.test(t);
+  var asksAdvisor = /(asesor|llamenme|llamame|contactenme|me contactan)/.test(t);
 
-  let intent = 'info';
+  var intent = 'info';
   if (hasQuote) intent = 'cotizacion';
   if (hasInstallIntent || /(comprar|quiero avanzar|cerrar)/.test(t)) intent = 'compra';
 
@@ -297,10 +443,11 @@ function classifyLeadStatus_(score, cfg) {
 }
 
 function buildBotReply_(ctx, signal, props, cfg) {
-  const docs = readKnowledgeDocs_(props);
-  const historyText = formatHistoryForPrompt_(ctx.chatHistory);
+  var docs = readKnowledgeDocs_(props);
 
-  const prompt = [
+  var historyText = formatHistoryForPrompt_(ctx.chatHistory);
+
+  var prompt = [
     docs.instructions,
     '\n\nCONOCIMIENTO:\n',
     docs.knowledge,
@@ -327,29 +474,22 @@ function buildBotReply_(ctx, signal, props, cfg) {
     '\n- Si piden alarma sin mas datos, pregunta si es para hogar o comercio y cantidad aproximada de ambientes o accesos.'
   ].join('');
 
-  if (props.GEMINI_API_KEY) {
-    try {
-      const text = callGemini_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
-      return { mode: 'ia', replyText: postProcessReply_(text, ctx) };
-    } catch (err) {
-      const errMsg = String(err);
-      const providerCode = detectProviderCode_(errMsg);
-      writeErrorSafe_(ctx.sessionId, 'ia_provider_error', errMsg, providerCode, true);
-
-      if (cfg.fallbackModoFaqActivo) {
-        return {
-          mode: 'fallback_faq',
-          replyText: buildFaqFallbackReply_(ctx, signal, docs.knowledge, cfg)
-        };
-      }
-
-      throw err;
-    }
+  if (!props.GEMINI_API_KEY) {
+    throw new Error('IA no disponible: falta GEMINI_API_KEY en Script Properties');
   }
 
-  return {
-    mode: 'fallback_faq',
-    replyText: buildFaqFallbackReply_(ctx, signal, docs.knowledge, cfg)
+  try {
+    var text = callGemini_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
+    var processed = postProcessReply_(text, ctx);
+    if (looksWeakOrTruncatedReply_(processed)) {
+      throw new Error('Respuesta IA debil o truncada');
+    }
+    return { mode: 'ia', replyText: processed };
+  } catch (err) {
+    var errMsg = String(err);
+    var providerCode = detectProviderCode_(errMsg);
+    writeErrorSafe_(ctx.sessionId, 'ia_provider_error', errMsg, providerCode, false);
+    throw err;
   };
 }
 
@@ -362,9 +502,9 @@ function readKnowledgeDocs_(props) {
 }
 
 function callGemini_(prompt, apiKey, modelName) {
-  const model = cleanText_(modelName) || 'gemini-2.5-flash';
-  const url = 'https://generativelanguage.googleapis.com/v1/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
-  const body = {
+  var model = cleanText_(modelName) || 'gemini-2.5-flash';
+  var url = 'https://generativelanguage.googleapis.com/v1/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
+  var body = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.25,
@@ -372,23 +512,23 @@ function callGemini_(prompt, apiKey, modelName) {
     }
   };
 
-  const res = UrlFetchApp.fetch(url, {
+  var res = UrlFetchApp.fetch(url, {
     method: 'post',
     contentType: 'application/json',
     payload: JSON.stringify(body),
     muteHttpExceptions: true
   });
 
-  const code = res.getResponseCode();
-  const txt = res.getContentText() || '';
+  var code = res.getResponseCode();
+  var txt = res.getContentText() || '';
 
   if (code < 200 || code >= 300) {
     throw new Error('Gemini HTTP ' + code + ': ' + txt.slice(0, 600));
   }
 
-  const data = JSON.parse(txt);
-  const parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
-  const output = Array.isArray(parts)
+  var data = JSON.parse(txt);
+  var parts = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+  var output = Array.isArray(parts)
     ? parts.map(function(p) { return p && p.text ? String(p.text) : ''; }).join('')
     : '';
 
@@ -398,7 +538,7 @@ function callGemini_(prompt, apiKey, modelName) {
 }
 
 function postProcessReply_(text, ctx) {
-  let out = cleanText_(text);
+  var out = cleanText_(text);
   if (!out) return 'Puedo ayudarte con una recomendacion concreta. Es para hogar o comercio?';
 
   // Limpiar restos de markdown para que suene a chat humano.
@@ -410,7 +550,7 @@ function postProcessReply_(text, ctx) {
     .trim();
 
   if (ctx && ctx.chatHistory && ctx.chatHistory.length > 0) {
-    out = out.replace(/^\s*[¡!]*\s*(hola|hola de nuevo|buenas|buen dia|buenas tardes|buenas noches)[\s!,.:;-]*/i, '');
+    out = out.replace(/^\s*[!]*\s*(hola|hola de nuevo|buenas|buen dia|buenas tardes|buenas noches)[\s!,.:;-]*/i, '');
     out = cleanText_(out);
   }
 
@@ -420,7 +560,7 @@ function postProcessReply_(text, ctx) {
 
   // Si termina con palabras de enlace o fragmentos demasiado cortos, completar con una pregunta util.
   if (/(para|con|de|y|o|si|que|en|por|como|tu|su)\.$/i.test(out) || /,\s*[a-zA-Z]{1,7}\.$/.test(out)) {
-    const hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
+    var hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
     if (hasTipo) {
       out = out.replace(/\.?$/, '') + '. Para avanzar, decime cuantos accesos o ambientes queres cubrir?';
     } else {
@@ -430,7 +570,7 @@ function postProcessReply_(text, ctx) {
 
   // Si la respuesta termina en frase incompleta, completar con pregunta comercial util.
   if (/(para poder|para ayudarte|necesito saber|necesito|para recomendarte)\.?$/i.test(out)) {
-    const hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
+    var hasTipo = !!(ctx && ctx.lead && ctx.lead.tipoCliente);
     if (hasTipo) {
       out = out.replace(/\.?$/,'') + ', decime aproximadamente cuantos ambientes o accesos queres cubrir?';
     } else {
@@ -460,11 +600,16 @@ function postProcessReply_(text, ctx) {
 }
 
 function buildFaqFallbackReply_(ctx, signal, knowledgeText, cfg) {
-  const userText = String(ctx.userMessage || '').toLowerCase();
-  const hasHistory = !!(ctx && ctx.chatHistory && ctx.chatHistory.length);
+  var deterministic = buildDeterministicFlowReply_(ctx, signal);
+  if (deterministic && deterministic.force && deterministic.reply) {
+    return deterministic.reply;
+  }
+
+  var userText = String(ctx.userMessage || '').toLowerCase();
+  var hasHistory = !!(ctx && ctx.chatHistory && ctx.chatHistory.length);
 
   if (isTruncationComplaint_(userText)) {
-    const lastBot = getLastBotMessage_(ctx);
+    var lastBot = getLastBotMessage_(ctx);
     if (lastBot) {
       return 'Gracias por avisar. Te lo repito claro: ' + ensureEndsWithQuestionOrDot_(lastBot);
     }
@@ -475,8 +620,8 @@ function buildFaqFallbackReply_(ctx, signal, knowledgeText, cfg) {
     return 'Entiendo, no hay problema. Si mas adelante quieres retomar, aqui estoy para ayudarte con kits, planes y cotizacion.';
   }
 
-  if (isGreetingOnly_(userText) && !hasHistory) {
-    return 'Hola, soy el asistente de SmartHome. Te puedo ayudar a elegir kit, plan y cotizacion segun tu caso. Si quieres, empezamos por esto: es para hogar o comercio?';
+  if (isGreetingOnly_(userText)) {
+    return buildGreetingReply_(ctx, inferClientType_(ctx), inferCoverageNeed_(ctx));
   }
 
   if (isConfusionTurn_(userText)) {
@@ -491,8 +636,8 @@ function buildFaqFallbackReply_(ctx, signal, knowledgeText, cfg) {
     return 'Puedo ayudarte con seguridad para hogar o comercio (alarmas, camaras, monitoreo y cotizacion). Si quieres, te asesoro con una opcion concreta para tu caso.';
   }
 
-  const inferredType = inferClientType_(ctx);
-  const inferredCoverage = inferCoverageNeed_(ctx);
+  var inferredType = inferClientType_(ctx);
+  var inferredCoverage = inferCoverageNeed_(ctx);
 
   if (/(precio|cuanto sale|cuanto cuesta|valor|costo|sale\?)/.test(userText)) {
     if (!inferredType) {
@@ -516,19 +661,279 @@ function buildFaqFallbackReply_(ctx, signal, knowledgeText, cfg) {
     return avoidRepeatedBotReply_('Genial, para hogar. Para recomendarte bien, decime aproximadamente cuantos ambientes o accesos queres cubrir.', ctx);
   }
 
-  const deterministic = buildDeterministicRecommendation_(inferredType, inferredCoverage, signal.intent);
-  const safeReply = avoidRepeatedBotReply_(deterministic, ctx);
+  var deterministicRec = buildDeterministicRecommendation_(inferredType, inferredCoverage, signal.intent);
+  var safeReply = avoidRepeatedBotReply_(deterministicRec, ctx);
   if (safeReply) return safeReply;
 
-  const brief = extractRelevantKnowledge_(ctx.userMessage, knowledgeText);
-  const cta = buildFallbackCta_(ctx, signal, inferredType);
+  var brief = extractRelevantKnowledge_(ctx.userMessage, knowledgeText);
+  var cta = buildFallbackCta_(ctx, signal, inferredType);
 
   return avoidRepeatedBotReply_([brief, ' ', cta].join('').replace(/\s{2,}/g, ' ').trim(), ctx);
 }
 
+function buildDeterministicFlowReply_(ctx, signal) {
+  var userText = String((ctx && ctx.userMessage) || '').toLowerCase();
+  var state = buildConversationState_(ctx, signal);
+  var progress = analyzeConversationProgress_(ctx);
+  var userTurns = countUserTurns_(ctx);
+
+  if (isStopIntent_(userText)) {
+    return {
+      force: true,
+      reply: 'Entiendo, no hay problema. Si mas adelante queres retomar, te ayudo cuando quieras.'
+    };
+  }
+
+  if (isTruncationComplaint_(userText)) {
+    return {
+      force: true,
+      reply: state.lastBot
+        ? ('Gracias por avisar. Te lo repito claro: ' + ensureEndsWithQuestionOrDot_(state.lastBot))
+        : 'Gracias por avisar. Retomemos desde cero: es para hogar o comercio?'
+    };
+  }
+
+  if (isGreetingOnly_(userText)) {
+    return {
+      force: false,
+      reply: buildGreetingReply_(ctx, state.clientType, state.coverage, userTurns)
+    };
+  }
+
+  if (isConfusionTurn_(userText)) {
+    return {
+      force: true,
+      reply: 'Te ayudo a definir una opcion concreta de seguridad segun tu caso y presupuesto. Arrancamos por un dato: es para hogar o comercio?'
+    };
+  }
+
+  if (isTypeDisputeTurn_(userText)) {
+    return {
+      force: true,
+      reply: 'Tenes razon, mala mia por asumirlo. Confirmame por favor si es para hogar o comercio y seguimos desde ahi.'
+    };
+  }
+
+  if (isGreetingComplaintTurn_(userText)) {
+    return {
+      force: true,
+      reply: 'Tenes razon, disculpas por eso. Hola y gracias por escribirnos. Para ayudarte bien, confirmame si es para hogar o comercio.'
+    };
+  }
+
+  if (isFrustrationTurn_(userText)) {
+    return {
+      force: true,
+      reply: 'Tenes razon. Vamos directo y sin vueltas: decime si es hogar o comercio, y despues te pido solo un dato mas para recomendarte algo puntual.'
+    };
+  }
+
+  if (isOutOfScopeQuestion_(userText)) {
+    return {
+      force: true,
+      reply: 'Puedo ayudarte con seguridad para hogar o comercio: alarmas, camaras, monitoreo y cotizacion. Si queres, empezamos por tu caso concreto.'
+    };
+  }
+
+  if (isAcknowledgementTurn_(userText) && state.coverage > 0 && progress.hasRecommendation) {
+    return {
+      force: true,
+      reply: 'Perfecto. Si queres, seguimos con una cotizacion estimada: pasame tu localidad y te comparto un rango de instalacion y plan mensual.'
+    };
+  }
+
+  if (!state.clientType) {
+    return {
+      force: true,
+      reply: avoidRepeatedBotReply_('Para recomendarte bien necesito un dato: es para hogar o comercio?', ctx)
+    };
+  }
+
+  if (!state.coverage) {
+    if (state.clientType === 'comercio') {
+      return {
+        force: true,
+        reply: avoidRepeatedBotReply_('Perfecto, para comercio. Decime cuantos accesos o ambientes queres cubrir (por ejemplo: 2 puertas y 2 salones).', ctx)
+      };
+    }
+    return {
+      force: true,
+      reply: avoidRepeatedBotReply_('Perfecto, para hogar. Decime cuantos accesos o ambientes queres cubrir (por ejemplo: 2 puertas y living-comedor).', ctx)
+    };
+  }
+
+  if (state.contradiction) {
+    return {
+      force: true,
+      reply: 'Para no recomendarte mal, veo datos mezclados: dijiste lugar grande, pero los ambientes/accesos detectados dan cobertura media. Confirmame si queres cubrir mas zonas o si avanzamos con cobertura media.'
+    };
+  }
+
+  if (state.hotIntent) {
+    return {
+      force: true,
+      reply: buildDeterministicQuoteReply_(state)
+    };
+  }
+
+  return {
+    force: false,
+    reply: buildDeterministicAdviceReply_(state)
+  };
+}
+
+function countUserTurns_(ctx) {
+  var history = (ctx && ctx.chatHistory) || [];
+  var count = 0;
+
+  for (var i = 0; i < history.length; i++) {
+    if (history[i] && history[i].role === 'user' && cleanText_(history[i].text)) {
+      count++;
+    }
+  }
+
+  var current = cleanText_(ctx && ctx.userMessage);
+  if (current) count += 1;
+
+  return count;
+}
+
+function buildGreetingReply_(ctx, clientType, coverage, userTurns) {
+  var turns = toNumber_(userTurns, countUserTurns_(ctx));
+  var openers = [
+    'Hola, gracias por escribirnos.',
+    'Hola, bienvenido a SmartHome.',
+    'Hola, un gusto ayudarte con seguridad.'
+  ];
+  var opener = openers[Math.abs(turns) % openers.length];
+
+  if (!clientType) {
+    return opener + ' Para orientarte bien desde el inicio, confirmame si es para hogar o comercio.';
+  }
+
+  if (!coverage) {
+    if (clientType === 'comercio') {
+      return opener + ' Perfecto, es para comercio. Decime cuantos accesos o ambientes queres cubrir y te recomiendo una opcion concreta.';
+    }
+    return opener + ' Perfecto, es para hogar. Decime cuantos accesos o ambientes queres cubrir y te recomiendo una opcion concreta.';
+  }
+
+  return opener + ' Si queres, con los datos que ya tenemos te doy una recomendacion puntual y luego una cotizacion estimada.';
+}
+
+function buildConversationState_(ctx, signal) {
+  var userText = String((ctx && ctx.userMessage) || '').toLowerCase();
+  var history = (ctx && ctx.chatHistory) || [];
+  var coverage = inferCoverageNeed_(ctx);
+  var type = inferClientType_(ctx);
+  var size = inferSizeWord_(ctx);
+  var lastBot = getLastBotMessage_(ctx);
+  var state = (ctx && ctx.sessionState) || {};
+  var localidadNow = inferLocalidadFromText_(userText) || (ctx && ctx.lead && ctx.lead.localidad) || state.localidad || '';
+  var shouldForceQuoteStep = !!state.awaitingLocalidad || !!localidadNow;
+
+  var contradiction = isSizeCoverageContradiction_(size, coverage);
+
+  return {
+    hasHistory: history.length > 0,
+    clientType: type,
+    coverage: coverage,
+    localidad: localidadNow,
+    sizeWord: size,
+    contradiction: contradiction,
+    hotIntent: !!(shouldForceQuoteStep || (signal && (signal.intent === 'cotizacion' || signal.intent === 'compra' || /(precio|cuanto sale|cuanto cuesta|valor|costo|presupuesto)/.test(userText)))),
+    lastBot: lastBot
+  };
+}
+
+function inferSizeWord_(ctx) {
+  var texts = [String((ctx && ctx.userMessage) || '')];
+  var history = (ctx && ctx.chatHistory) || [];
+  history.forEach(function(item) {
+    if (item.role === 'user') texts.push(item.text || '');
+  });
+
+  var result = '';
+  for (var i = texts.length - 1; i >= 0; i--) {
+    var t = String(texts[i] || '').toLowerCase();
+    if (/grande/.test(t)) return 'grande';
+    if (/mediano/.test(t)) result = result || 'mediano';
+    if (/chico|pequeno/.test(t)) result = result || 'chico';
+  }
+  return result;
+}
+
+function isSizeCoverageContradiction_(sizeWord, coverage) {
+  if (!sizeWord || !coverage) return false;
+  if (sizeWord === 'grande' && coverage <= 4) return true;
+  if (sizeWord === 'chico' && coverage >= 6) return true;
+  return false;
+}
+
+function buildDeterministicAdviceReply_(state) {
+  var segment = coverageSegment_(state.coverage);
+
+  if (state.clientType === 'comercio') {
+    if (segment === 'small') {
+      return 'Para comercio con cobertura chica, te conviene una opcion base escalable. Si queres, te explico que incluye una opcion inicial y una intermedia para comparar.';
+    }
+    if (segment === 'medium') {
+      return 'Para comercio con esa cobertura, te conviene una opcion intermedia con monitoreo y gestion por app. Si queres, te detallo que incluye y que no incluye.';
+    }
+    return 'Para comercio con cobertura amplia, conviene una solucion robusta y escalable por zonas. Si queres, te propongo una configuracion recomendada por etapas.';
+  }
+
+  if (segment === 'small') {
+    return 'Para hogar con cobertura chica, una opcion base suele funcionar bien y luego podes escalar. Si queres, te explico diferencia con una alternativa superior.';
+  }
+  if (segment === 'medium') {
+    return 'Para hogar con esa cobertura, te conviene una opcion intermedia por equilibrio entre costo y proteccion. Si queres, te detallo componentes y plan sugerido.';
+  }
+  return 'Para hogar con cobertura amplia, te conviene una opcion escalable por zonas para proteger mejor sin sobredimensionar de entrada. Si queres, te paso propuesta por etapas.';
+}
+
+function buildDeterministicQuoteReply_(state) {
+  if (state.localidad) {
+    return 'Excelente, con localidad ' + state.localidad + ' te puedo preparar el rango estimado final. Si queres, pasame un telefono y te deriva un asesor para cerrar la cotizacion.';
+  }
+
+  var segment = coverageSegment_(state.coverage);
+  if (state.clientType === 'comercio') {
+    if (segment === 'small') {
+      return 'Para cotizar comercio con cobertura chica, preparo dos alternativas: base e intermedia. Si queres, te pido localidad y te paso rango estimado de instalacion y plan mensual.';
+    }
+    if (segment === 'medium') {
+      return 'Para cotizar comercio con cobertura media, te preparo una opcion intermedia con monitoreo. Pasame localidad y te comparto rango estimado de instalacion y plan mensual.';
+    }
+    return 'Para cotizar comercio con cobertura amplia, conviene armar propuesta por zonas. Si queres, pasame localidad y te doy rango estimado para avanzar con asesor.';
+  }
+
+  if (segment === 'small') {
+    return 'Para cotizar hogar con cobertura chica, te puedo pasar dos opciones: inicial y superior. Decime localidad y te doy rango estimado de instalacion y plan mensual.';
+  }
+  if (segment === 'medium') {
+    return 'Para cotizar hogar con cobertura media, te conviene opcion intermedia. Pasame localidad y te comparto rango estimado de instalacion y plan mensual.';
+  }
+  return 'Para cotizar hogar con cobertura amplia, te recomiendo una propuesta escalable por zonas. Si queres, pasame localidad y te doy rango estimado para avanzar.';
+}
+
+function coverageSegment_(coverage) {
+  if (coverage <= 2) return 'small';
+  if (coverage <= 5) return 'medium';
+  return 'large';
+}
+
+function looksWeakOrTruncatedReply_(text) {
+  var t = cleanText_(text).toLowerCase();
+  if (!t) return true;
+  if (t.length < 26) return true;
+  if (/(para poder|para ayudarte|necesito|y\.|de\.|con\.)$/.test(t)) return true;
+  return false;
+}
+
 function extractRelevantKnowledge_(query, text) {
-  const q = String(query || '').toLowerCase();
-  const lines = String(text || '')
+  var q = String(query || '').toLowerCase();
+  var lines = String(text || '')
     .split(/\r?\n/)
     .map(function(line) {
       return String(line || '')
@@ -544,8 +949,8 @@ function extractRelevantKnowledge_(query, text) {
       return true;
     });
 
-  const scored = lines.map(function(line) {
-    const l = line.toLowerCase();
+  var scored = lines.map(function(line) {
+    var l = line.toLowerCase();
     var score = 0;
     if (/kit|plan|monitoreo|camara|alarma|comercio|hogar/.test(l)) score += 1;
     if (q && l.indexOf(q.split(' ')[0]) !== -1) score += 2;
@@ -554,14 +959,14 @@ function extractRelevantKnowledge_(query, text) {
   });
 
   scored.sort(function(a, b) { return b.score - a.score; });
-  const top = scored.filter(function(s) { return s.score > 0; }).slice(0, 2).map(function(s) { return normalizeKnowledgeLine_(s.line); });
+  var top = scored.filter(function(s) { return s.score > 0; }).slice(0, 2).map(function(s) { return normalizeKnowledgeLine_(s.line); });
 
   if (!top.length) return 'Te ayudo a elegir una opcion de seguridad segun tu necesidad y presupuesto.';
   return top.join(' ');
 }
 
 function normalizeKnowledgeLine_(line) {
-  const t = String(line || '')
+  var t = String(line || '')
     .replace(/^Segmento:\s*/i, 'Trabajamos para ')
     .replace(/^Propuesta:\s*/i, 'La propuesta incluye ')
     .replace(/^Nota:\s*/i, '')
@@ -574,7 +979,7 @@ function normalizeKnowledgeLine_(line) {
 
 function buildFallbackCta_(ctx, signal, inferredType) {
   if (!inferredType) {
-    return 'Si te parece, empezamos por lo básico: es para hogar o comercio?';
+    return 'Si te parece, empezamos por lo basico: es para hogar o comercio?';
   }
 
   if (signal.intent === 'cotizacion' || signal.intent === 'compra') {
@@ -589,13 +994,23 @@ function inferClientType_(ctx) {
     return ctx.lead.tipoCliente;
   }
 
-  const fromCurrent = detectTypeInText_(ctx && ctx.userMessage);
+  if (
+    ctx &&
+    ctx.sessionState &&
+    ctx.sessionState.clientTypeLocked &&
+    isStateFresh_(ctx.sessionState.lastUpdatedAt, 90) &&
+    (ctx.sessionState.clientType === 'hogar' || ctx.sessionState.clientType === 'comercio')
+  ) {
+    return ctx.sessionState.clientType;
+  }
+
+  var fromCurrent = detectTypeInText_(ctx && ctx.userMessage);
   if (fromCurrent) return fromCurrent;
 
-  const history = (ctx && ctx.chatHistory) || [];
+  var history = (ctx && ctx.chatHistory) || [];
   for (var i = history.length - 1; i >= 0; i--) {
-    if (history[i].role !== 'user' && history[i].role !== 'bot') continue;
-    const t = detectTypeInText_(history[i].text);
+    if (history[i].role !== 'user') continue;
+    var t = detectTypeInText_(history[i].text);
     if (t) return t;
   }
 
@@ -603,38 +1018,34 @@ function inferClientType_(ctx) {
 }
 
 function detectTypeInText_(text) {
-  const t = String(text || '').toLowerCase();
+  var t = String(text || '').toLowerCase();
   if (/\bcomercio\b|\bcomercial\b|\blocal\b|\bnegocio\b/.test(t)) return 'comercio';
   if (/\bhogar\b|\bcasa\b|\bdepartamento\b/.test(t)) return 'hogar';
   return '';
 }
 
 function inferCoverageNeed_(ctx) {
-  const candidates = [];
+  var candidates = [];
   candidates.push(String((ctx && ctx.userMessage) || ''));
 
-  const history = (ctx && ctx.chatHistory) || [];
+  var history = (ctx && ctx.chatHistory) || [];
   history.forEach(function(item) {
     if (item.role === 'user') candidates.push(item.text || '');
   });
 
   var best = 0;
+  if (ctx && ctx.sessionState && toNumber_(ctx.sessionState.coverage, 0) > 0) {
+    best = toNumber_(ctx.sessionState.coverage, 0);
+  }
   for (var i = 0; i < candidates.length; i++) {
-    const t = String(candidates[i] || '').toLowerCase();
+    var t = String(candidates[i] || '').toLowerCase();
     if (!t) continue;
-
-    var explicitMax = 0;
-    var explicitSum = 0;
-    const rgx = /(\d{1,2})\s*(accesos|acceso|ambientes|ambiente|puertas|zonas|salones|salon)/g;
-    var m;
-    while ((m = rgx.exec(t)) !== null) {
-      const n = Number(m[1]) || 0;
-      if (n > explicitMax) explicitMax = n;
-      explicitSum += n;
-    }
+    var parsed = extractCoverageFromText_(t);
+    var explicitMax = parsed.max;
+    var explicitSum = parsed.sum;
 
     var adjectiveFloor = 0;
-    if (/chico|pequeno|pequeño/.test(t)) adjectiveFloor = 2;
+    if (/chico|chiquito|chiquitito|pequeno/.test(t)) adjectiveFloor = 2;
     if (/mediano/.test(t)) adjectiveFloor = Math.max(adjectiveFloor, 4);
     if (/grande/.test(t)) adjectiveFloor = Math.max(adjectiveFloor, 6);
 
@@ -656,8 +1067,31 @@ function inferCoverageNeed_(ctx) {
   return best;
 }
 
+function extractCoverageFromText_(text) {
+  var t = String(text || '').toLowerCase();
+  t = t
+    .replace(/\buna\b/g, '1')
+    .replace(/\bun\b/g, '1')
+    .replace(/\bdos\b/g, '2')
+    .replace(/\btres\b/g, '3')
+    .replace(/\bcuatro\b/g, '4')
+    .replace(/\bcinco\b/g, '5')
+    .replace(/\bseis\b/g, '6');
+  var rgx = /(\d{1,2})\s*(accesos|acceso|ambientes|ambiente|puertas|ouertas|ventanas|ventana|zonas|zona|salones|salon|habitaciones|habitacion|dormitorios|dormitorio)/g;
+  var out = { max: 0, sum: 0 };
+  var m;
+
+  while ((m = rgx.exec(t)) !== null) {
+    var n = Number(m[1]) || 0;
+    if (n > out.max) out.max = n;
+    out.sum += n;
+  }
+
+  return out;
+}
+
 function buildDeterministicRecommendation_(clientType, coverage, intent) {
-  const isHotIntent = intent === 'cotizacion' || intent === 'compra';
+  var isHotIntent = intent === 'cotizacion' || intent === 'compra';
 
   if (clientType === 'comercio') {
     if (coverage <= 2) {
@@ -693,12 +1127,12 @@ function buildDeterministicRecommendation_(clientType, coverage, intent) {
 }
 
 function avoidRepeatedBotReply_(reply, ctx) {
-  const candidate = cleanText_(reply);
-  const history = (ctx && ctx.chatHistory) || [];
+  var candidate = cleanText_(reply);
+  var history = (ctx && ctx.chatHistory) || [];
 
   for (var i = history.length - 1; i >= 0; i--) {
     if (history[i].role !== 'bot') continue;
-    const lastBot = cleanText_(history[i].text);
+    var lastBot = cleanText_(history[i].text);
     if (lastBot && lastBot.toLowerCase() === candidate.toLowerCase()) {
       return candidate + ' Si queres, en el siguiente mensaje te hago una recomendacion puntual para tu caso.';
     }
@@ -709,63 +1143,110 @@ function avoidRepeatedBotReply_(reply, ctx) {
 }
 
 function isOutOfScopeQuestion_(text) {
-  const t = String(text || '');
+  var t = String(text || '');
   if (!t) return false;
 
-  const hasSecurityContext = /(alarma|camar|monitoreo|kit|plan|seguridad|hogar|comercio|cotiz|presupuesto|instal)/.test(t);
+  var hasSecurityContext = /(alarma|camar|monitoreo|kit|plan|seguridad|hogar|comercio|cotiz|presupuesto|instal)/.test(t);
   if (hasSecurityContext) return false;
 
-  const clearlyOffTopic = /(bebes|reptil|reptiloide|perro|gato|futbol|receta|astrolog|politic|distancia del sol|luna)/.test(t);
+  var clearlyOffTopic = /(bebes|reptil|reptiloide|perro|gato|futbol|receta|astrolog|politic|distancia del sol|luna)/.test(t);
   return clearlyOffTopic;
 }
 
 function isGreetingOnly_(text) {
-  const t = String(text || '').toLowerCase().trim();
+  var t = String(text || '').toLowerCase().trim();
   if (!t) return false;
   return /^(hola+|buenas|buen dia|buenas tardes|buenas noches|hello|hi|holi)[!.\s]*$/.test(t);
 }
 
 function isStopIntent_(text) {
-  const t = String(text || '').toLowerCase();
+  var t = String(text || '').toLowerCase();
   return /(no quiero nada|ya no quiero|no me interesa|dejalo ahi|deja ahi|cancelar|chau|adios|hasta luego)/.test(t);
 }
 
 function isConfusionTurn_(text) {
-  const t = String(text || '').toLowerCase();
+  var t = String(text || '').toLowerCase();
   if (!t) return false;
   if (t.length <= 8 && /que+/.test(t)) return true;
   return /(con que|con quee|en que me ayudas|en que ayudas|que haces|que ofreces)/.test(t);
 }
 
 function isFrustrationTurn_(text) {
-  const t = String(text || '').toLowerCase();
-  return /(fome|wea|wea fome|wea\s+fome|aburrido|malo|pesimo|horrible|broma|no sirve|errores por todos lados)/.test(t);
+  var t = String(text || '').toLowerCase();
+  return /(fome|wea|wea fome|wea\s+fome|aburrido|malo|pesimo|horrible|broma|no sirve|errores por todos lados|falta de respeto|cagada)/.test(t);
+}
+
+function isGreetingComplaintTurn_(text) {
+  var t = String(text || '').toLowerCase();
+  return /(no saludas|ni saludas|sin saludar|falta de respeto)/.test(t);
+}
+
+function isTypeDisputeTurn_(text) {
+  var t = String(text || '').toLowerCase();
+  return /(como sabes.*comercio|como sabes.*hogar|no te he dado|no te di|quien dijo comercio|quien dijo hogar|no dije comercio|no dije hogar|por que asum)/.test(t);
+}
+
+function isStateFresh_(isoDate, maxMinutes) {
+  try {
+    if (!isoDate) return false;
+    var then = new Date(String(isoDate)).getTime();
+    if (!then) return false;
+    var now = Date.now();
+    var diffMin = (now - then) / 60000;
+    return diffMin >= 0 && diffMin <= toNumber_(maxMinutes, 90);
+  } catch (_err) {
+    return false;
+  }
 }
 
 function isTruncationComplaint_(text) {
-  const t = String(text || '').toLowerCase();
-  return /(llego cortado|lleg[oó] cortado|mensaje cortado|se corto|quedo cortado|sale cortado|respuesta cortada)/.test(t);
+  var t = String(text || '').toLowerCase();
+  return /(llego cortado|mensaje cortado|se corto|quedo cortado|sale cortado|respuesta cortada)/.test(t);
+}
+
+function isAcknowledgementTurn_(text) {
+  var t = String(text || '').toLowerCase().trim();
+  if (!t) return false;
+  return /^(ok|okay|dale|bueno|bueno si|perfecto|genial|listo|si|si dale|de una|va|joya|bien)$/.test(t);
+}
+
+function analyzeConversationProgress_(ctx) {
+  var history = (ctx && ctx.chatHistory) || [];
+  var hasRecommendation = false;
+
+  for (var i = history.length - 1; i >= 0; i--) {
+    if (history[i].role !== 'bot') continue;
+    var t = String(history[i].text || '').toLowerCase();
+    if (/te conviene|te recomiendo|cobertura|opcion intermedia|opcion base|escalable/.test(t)) {
+      hasRecommendation = true;
+      break;
+    }
+  }
+
+  return {
+    hasRecommendation: hasRecommendation
+  };
 }
 
 function getLastBotMessage_(ctx) {
-  const history = (ctx && ctx.chatHistory) || [];
+  var history = (ctx && ctx.chatHistory) || [];
   for (var i = history.length - 1; i >= 0; i--) {
     if (history[i].role !== 'bot') continue;
-    const txt = cleanText_(history[i].text);
+    var txt = cleanText_(history[i].text);
     if (txt) return txt;
   }
   return '';
 }
 
 function ensureEndsWithQuestionOrDot_(text) {
-  const t = cleanText_(text);
+  var t = cleanText_(text);
   if (!t) return '';
   if (/[.!?]$/.test(t)) return t;
   return t + '.';
 }
 
 function buildEvents_(signal, score, status, botReplyResult, ctx, cfg) {
-  const events = [];
+  var events = [];
 
   if (signal.intent === 'cotizacion') {
     events.push({ type: 'cotizacion_solicitada', payload: { intent: signal.intent } });
@@ -802,8 +1283,8 @@ function buildConversationSummary_(ctx, signal, score, status) {
   ].join('\n');
 }
 
-function writeChatLog_(ctx, botResponse, intent, score, leadStatus, cfg) {
-  const row = [
+function writeChatLog_(ctx, botResponse, intent, score, leadStatus, cfg, transcript, state) {
+  var row = [
     new Date(),
     ctx.sessionId,
     ctx.userMessage,
@@ -812,26 +1293,42 @@ function writeChatLog_(ctx, botResponse, intent, score, leadStatus, cfg) {
     score,
     leadStatus,
     ctx.consent,
-    ctx.sourcePage
+    ctx.sourcePage,
+    transcript.docId || '',
+    transcript.docUrl || '',
+    (state && state.turnCount) || 1,
+    new Date().toISOString()
   ];
-  appendRow_(OP_SHEETS.CHAT_LOGS, row, cfg);
+  upsertRowBySession_(OP_SHEETS.CHAT_LOGS, ctx.sessionId, row);
 }
 
-function writeEvents_(sessionId, eventList) {
-  eventList.forEach(function(evt) {
-    appendRow_(OP_SHEETS.EVENTOS, [
-      new Date(),
-      sessionId,
-      evt.type,
-      JSON.stringify(evt.payload || {}),
-      false,
-      ''
-    ]);
-  });
+function writeEvents_(sessionId, eventList, transcript, state) {
+  var eventTypes = eventList.map(function(evt) { return evt.type; });
+  var payload = {
+    eventos: eventList,
+    eventTypes: eventTypes,
+    turnCount: (state && state.turnCount) || 1,
+    updatedAt: new Date().toISOString(),
+    transcriptDocId: transcript.docId || '',
+    transcriptDocUrl: transcript.docUrl || ''
+  };
+
+  upsertRowBySession_(OP_SHEETS.EVENTOS, sessionId, [
+    new Date(),
+    sessionId,
+    eventTypes.join('|') || 'sin_eventos',
+    JSON.stringify(payload),
+    false,
+    transcript.docId || ''
+  ]);
 }
 
-function writeLeadPrequal_(ctx, signal, score, status, resumen, cfg) {
-  appendRow_(OP_SHEETS.LEADS, [
+function writeLeadPrequal_(ctx, signal, score, status, resumen, cfg, transcript, state) {
+  var payloadResumen = resumen
+    ? JSON.stringify({ resumen: resumen, intent: signal.intent, score: score, status: status })
+    : '';
+
+  upsertRowBySession_(OP_SHEETS.LEADS, ctx.sessionId, [
     new Date(),
     ctx.sessionId,
     ctx.lead.nombre,
@@ -843,25 +1340,18 @@ function writeLeadPrequal_(ctx, signal, score, status, resumen, cfg) {
     ctx.lead.urgencia,
     score,
     ctx.consent,
-    false
-  ], cfg);
-
-  if (resumen) {
-    appendRow_(OP_SHEETS.EVENTOS, [
-      new Date(),
-      ctx.sessionId,
-      'resumen_conversacion',
-      JSON.stringify({ resumen: resumen, intent: signal.intent, score: score, status: status }),
-      false,
-      ''
-    ]);
-  }
+    false,
+    transcript.docId || '',
+    transcript.docUrl || '',
+    payloadResumen,
+    (state && state.turnCount) || 1
+  ]);
 }
 
 function handleAlerts_(eventList, ctx, score, props, cfg) {
-  const hasHotLead = eventList.some(function(e) { return e.type === 'lead_caliente'; });
+  var hasHotLead = eventList.some(function(e) { return e.type === 'lead_caliente'; });
   if (hasHotLead) {
-    const body = [
+    var body = [
       'Nuevo lead caliente detectado.',
       '',
       'Session: ' + ctx.sessionId,
@@ -897,7 +1387,7 @@ function maybeSyncLeadToForms_(ctx, signal, score, status, props, cfg) {
     return { synced: false, detail: 'Faltan datos para hoja oficial (nombre/telefono/email/localidad)' };
   }
 
-  const payload = {
+  var payload = {
     formType: 'lead',
     nombreApellido: ctx.lead.nombre,
     telefono: ctx.lead.telefono,
@@ -911,17 +1401,17 @@ function maybeSyncLeadToForms_(ctx, signal, score, status, props, cfg) {
   };
 
   try {
-    const res = UrlFetchApp.fetch(props.FORMS_WEBAPP_URL, {
+    var res = UrlFetchApp.fetch(props.FORMS_WEBAPP_URL, {
       method: 'post',
       contentType: 'application/json',
       payload: JSON.stringify(payload),
       muteHttpExceptions: true
     });
 
-    const code = res.getResponseCode();
-    const body = res.getContentText() || '';
+    var code = res.getResponseCode();
+    var body = res.getContentText() || '';
 
-    const synced = code >= 200 && code < 300 && /"ok"\s*:\s*true/.test(body);
+    var synced = code >= 200 && code < 300 && /"ok"\s*:\s*true/.test(body);
 
     markLeadSyncFlag_(ctx.sessionId, synced);
 
@@ -936,11 +1426,11 @@ function maybeSyncLeadToForms_(ctx, signal, score, status, props, cfg) {
 }
 
 function markLeadSyncFlag_(sessionId, synced) {
-  const ss = SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty('SHEET_OPERACION_ID'));
-  const sh = ss.getSheetByName(OP_SHEETS.LEADS);
+  var ss = SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty('SHEET_OPERACION_ID'));
+  var sh = ss.getSheetByName(OP_SHEETS.LEADS);
   if (!sh) return;
 
-  const values = sh.getDataRange().getValues();
+  var values = sh.getDataRange().getValues();
   for (var i = values.length - 1; i >= 1; i--) {
     if (String(values[i][1]) === String(sessionId)) {
       sh.getRange(i + 1, 12).setValue(!!synced);
@@ -949,38 +1439,84 @@ function markLeadSyncFlag_(sessionId, synced) {
   }
 }
 
+function upsertRowBySession_(sheetName, sessionId, row) {
+  var opId = PropertiesService.getScriptProperties().getProperty('SHEET_OPERACION_ID');
+  var ss = SpreadsheetApp.openById(opId);
+  var sh = ss.getSheetByName(sheetName);
+  if (!sh) throw new Error('No existe la pestana: ' + sheetName);
+
+  var values = sh.getDataRange().getValues();
+  var foundRow = 0;
+  for (var i = values.length - 1; i >= 1; i--) {
+    if (String(values[i][1]) === String(sessionId)) {
+      foundRow = i + 1;
+      break;
+    }
+  }
+
+  if (!foundRow) {
+    sh.appendRow(row);
+    return;
+  }
+
+  var targetColumns = Math.max(row.length, sh.getLastColumn());
+  var padded = [];
+  for (var c = 0; c < targetColumns; c++) {
+    padded.push(c < row.length ? row[c] : '');
+  }
+
+  sh.getRange(foundRow, 1, 1, targetColumns).setValues([padded]);
+}
+
 function appendRow_(sheetName, row) {
-  const opId = PropertiesService.getScriptProperties().getProperty('SHEET_OPERACION_ID');
-  const ss = SpreadsheetApp.openById(opId);
-  const sh = ss.getSheetByName(sheetName);
+  var opId = PropertiesService.getScriptProperties().getProperty('SHEET_OPERACION_ID');
+  var ss = SpreadsheetApp.openById(opId);
+  var sh = ss.getSheetByName(sheetName);
   if (!sh) throw new Error('No existe la pestana: ' + sheetName);
   sh.appendRow(row);
 }
 
 function writeErrorSafe_(sessionId, type, message, providerCode, handledFallback) {
   try {
-    appendRow_(OP_SHEETS.ERRORES, [
+    var sid = sessionId || 'runtime';
+    upsertRowBySession_(OP_SHEETS.ERRORES, sid, [
       new Date(),
-      sessionId || '',
+      sid,
       type,
       String(message || '').slice(0, 1000),
       providerCode || '',
-      !!handledFallback
+      !!handledFallback,
+      new Date().toISOString()
     ]);
   } catch (_ignored) {}
 }
 
 function detectProviderCode_(errMsg) {
-  const t = String(errMsg || '').toLowerCase();
+  var t = String(errMsg || '').toLowerCase();
   if (t.indexOf('quota') !== -1 || t.indexOf('resource_exhausted') !== -1) return 'quota_exceeded';
   if (t.indexOf('429') !== -1) return 'rate_limited';
   if (t.indexOf('401') !== -1 || t.indexOf('403') !== -1) return 'auth_error';
   return 'provider_error';
 }
 
+function isIaUnavailableError_(errMsg) {
+  var t = String(errMsg || '').toLowerCase();
+  if (!t) return false;
+
+  return (
+    t.indexOf('ia no disponible') !== -1 ||
+    t.indexOf('gemini') !== -1 ||
+    t.indexOf('respuesta ia debil o truncada') !== -1 ||
+    t.indexOf('provider_error') !== -1 ||
+    t.indexOf('rate_limited') !== -1 ||
+    t.indexOf('quota') !== -1 ||
+    t.indexOf('resource_exhausted') !== -1
+  );
+}
+
 function hasValidContact_(ctx, cfg) {
-  const phoneOk = ctx.lead.telefono && ctx.lead.telefono.length >= cfg.telefonoMinDigitos;
-  const emailOk = isValidEmail_(ctx.lead.email);
+  var phoneOk = ctx.lead.telefono && ctx.lead.telefono.length >= cfg.telefonoMinDigitos;
+  var emailOk = isValidEmail_(ctx.lead.email);
   return !!(phoneOk || emailOk);
 }
 
@@ -1024,13 +1560,13 @@ function isValidEmail_(email) {
 }
 
 function toNumber_(value, fallback) {
-  const n = Number(value);
+  var n = Number(value);
   return isNaN(n) ? fallback : n;
 }
 
 function toBool_(value, fallback) {
   if (typeof value === 'boolean') return value;
-  const t = String(value || '').toLowerCase();
+  var t = String(value || '').toLowerCase();
   if (t === 'true') return true;
   if (t === 'false') return false;
   return fallback;
@@ -1047,10 +1583,10 @@ function normalizeConfigValue_(value) {
  * Ejecutar luego de cargar Script Properties.
  */
 function testConfigAndAccess() {
-  const props = getScriptProps_();
-  const cfg = loadRuntimeConfig_(props);
+  var props = getScriptProps_();
+  var cfg = loadRuntimeConfig_(props);
 
-  const out = {
+  var out = {
     ok: true,
     propsLoaded: {
       DOC_INSTRUCCIONES_ID: !!props.DOC_INSTRUCCIONES_ID,
@@ -1080,23 +1616,23 @@ function testConfigAndAccess() {
  * Lista modelos disponibles para tu API key y muestra solo los que aceptan generateContent.
  */
 function testListGeminiModels() {
-  const p = PropertiesService.getScriptProperties();
-  const apiKey = p.getProperty('GEMINI_API_KEY') || '';
+  var p = PropertiesService.getScriptProperties();
+  var apiKey = p.getProperty('GEMINI_API_KEY') || '';
   if (!apiKey) throw new Error('Falta GEMINI_API_KEY en Script Properties');
 
-  const url = 'https://generativelanguage.googleapis.com/v1/models?key=' + encodeURIComponent(apiKey);
-  const res = UrlFetchApp.fetch(url, { method: 'get', muteHttpExceptions: true });
-  const code = res.getResponseCode();
-  const txt = res.getContentText() || '';
+  var url = 'https://generativelanguage.googleapis.com/v1/models?key=' + encodeURIComponent(apiKey);
+  var res = UrlFetchApp.fetch(url, { method: 'get', muteHttpExceptions: true });
+  var code = res.getResponseCode();
+  var txt = res.getContentText() || '';
 
   if (code < 200 || code >= 300) {
     throw new Error('ListModels HTTP ' + code + ': ' + txt.slice(0, 800));
   }
 
-  const data = JSON.parse(txt);
-  const models = (data.models || [])
+  var data = JSON.parse(txt);
+  var models = (data.models || [])
     .filter(function(m) {
-      const methods = m.supportedGenerationMethods || [];
+      var methods = m.supportedGenerationMethods || [];
       return methods.indexOf('generateContent') !== -1;
     })
     .map(function(m) {
@@ -1110,4 +1646,5 @@ function testListGeminiModels() {
   Logger.log(JSON.stringify(models, null, 2));
   return models;
 }
+
 

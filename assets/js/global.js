@@ -2269,13 +2269,25 @@ function getChatBackendUrl_() {
 
 function getChatSessionId_() {
   const key = 'smarthome_chat_ia_session_id';
+  const maxAgeMs = 45 * 60 * 1000;
 
   try {
-    const existing = sessionStorage.getItem(key);
-    if (existing) return existing;
+    const existingRaw = sessionStorage.getItem(key);
+    if (existingRaw) {
+      try {
+        const parsed = JSON.parse(existingRaw);
+        if (parsed && parsed.id && parsed.createdAt && (Date.now() - Number(parsed.createdAt) <= maxAgeMs)) {
+          return String(parsed.id);
+        }
+      } catch (_legacyParseErr) {
+        if (Date.now() - performance.timeOrigin <= maxAgeMs) {
+          return existingRaw;
+        }
+      }
+    }
 
     const newId = 'sess_web_' + Math.random().toString(36).slice(2, 10);
-    sessionStorage.setItem(key, newId);
+    sessionStorage.setItem(key, JSON.stringify({ id: newId, createdAt: Date.now() }));
     return newId;
   } catch (error) {
     return 'sess_web_' + Math.random().toString(36).slice(2, 10);
@@ -2359,6 +2371,8 @@ function initChatIAWidget_(contenedor) {
   const sessionId = getChatSessionId_();
   let isBusy = false;
   const conversationHistory = [];
+  let typingNode = null;
+  let typingTimer = null;
 
   function pushHistory_(role, text) {
     const cleanRole = role === 'bot' ? 'bot' : 'user';
@@ -2367,25 +2381,72 @@ function initChatIAWidget_(contenedor) {
 
     conversationHistory.push({
       role: cleanRole,
-      text: cleanText.slice(0, 120)
+      text: cleanText.slice(0, 320)
     });
 
-    if (conversationHistory.length > 6) {
-      conversationHistory.splice(0, conversationHistory.length - 6);
+    if (conversationHistory.length > 12) {
+      conversationHistory.splice(0, conversationHistory.length - 12);
     }
   }
 
-  function appendMessage(sender, text, trackHistory) {
+  function setUserMessageStatus_(msgEl, statusText) {
+    if (!msgEl) return;
+    const statusEl = msgEl.querySelector('.chat-ia-msg__status');
+    if (!statusEl) return;
+    statusEl.textContent = statusText || '';
+  }
+
+  function showTypingIndicator_() {
+    if (typingNode || typingTimer) return;
+    typingTimer = setTimeout(function () {
+      typingTimer = null;
+      if (typingNode) return;
+      typingNode = document.createElement('article');
+      typingNode.className = 'chat-ia-msg is-bot is-typing';
+      typingNode.innerHTML = '<span class="chat-ia-typing"><span></span><span></span><span></span></span> <span class="chat-ia-typing__label">Escribiendo...</span>';
+      messages.appendChild(typingNode);
+      messages.scrollTop = messages.scrollHeight;
+    }, 450);
+  }
+
+  function hideTypingIndicator_() {
+    if (typingTimer) {
+      clearTimeout(typingTimer);
+      typingTimer = null;
+    }
+    if (!typingNode) return;
+    if (typingNode.parentNode) typingNode.parentNode.removeChild(typingNode);
+    typingNode = null;
+  }
+
+  function appendMessage(sender, text, trackHistory, options) {
     const msg = document.createElement('article');
     msg.className = 'chat-ia-msg is-' + sender;
     const cleanText = String(text || '').trim();
-    msg.textContent = cleanText;
+
+    if (sender === 'user') {
+      const textEl = document.createElement('span');
+      textEl.className = 'chat-ia-msg__text';
+      textEl.textContent = cleanText;
+
+      const statusEl = document.createElement('span');
+      statusEl.className = 'chat-ia-msg__status';
+      statusEl.textContent = (options && options.statusText) ? options.statusText : 'Enviado';
+
+      msg.appendChild(textEl);
+      msg.appendChild(statusEl);
+    } else {
+      msg.textContent = cleanText;
+    }
+
     messages.appendChild(msg);
     messages.scrollTop = messages.scrollHeight;
 
     if (trackHistory !== false) {
       pushHistory_(sender, cleanText);
     }
+
+    return msg;
   }
 
   function setOpenState(isOpen) {
@@ -2405,8 +2466,6 @@ function initChatIAWidget_(contenedor) {
     sendBtn.disabled = nextBusy;
   }
 
-  appendMessage('bot', 'Hola, soy el asistente de SmartHome. Puedo ayudarte con kits, planes y cotizaciones.', false);
-
   toggle.addEventListener('click', function () {
     const next = panel.hidden;
     setOpenState(next);
@@ -2424,12 +2483,14 @@ function initChatIAWidget_(contenedor) {
     const userText = String(input.value || '').trim();
     if (!userText) return;
 
-    appendMessage('user', userText);
+    const userMsgEl = appendMessage('user', userText, true, { statusText: 'Enviando...' });
     input.value = '';
     setBusyState(true);
 
     const endpoint = getChatBackendUrl_();
     if (!endpoint) {
+      hideTypingIndicator_();
+      setUserMessageStatus_(userMsgEl, 'No entregado');
       appendMessage('bot', 'El chat aun no esta conectado. Si quieres, escribinos por WhatsApp y te respondemos ahora.');
       setBusyState(false);
       return;
@@ -2441,7 +2502,7 @@ function initChatIAWidget_(contenedor) {
         message: userText,
         sourcePage: window.location.pathname || '/',
         userAgent: navigator.userAgent || 'browser',
-        chatHistory: conversationHistory.slice(-4)
+        chatHistory: conversationHistory.slice(-10)
       };
 
       let data = null;
@@ -2455,6 +2516,9 @@ function initChatIAWidget_(contenedor) {
           body: JSON.stringify(payload)
         });
 
+        setUserMessageStatus_(userMsgEl, '✓ Enviado');
+        showTypingIndicator_();
+
         const bodyText = await res.text();
 
         try {
@@ -2463,22 +2527,37 @@ function initChatIAWidget_(contenedor) {
           data = null;
         }
 
-        if (!res.ok) {
-          data = null;
+        if (!res.ok && !data) {
+          throw new Error('HTTP ' + res.status);
         }
       } catch (_postError) {
+        setUserMessageStatus_(userMsgEl, '✓ Enviado');
+        showTypingIndicator_();
         data = await sendChatByJsonp_(endpoint, payload);
       }
 
-      if (!data || data.ok !== true) {
+      hideTypingIndicator_();
+      const hasBackendMessage = !!(data && (data.reply || data.message));
+      if (!data) {
+        setUserMessageStatus_(userMsgEl, 'No entregado');
         appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.');
-      } else {
+      } else if (hasBackendMessage) {
+        setUserMessageStatus_(userMsgEl, '✓✓ Leido');
+        appendMessage('bot', data.reply || data.message);
+      } else if (data.ok === true) {
+        setUserMessageStatus_(userMsgEl, '✓✓ Leido');
         appendMessage('bot', data.reply || 'Te leo. Si quieres, puedo ayudarte a cotizar ahora.');
+      } else {
+        setUserMessageStatus_(userMsgEl, 'No entregado');
+        appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.');
       }
     } catch (error) {
+      hideTypingIndicator_();
+      setUserMessageStatus_(userMsgEl, 'No entregado');
       appendMessage('bot', 'No pude conectar con el asistente ahora. Puedes continuar por WhatsApp y te atendemos enseguida.');
       console.error('Error enviando mensaje al chat IA:', error);
     } finally {
+      hideTypingIndicator_();
       setBusyState(false);
       input.focus();
     }
