@@ -2313,7 +2313,8 @@ function resetChatSessionId_() {
   return createChatSessionId_();
 }
 
-function sendChatByJsonp_(endpoint, payload) {
+function sendChatByJsonp_(endpoint, payload, timeoutMs) {
+  var jsonpTimeout = Math.max(8000, timeoutMs || 35000);
   return new Promise((resolve, reject) => {
     const callbackName = '__smarthomeChatCb_' + Math.random().toString(36).slice(2, 10);
     const url = new URL(endpoint);
@@ -2354,10 +2355,92 @@ function sendChatByJsonp_(endpoint, payload) {
     const timer = setTimeout(function () {
       cleanup();
       reject(new Error('JSONP timeout'));
-    }, 12000);
+    }, jsonpTimeout);
 
     document.head.appendChild(script);
   });
+}
+
+/**
+ * Intento POST a Apps Script evitando preflight CORS.
+ * Usa Content-Type text/plain para que el navegador lo envie como
+ * "simple request" sin OPTIONS (Apps Script no responde OPTIONS).
+ * Incluye AbortController con timeout para no quedar colgado.
+ */
+function sendChatByPost_(endpoint, payload, timeoutMs) {
+  var postTimeout = Math.max(8000, timeoutMs || 30000);
+  var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var timer = null;
+
+  if (controller) {
+    timer = setTimeout(function () { controller.abort(); }, postTimeout);
+  }
+
+  var fetchOpts = {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  };
+  if (controller) fetchOpts.signal = controller.signal;
+
+  return fetch(endpoint, fetchOpts)
+    .then(function (res) {
+      if (timer) clearTimeout(timer);
+      return res.text().then(function (bodyText) {
+        if (!bodyText) return null;
+        try { return JSON.parse(bodyText); } catch (_e) { return null; }
+      });
+    })
+    .catch(function (err) {
+      if (timer) clearTimeout(timer);
+      throw err;
+    });
+}
+
+/**
+ * Estrategia de envio robusta con multiples intentos:
+ * 1. POST text/plain (evita preflight) con timeout 30s
+ * 2. Si falla → JSONP con 35s timeout
+ * 3. Si JSONP falla por timeout → reintento JSONP una vez mas (25s)
+ * Devuelve { data, method } o lanza error.
+ */
+async function sendChatMessage_(endpoint, payload) {
+  // --- Intento 1: POST (mas rapido y fiable si no hay bloqueo CORS) ---
+  try {
+    var postData = await sendChatByPost_(endpoint, payload, 30000);
+    if (postData && typeof postData === 'object') {
+      return { data: postData, method: 'post' };
+    }
+    // Respuesta no usable, caer a JSONP
+  } catch (_postErr) {
+    // POST fallo (CORS, abort, network) — no loguear, es esperado
+  }
+
+  // --- Intento 2: JSONP primer intento (35s) ---
+  try {
+    var jsonpData = await sendChatByJsonp_(endpoint, payload, 35000);
+    if (jsonpData && typeof jsonpData === 'object') {
+      return { data: jsonpData, method: 'jsonp' };
+    }
+  } catch (jsonpErr) {
+    var isTimeout = String(jsonpErr && jsonpErr.message || '').indexOf('timeout') !== -1;
+
+    // --- Intento 3: si fue timeout, reintentar JSONP una vez (25s) ---
+    if (isTimeout) {
+      try {
+        var retryData = await sendChatByJsonp_(endpoint, payload, 25000);
+        if (retryData && typeof retryData === 'object') {
+          return { data: retryData, method: 'jsonp_retry' };
+        }
+      } catch (_retryErr) {
+        // Segundo JSONP tambien fallo — propagar el error original
+      }
+    }
+
+    throw jsonpErr;
+  }
+
+  throw new Error('No usable response from backend');
 }
 
 function cargarChatIAFloat() {
@@ -2870,41 +2953,34 @@ function initChatIAWidget_(contenedor) {
         chatHistory: conversationHistory.slice(-10)
       };
 
+      showTypingIndicator_();
+
+      // Estrategia robusta: POST → JSONP → retry JSONP.
+      // sendChatMessage_ maneja toda la cadena de intentos internamente.
       let data = null;
-
       try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-
+        var result = await sendChatMessage_(endpoint, payload);
+        data = result.data;
         setUserMessageStatus_(userMsgEl, '✓ Enviado');
-        showTypingIndicator_();
-
-        const bodyText = await res.text();
-
-        try {
-          data = JSON.parse(bodyText);
-        } catch (error) {
-          data = null;
-        }
-
-        if (!res.ok && !data) {
-          throw new Error('HTTP ' + res.status);
-        }
-
-        // Si el backend responde texto no JSON (intermitencia Apps Script/proxy),
-        // reintentar por JSONP antes de marcar el mensaje como no entregado.
-        if (!data) {
-          throw new Error('Invalid JSON response');
-        }
-      } catch (_postError) {
+      } catch (sendErr) {
+        // Todos los intentos fallaron
         setUserMessageStatus_(userMsgEl, '✓ Enviado');
-        showTypingIndicator_();
-        data = await sendChatByJsonp_(endpoint, payload);
+        data = null;
+
+        // Si fue timeout en todos los intentos, dar mensaje mas amigable
+        // sin codigo de diagnostico tecnico (el usuario no puede hacer nada).
+        var errMsg = String(sendErr && sendErr.message || '');
+        var isAllTimeouts = errMsg.indexOf('timeout') !== -1;
+
+        if (isAllTimeouts) {
+          hideTypingIndicator_();
+          setUserMessageStatus_(userMsgEl, 'Demora en responder');
+          appendMessage('bot', 'El servidor esta tardando mas de lo habitual en responder. Por favor intenta de nuevo en unos segundos o escribinos por WhatsApp para atencion inmediata.');
+          appendFallbackSupportCard_();
+          return;
+        }
+
+        throw sendErr;
       }
 
       hideTypingIndicator_();
