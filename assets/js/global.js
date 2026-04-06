@@ -3006,7 +3006,12 @@ function initChatIAWidget_(contenedor) {
         const fallbackMode = isFallbackMode_(data);
         setUserMessageStatus_(userMsgEl, fallbackMode ? '✓✓ Recibido' : '✓✓ Leido');
         const botText = String(data.reply || data.message || '');
-        appendMessage('bot', fallbackMode ? (botText + buildDiagnosticSuffix_(data, 'fallback', null)) : botText);
+        // TODO: QUITAR debug de API key/modelo cuando ya no se necesite.
+        var _dk = (data.data && data.data._debugApiKey) ? data.data._debugApiKey : '?';
+        var _dm = (data.data && data.data._debugModel) ? data.data._debugModel : '?';
+        console.log('[CHAT DEBUG] Key: ' + _dk + ' | Model: ' + _dm);
+        var debugSuffix = ' [K' + _dk + '|' + String(_dm).replace('gemini-2.5-', '') + ']';
+        appendMessage('bot', fallbackMode ? (botText + buildDiagnosticSuffix_(data, 'fallback', null)) : (botText + debugSuffix));
         if (fallbackMode) {
           appendFallbackSupportCard_();
         }

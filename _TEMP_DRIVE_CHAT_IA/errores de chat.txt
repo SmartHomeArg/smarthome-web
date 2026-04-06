@@ -1,4 +1,4 @@
-Errores de frontend (fallo antes de recibir respuesta usable del backend)
+Errores de frontend (fallo antes de recibir respuesta usable del backend).
 
 SHC-FE-COR: bloqueo de acceso al backend desde el navegador (normalmente CORS, muy común en pruebas con Live Server).
 SHC-FE-JTO: el intento por JSONP tardó demasiado y venció el tiempo de espera.
@@ -25,3 +25,5 @@ Lectura rápida práctica
 Si empieza con SHC-FE: el problema está en transporte/navegador/conexión con el endpoint.
 Si empieza con SHC- y no tiene FE: el backend sí respondió y te está indicando causa interna/proveedor.
 Si ves SHC-FE-COR en Live Server: suele ser configuración de acceso/origen, no caída de internet.
+
+hola

@@ -21,6 +21,57 @@
 var CHAT_VERSION = '1.1.0';
 var IA_UNAVAILABLE_MESSAGE = 'En este momento no hay operador disponible para atencion. Comunicate por WhatsApp o completa el formulario y te contactamos a la brevedad.';
 
+/**
+ * FUNCION DE TEST — Ejecutar manualmente desde Apps Script (boton Run).
+ * Diagnostica si la carpeta Chats_History funciona correctamente.
+ * Los resultados aparecen en View > Logs (Ctrl+Enter).
+ */
+function TEST_carpeta_transcripts() {
+  var props = getScriptProps_();
+  Logger.log('=== TEST CARPETA TRANSCRIPTS ===');
+  Logger.log('CHAT_TRANSCRIPTS_FOLDER_ID en props: "' + (props.CHAT_TRANSCRIPTS_FOLDER_ID || 'VACIO') + '"');
+
+  var folderId = resolveTranscriptsFolderId_(props);
+  Logger.log('resolveTranscriptsFolderId_ devolvio: "' + (folderId || 'NULL') + '"');
+
+  if (!folderId) {
+    Logger.log('ERROR: No se pudo resolver la carpeta. Revisa Script Properties o que exista Chats_History en Drive.');
+    return;
+  }
+
+  try {
+    var folder = DriveApp.getFolderById(folderId);
+    Logger.log('Carpeta encontrada: nombre="' + folder.getName() + '", id=' + folder.getId());
+  } catch (e) {
+    Logger.log('ERROR al abrir carpeta con ID ' + folderId + ': ' + e);
+    return;
+  }
+
+  // Crear un doc de prueba.
+  Logger.log('Creando doc de prueba...');
+  var testDocId = createDocInFolder_('TEST_borrar_' + new Date().getTime(), folderId, 'test_session');
+  Logger.log('Doc creado con ID: ' + testDocId);
+
+  // Verificar donde quedo.
+  try {
+    var testFile = DriveApp.getFileById(testDocId);
+    var parents = testFile.getParents();
+    var parentNames = [];
+    while (parents.hasNext()) {
+      var p = parents.next();
+      parentNames.push(p.getName() + ' (' + p.getId() + ')');
+    }
+    Logger.log('El doc esta en carpeta(s): ' + (parentNames.length > 0 ? parentNames.join(', ') : 'NINGUNA (huerfano!)'));
+    Logger.log('Esperado: Chats_History (' + folderId + ')');
+
+    // Limpiar: borrar el doc de prueba.
+    testFile.setTrashed(true);
+    Logger.log('Doc de prueba enviado a papelera. Test completo.');
+  } catch (e) {
+    Logger.log('ERROR verificando doc de prueba: ' + e);
+  }
+}
+
 var OP_SHEETS = {
   CHAT_LOGS: 'chat_logs',
   EVENTOS: 'eventos_chat',
@@ -182,7 +233,10 @@ function processChatRequest_(payload) {
         syncedToOfficialLeads: syncResult.synced,
         syncDetail: syncResult.detail,
         transcriptDocId: transcript.docId,
-        transcriptDocUrl: transcript.docUrl
+        transcriptDocUrl: transcript.docUrl,
+        // TODO: QUITAR debug fields cuando ya no se necesiten.
+        _debugApiKey: _lastUsedKeyIndex || 0,
+        _debugModel: _lastUsedModel || ''
       }
     };
   } catch (err) {
@@ -599,8 +653,8 @@ function persistConversationTranscript_(ctx, botReplyText, props) {
  * Resuelve el ID de la carpeta donde guardar transcripciones.
  * Prioridad:
  *   1. CHAT_TRANSCRIPTS_FOLDER_ID de Script Properties.
- *   2. Buscar carpeta llamada "Chats_History" en Drive (cacheado 1h).
- *   3. null si no se encuentra.
+ *   2. Buscar carpeta llamada "Chats_History" en Drive.
+ *   3. Crear la carpeta "Chats_History" si no existe.
  */
 function resolveTranscriptsFolderId_(props) {
   // 1. Script Property explicita.
@@ -608,11 +662,10 @@ function resolveTranscriptsFolderId_(props) {
     return props.CHAT_TRANSCRIPTS_FOLDER_ID;
   }
 
-  // 2. Cache para no buscar en cada request.
+  // 2. Cache para no buscar/crear en cada request.
   var cache = CacheService.getScriptCache();
   var cacheKey = 'resolved_transcripts_folder_id';
   var cached = cache.get(cacheKey);
-  if (cached === '__NOT_FOUND__') return null;
   if (cached) return cached;
 
   // 3. Buscar por nombre en Drive.
@@ -620,13 +673,19 @@ function resolveTranscriptsFolderId_(props) {
     var folders = DriveApp.getFoldersByName('Chats_History');
     if (folders.hasNext()) {
       var folderId = folders.next().getId();
-      cache.put(cacheKey, folderId, 3600); // cachear 1 hora
+      cache.put(cacheKey, folderId, 3600);
       return folderId;
     }
   } catch (_searchErr) {}
 
-  // No encontrado: cachear resultado negativo 10 min para no buscar en cada turno.
-  cache.put(cacheKey, '__NOT_FOUND__', 600);
+  // 4. No existe: CREAR la carpeta en la raiz de Drive.
+  try {
+    var newFolder = DriveApp.createFolder('Chats_History');
+    var newFolderId = newFolder.getId();
+    cache.put(cacheKey, newFolderId, 3600);
+    return newFolderId;
+  } catch (_createErr) {}
+
   return null;
 }
 
@@ -870,7 +929,7 @@ function buildBotReply_(ctx, signal, props, cfg) {
   }
 
   try {
-    var text = callGeminiWithFallbackModels_(prompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
+    var text = callGeminiWithMultiKey_(prompt, props.GEMINI_MODEL);
     noteProviderSuccess_();
     var processed = postProcessReply_(text, ctx);
     // Refinamiento deshabilitado: gasta 1 call API extra y en tier gratuito
@@ -967,30 +1026,11 @@ function tryRescueIaReply_(prompt, ctx, signal, props, originalErrMsg) {
   if (errMsg.indexOf('no_api_key') !== -1) return { ok: false };
 
   try {
-    // Ultimo intento de rescate con prompt compacto y modelos alternativos.
+    // Ultimo intento de rescate con prompt compacto via multi-key.
     Utilities.sleep(120);
 
     var rescuePrompt = buildRescuePrompt_(ctx, signal);
-    var candidates = buildGeminiModelCandidates_(props.GEMINI_MODEL, props.GEMINI_API_KEY);
-    var maxModels = Math.max(1, toNumber_(PROMPT_OPT.GEMINI_RESCUE_MODELS, 2));
-    var rescueBudget = Math.max(2500, toNumber_(PROMPT_OPT.GEMINI_RESCUE_TIMEOUT_MS, 4200));
-    var start = Date.now();
-    var rescueText = '';
-
-    for (var i = 0; i < candidates.length && i < maxModels; i++) {
-      if ((Date.now() - start) >= rescueBudget) break;
-      try {
-        rescueText = callGeminiWithRetries_(
-          rescuePrompt,
-          props.GEMINI_API_KEY,
-          candidates[i],
-          2,
-          start,
-          rescueBudget
-        );
-        if (cleanText_(rescueText)) break;
-      } catch (_rescueModelErr) {}
-    }
+    var rescueText = callGeminiWithMultiKey_(rescuePrompt, props.GEMINI_MODEL);
 
     if (!cleanText_(rescueText)) return { ok: false };
 
@@ -1017,9 +1057,9 @@ function tryLastResortDirectCall_(ctx, props) {
   var msg = cleanText_(ctx && ctx.userMessage) || 'hola';
   var miniPrompt = 'Sos un asesor comercial de Smarthome (alarmas, camaras, monitoreo 24/7 en Argentina). Planes desde $32.830/mes con 30% dto. Equipamiento en comodato. Responde breve en espanol al cliente: ' + msg;
 
-  // Ultimo intento con Flash Lite (tiene mas cuota disponible en capa gratuita).
+  // Ultimo intento con multi-key y Flash Lite.
   try {
-    var text = callGemini_(miniPrompt, props.GEMINI_API_KEY, 'gemini-2.5-flash-lite');
+    var text = callGeminiWithMultiKey_(miniPrompt, 'gemini-2.5-flash-lite');
     if (cleanText_(text)) {
       noteProviderSuccess_();
       return postProcessReply_(text, ctx);
@@ -1042,19 +1082,14 @@ function tryLightPromptFallback_(ctx, signal, props) {
   var sessionCompact = buildSessionContextForPrompt_(ctx);
   var lightPrompt = buildLightIaPrompt_(ctx, signal, knownFacts, sessionCompact);
 
-  // Mismo orden: Flash -> Flash Lite con prompt liviano.
-  var modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
-  for (var i = 0; i < modelsToTry.length; i++) {
-    try {
-      var text = callGemini_(lightPrompt, props.GEMINI_API_KEY, modelsToTry[i]);
-      if (cleanText_(text)) {
-        noteProviderSuccess_();
-        return postProcessReply_(text, ctx);
-      }
-    } catch (_lightErr) {
-      continue;
+  // Usar multi-key para el prompt liviano tambien.
+  try {
+    var text = callGeminiWithMultiKey_(lightPrompt, 'gemini-2.5-flash-lite');
+    if (cleanText_(text)) {
+      noteProviderSuccess_();
+      return postProcessReply_(text, ctx);
     }
-  }
+  } catch (_lightErr) {}
 
   return null;
 }
@@ -1299,6 +1334,133 @@ function buildGeminiModelCandidates_(preferredModel, apiKey) {
   return ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
 }
 
+// ============================================================
+// MULTI API KEY — Round Robin + Failover
+// ============================================================
+
+/**
+ * Lee todas las API keys disponibles desde Script Properties.
+ * Busca: GEMINI_API_KEY (principal), GEMINI_API_KEY_2 ... GEMINI_API_KEY_20.
+ * Devuelve array de {index, key} con las que tengan valor.
+ * Cachea el resultado 5 minutos para no leer properties en cada request.
+ */
+function getAvailableApiKeys_() {
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'available_api_keys_json';
+  var cached = cache.get(cacheKey);
+  if (cached) {
+    try {
+      var parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (_e) {}
+  }
+
+  var p = PropertiesService.getScriptProperties();
+  var keys = [];
+
+  // Key principal (sin numero).
+  var main = cleanText_(p.getProperty('GEMINI_API_KEY'));
+  if (main) keys.push({ index: 1, key: main });
+
+  // Keys 2 a 20.
+  for (var i = 2; i <= 20; i++) {
+    var val = cleanText_(p.getProperty('GEMINI_API_KEY_' + i));
+    if (val) keys.push({ index: i, key: val });
+  }
+
+  if (keys.length > 0) {
+    cache.put(cacheKey, JSON.stringify(keys), 300); // 5 min
+  }
+
+  return keys;
+}
+
+/**
+ * Devuelve la siguiente API key en rotacion round-robin.
+ * Usa un contador atomico en CacheService.
+ * Si se pasan keysToSkip (indices ya agotados), las saltea.
+ */
+function getNextApiKeyRoundRobin_(availableKeys, keysToSkip) {
+  if (!availableKeys || availableKeys.length === 0) return null;
+
+  var skip = keysToSkip || {};
+  var usable = availableKeys.filter(function(k) { return !skip[k.index]; });
+  if (usable.length === 0) return null;
+  if (usable.length === 1) return usable[0];
+
+  var cache = CacheService.getScriptCache();
+  var counterKey = 'rr_api_key_counter';
+  var counter = toNumber_(cache.get(counterKey), 0);
+  var next = counter % usable.length;
+  cache.put(counterKey, String(counter + 1), 86400); // 24h
+
+  return usable[next];
+}
+
+/**
+ * Variable global temporal para trackear que key y modelo se usaron.
+ * Se resetea en cada request. Se usa para debug en la respuesta.
+ * TODO: QUITAR cuando ya no se necesite debug.
+ */
+var _lastUsedKeyIndex = 0;
+var _lastUsedModel = '';
+
+/**
+ * Llama a Gemini rotando API keys en round-robin.
+ * Si una key falla por cuota (429), la marca como agotada 10 min
+ * y pasa a la siguiente key disponible.
+ * Internamente cada key prueba todos los modelos (flash -> flash-lite).
+ */
+function callGeminiWithMultiKey_(prompt, preferredModel) {
+  var allKeys = getAvailableApiKeys_();
+  if (!allKeys || allKeys.length === 0) {
+    throw new Error('No hay API keys configuradas en Script Properties');
+  }
+
+  var cache = CacheService.getScriptCache();
+  var exhaustedKeys = {};
+
+  // Verificar cuales keys estan marcadas como agotadas.
+  for (var c = 0; c < allKeys.length; c++) {
+    var exhaustedFlag = cache.get('api_key_exhausted_' + allKeys[c].index);
+    if (exhaustedFlag) exhaustedKeys[allKeys[c].index] = true;
+  }
+
+  var errors = [];
+  var triedCount = 0;
+  var maxTries = allKeys.length; // intentar cada key como maximo 1 vez
+
+  for (var attempt = 0; attempt < maxTries; attempt++) {
+    var keyObj = getNextApiKeyRoundRobin_(allKeys, exhaustedKeys);
+    if (!keyObj) break;
+
+    triedCount++;
+    try {
+      var result = callGeminiWithFallbackModels_(prompt, keyObj.key, preferredModel);
+      // Exito! Guardar cual key/model se uso para debug.
+      _lastUsedKeyIndex = keyObj.index;
+      // _lastUsedModel se setea dentro de callGemini_ (lo agregamos abajo)
+      return result;
+    } catch (err) {
+      var errMsg = String(err && err.message ? err.message : err);
+      errors.push('Key' + keyObj.index + ': ' + errMsg.slice(0, 150));
+
+      // Si es error de cuota, marcar esta key como agotada por 10 minutos.
+      if (isQuotaOrRateError_(errMsg)) {
+        cache.put('api_key_exhausted_' + keyObj.index, 'true', 600); // 10 min
+        exhaustedKeys[keyObj.index] = true;
+        continue; // intentar con otra key
+      }
+
+      // Si no es cuota (ej: error de auth, modelo invalido), no seguir con otras keys
+      // porque probablemente el error es del prompt, no de la key.
+      break;
+    }
+  }
+
+  throw new Error('Gemini: todas las API keys agotadas (' + triedCount + ' intentadas). ' + errors.join(' || '));
+}
+
 function readAvailableGeminiModels_(apiKey, forceRefresh) {
   var key = cleanText_(apiKey);
   if (!key) return [];
@@ -1517,6 +1679,9 @@ function callGemini_(prompt, apiKey, modelName) {
     throw new Error('Respuesta vacia de Gemini');
   }
 
+  // TODO: QUITAR debug tracking cuando ya no se necesite.
+  _lastUsedModel = model;
+
   return String(output).trim();
 }
 
@@ -1699,7 +1864,7 @@ function refineAbruptReplyWithIa_(reply, ctx, signal, props) {
   ].join('\n');
 
   try {
-    var fixed = callGeminiWithFallbackModels_(repairPrompt, props.GEMINI_API_KEY, props.GEMINI_MODEL);
+    var fixed = callGeminiWithMultiKey_(repairPrompt, props.GEMINI_MODEL);
     var cleaned = postProcessReply_(fixed, ctx);
     if (cleaned && !needsReplyRepair_(cleaned, ctx)) return cleaned;
   } catch (_repairErr) {}
@@ -2983,3 +3148,44 @@ function testChatFlow() {
 }
 
 
+// ============================================================
+// REFERENCIA DE API KEYS — AYUDA MEMORIA
+// ============================================================
+//
+// Cada API key corresponde a un proyecto de Google Cloud / AI Studio.
+// Se leen automaticamente desde Script Properties.
+// Para agregar una nueva, ir a: Configuracion del proyecto > Script Properties.
+//
+// Property Name              | Cuenta Google                     | Notas
+// ---------------------------|-----------------------------------|------------------
+// GEMINI_API_KEY             | contacto.smarthome.ar@gmail.com   | Key principal
+// GEMINI_API_KEY_2           | (pendiente)                       | 
+// GEMINI_API_KEY_3           | (pendiente)                       | 
+// GEMINI_API_KEY_4           | (pendiente)                       | 
+// GEMINI_API_KEY_5           | (pendiente)                       | 
+// GEMINI_API_KEY_6           | (pendiente)                       | 
+// GEMINI_API_KEY_7           | (pendiente)                       | 
+// GEMINI_API_KEY_8           | (pendiente)                       | 
+// GEMINI_API_KEY_9           | (pendiente)                       | 
+// GEMINI_API_KEY_10          | (pendiente)                       | 
+// GEMINI_API_KEY_11          | (pendiente)                       | 
+// GEMINI_API_KEY_12          | (pendiente)                       | 
+// GEMINI_API_KEY_13          | (pendiente)                       | 
+// GEMINI_API_KEY_14          | (pendiente)                       | 
+// GEMINI_API_KEY_15          | (pendiente)                       | 
+// GEMINI_API_KEY_16          | (pendiente)                       | 
+// GEMINI_API_KEY_17          | (pendiente)                       | 
+// GEMINI_API_KEY_18          | (pendiente)                       | 
+// GEMINI_API_KEY_19          | (pendiente)                       | 
+// GEMINI_API_KEY_20          | (pendiente)                       | 
+//
+// COMO AGREGAR UNA NUEVA KEY:
+// 1. Crear cuenta de Google (o usar una existente)
+// 2. Ir a https://aistudio.google.com/apikey
+// 3. Crear API key para un proyecto nuevo
+// 4. En Apps Script > Config > Script Properties, agregar GEMINI_API_KEY_N con el valor
+// 5. El sistema la detecta automaticamente en el proximo request (max 5 min cache)
+// 6. Actualizar esta tabla con la cuenta correspondiente
+//
+// ESTRATEGIA: Round-robin (distribucion pareja) + failover ante 429.
+// ============================================================
