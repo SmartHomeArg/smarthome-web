@@ -563,28 +563,39 @@ function persistConversationTranscript_(ctx, botReplyText, props) {
       doc = DocumentApp.create(title);
       docId = doc.getId();
 
-      // Mover a la carpeta Chats_History configurada en CHAT_TRANSCRIPTS_FOLDER_ID.
-      // Usa moveTo (API moderna) en lugar de addFile/removeFile (deprecado).
-      if (props.CHAT_TRANSCRIPTS_FOLDER_ID) {
+      // Mover a la carpeta Chats_History.
+      // Intenta primero con CHAT_TRANSCRIPTS_FOLDER_ID de Script Properties.
+      // Si no esta configurado, busca una carpeta llamada "Chats_History" en Drive.
+      var targetFolderId = resolveTranscriptsFolderId_(props);
+
+      if (targetFolderId) {
         try {
           var file = DriveApp.getFileById(docId);
-          var folder = DriveApp.getFolderById(props.CHAT_TRANSCRIPTS_FOLDER_ID);
+          var folder = DriveApp.getFolderById(targetFolderId);
           file.moveTo(folder);
-        } catch (_moveErr) {
-          // Si moveTo no esta disponible (version antigua), intentar metodo clasico.
+        } catch (moveErr) {
+          // moveTo fallo, intentar metodo clasico addFile/removeFile.
           try {
-            var fileFallback = DriveApp.getFileById(docId);
-            var folderFallback = DriveApp.getFolderById(props.CHAT_TRANSCRIPTS_FOLDER_ID);
-            folderFallback.addFile(fileFallback);
-            var parents = fileFallback.getParents();
+            var fileFb = DriveApp.getFileById(docId);
+            var folderFb = DriveApp.getFolderById(targetFolderId);
+            folderFb.addFile(fileFb);
+            var parents = fileFb.getParents();
             while (parents.hasNext()) {
               var parent = parents.next();
-              if (parent.getId() !== folderFallback.getId()) {
-                parent.removeFile(fileFallback);
+              if (parent.getId() !== folderFb.getId()) {
+                parent.removeFile(fileFb);
               }
             }
-          } catch (_fallbackMoveErr) {}
+          } catch (fallbackMoveErr) {
+            writeErrorSafe_(ctx.sessionId, 'transcript_move_fallback_error',
+              'moveTo: ' + String(moveErr) + ' | addFile: ' + String(fallbackMoveErr),
+              'transcript', true);
+          }
         }
+      } else {
+        writeErrorSafe_(ctx.sessionId, 'transcript_no_folder',
+          'No se encontro carpeta Chats_History. Configurar CHAT_TRANSCRIPTS_FOLDER_ID en Script Properties o crear carpeta Chats_History en Drive.',
+          'transcript', true);
       }
 
       var head = doc.getBody();
@@ -611,6 +622,41 @@ function persistConversationTranscript_(ctx, botReplyText, props) {
   }
 
   return out;
+}
+
+/**
+ * Resuelve el ID de la carpeta donde guardar transcripciones.
+ * Prioridad:
+ *   1. CHAT_TRANSCRIPTS_FOLDER_ID de Script Properties.
+ *   2. Buscar carpeta llamada "Chats_History" en Drive (cacheado 1h).
+ *   3. null si no se encuentra.
+ */
+function resolveTranscriptsFolderId_(props) {
+  // 1. Script Property explicita.
+  if (props && props.CHAT_TRANSCRIPTS_FOLDER_ID) {
+    return props.CHAT_TRANSCRIPTS_FOLDER_ID;
+  }
+
+  // 2. Cache para no buscar en cada request.
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'resolved_transcripts_folder_id';
+  var cached = cache.get(cacheKey);
+  if (cached === '__NOT_FOUND__') return null;
+  if (cached) return cached;
+
+  // 3. Buscar por nombre en Drive.
+  try {
+    var folders = DriveApp.getFoldersByName('Chats_History');
+    if (folders.hasNext()) {
+      var folderId = folders.next().getId();
+      cache.put(cacheKey, folderId, 3600); // cachear 1 hora
+      return folderId;
+    }
+  } catch (_searchErr) {}
+
+  // No encontrado: cachear resultado negativo 10 min para no buscar en cada turno.
+  cache.put(cacheKey, '__NOT_FOUND__', 600);
+  return null;
 }
 
 function normalizeChatHistory_(historyRaw) {
