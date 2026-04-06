@@ -88,7 +88,7 @@ var PROMPT_OPT = {
   MODELS_CACHE_SECONDS: 900,
   DISCOVERY_MAX_MODELS: 10,
   ENABLE_MODEL_DISCOVERY: false,
-  MAX_OUTPUT_TOKENS: 1024,
+  MAX_OUTPUT_TOKENS: 1500,
   MIN_REPLY_CHARS: 45,
   GEMINI_RETRY_ATTEMPTS: 2,
   GEMINI_RETRY_BASE_MS: 450,
@@ -905,16 +905,19 @@ function buildBotReply_(ctx, signal, props, cfg) {
       '\n- No cierres con frases incompletas.',
       '\n- No pidas de nuevo datos ya confirmados en DATOS CONFIRMADOS.',
       '\n- Usa CONOCIMIENTO COMERCIAL como fuente principal. NUNCA inventes precios ni datos.',
-      '\n- REGLA DE ORO PRECIOS: Si el cliente pregunta cuanto cuesta, cuanto sale, precios, valores o cualquier variante, SIEMPRE responde con numeros concretos PRIMERO. Da un rango de precios o el precio del kit/plan mas adecuado segun lo que ya sabes. NUNCA respondas solo con preguntas de diagnostico sin dar al menos un rango de precios. Ejemplo correcto: "Para una casa con alarma, los planes arrancan en $32.830/mes (Plan Video) y el kit desde $49.900 de instalacion. Dependiendo del tamaño de tu casa te conviene uno u otro. Cuantos ambientes tiene?"',
+      '\n- REGLA DE ORO PRECIOS: Si el cliente pregunta cuanto cuesta, cuanto sale, precios, valores o cualquier variante, SIEMPRE responde con numeros concretos PRIMERO. Da un rango de precios o el precio del kit/plan mas adecuado segun lo que ya sabes. NUNCA respondas solo con preguntas de diagnostico sin dar al menos un rango de precios.',
       '\n- Si el cliente pregunta que vendemos, explica brevemente: alarmas, camaras, monitoreo 24/7, equipamiento en comodato, instalacion profesional.',
-      '\n- Da una respuesta util con informacion concreta y luego 1 pregunta puntual para avanzar.',
-      '\n- Estrategia: responder la consulta del cliente PRIMERO con datos reales, luego preguntar para refinar la recomendacion.',
-      '\n- Si el cliente tiene dudas, respondelas primero con datos concretos y luego avanza.',
+      '\n- Da una respuesta util con informacion concreta. Solo agrega 1 pregunta si realmente la necesitas para avanzar. Si ya tenes toda la info que necesitas, NO preguntes nada mas.',
+      '\n- Estrategia: responder la consulta del cliente PRIMERO con datos reales, luego preguntar para refinar solo si falta un dato clave.',
+      '\n- Si el cliente tiene dudas, respondelas primero con datos concretos.',
       '\n- Si el cliente muestra intencion de compra, pedi nombre, telefono y localidad para derivar a un asesor.',
-      '\n- Antes de derivar a asesor, confirma: "Puedo pasarle tus datos a un asesor para que te contacte?"',
+      '\n- Antes de derivar a asesor, confirma UNA SOLA VEZ: "Puedo pasarle tus datos a un asesor para que te contacte?" NO vuelvas a pedir confirmacion si ya la dio.',
       '\n- No repitas textualmente la misma pregunta de turnos previos.',
-      '\n- Si el cliente esta confundido, responde primero su duda y recien despues hace una pregunta de avance.',
-      '\n- IMPORTANTE: SIEMPRE termina tu respuesta con una oracion completa. Nunca dejes una frase a mitad. Si te quedas sin espacio, cierra con lo que tengas y una pregunta corta.'
+      '\n- INTERPRETACION CONTEXTUAL: Interpreta el mensaje del cliente segun el CONTEXTO de la conversacion, no aislado. "no gracias" despues de una venta cerrada significa "no tengo mas consultas" (despedite cordialmente). "no gracias" al inicio o ante una oferta significa desinteres. Siempre lee el historial antes de interpretar.',
+      '\n- DESPEDIDA: Cuando el cliente dice "no" a "tenes alguna pregunta mas?" o similares, despedite cordialmente: "Perfecto, cualquier cosa estamos para ayudarte. Que tengas un buen dia!" NO interpretes eso como desinteres en la compra.',
+      '\n- NO SOBRE-PREGUNTAR: No hagas mas de 1 pregunta por mensaje. Si el cliente ya confirmo la venta y diste los datos al asesor, no sigas preguntando "algo mas?" en cada turno. Un buen vendedor sabe cuando cerrar la conversacion.',
+      '\n- COMPORTAMIENTO HUMANO: Habla como una persona real, no como un formulario. No repitas informacion que ya dijiste salvo que el cliente la pida. No seas repetitivo ni robótico. Si la conversacion llego a su fin natural, cerrala.',
+      '\n- IMPORTANTE: SIEMPRE termina tu respuesta con una oracion completa. Nunca dejes una frase a mitad. Si te quedas sin espacio, cierra con lo que tengas.'
     ].join('');
 
   if (!props.GEMINI_API_KEY) {
@@ -1801,7 +1804,11 @@ function salvageTruncatedReply_(text) {
 
   // Si ya termina en signo de cierre valido, verificar que no sea truncado.
   if (/[.!?]$/.test(t) && !hasAbruptEnding_(t)) {
-    return t;
+    // Doble check: si la ultima oracion tiene un precio que parece incompleto
+    // (ej: "$59." en vez de "$59.900"), es truncado.
+    if (!/\$\d{1,3}\.$/.test(t)) {
+      return t;
+    }
   }
 
   // Buscar la ultima oracion completa (terminada en . ! o ?).
@@ -1922,6 +1929,15 @@ function hasAbruptEnding_(text) {
 
   // Articulo o preposicion como ultima palabra antes del punto.
   if (/\s+(del|al|el|la|lo|los|las|un|una|unos|unas)\.$/.test(t)) return true;
+
+  // Precio o numero truncado: "$59." "$32." "$149." (deberia ser $59.900, etc).
+  if (/\$\d{1,3}\.$/.test(t)) return true;
+
+  // Numero suelto al final sin contexto: "sale 59." "son 32."
+  if (/\s\d{1,3}\.$/.test(t)) return true;
+
+  // Texto que termina con signo de moneda o numero sin punto final coherente.
+  if (/\$\d+$/.test(t)) return true;
 
   return false;
 }
