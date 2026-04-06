@@ -4874,6 +4874,16 @@ FOOTER
   border-bottom-left-radius: 5px;
 }
 
+.chat-ia-product-link {
+  color: #1a5ccc;
+  text-decoration: underline;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chat-ia-product-link:hover {
+  color: #0e3d8c;
+}
+
 .chat-ia-support {
   width: 92%;
   border: 1px solid #d2def8;

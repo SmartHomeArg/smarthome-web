@@ -2564,6 +2564,88 @@ function initChatIAWidget_(contenedor) {
     typingNode = null;
   }
 
+  // --- Linkificacion de nombres de kits/planes en mensajes del bot ---
+  var PRODUCT_LINK_MAP = [
+    // Kits — orden de match mas largo primero para evitar matches parciales.
+    { pattern: /\bKit\s+Smart\s+Cam\s+2[.,]2\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-smart-cam-2-2.html', label: 'Kit Smart Cam 2.2' },
+    { pattern: /\bSmart\s+Cam\s+2[.,]2\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-smart-cam-2-2.html', label: 'Smart Cam 2.2' },
+    { pattern: /\bKit\s+Smart\s+2[.,]2\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-smart-2-2.html', label: 'Kit Smart 2.2' },
+    { pattern: /\bKit\s+Smart\s+1[.,]1\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-smart-1-1.html', label: 'Kit Smart 1.1' },
+    { pattern: /\bKit\s+Cam\s*\+?\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-cam-plus.html', label: 'Kit Cam+' },
+    { pattern: /\bKit\s+Industrial\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-industrial.html', label: 'Kit Industrial' },
+    // Planes — cuidado con "Plan" solo, matchear solo con nombre completo.
+    { pattern: /\bPlan\s+Comercial\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-comercial.html', label: 'Plan Comercial' },
+    { pattern: /\bPlan\s+Video\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-video.html', label: 'Plan Video' },
+    { pattern: /\bPlan\s+Basic\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-basic.html', label: 'Plan Basic' },
+    { pattern: /\bPlan\s+Plus\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-plus.html', label: 'Plan Plus' },
+    { pattern: /\bPlan\s+Pro\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-pro.html', label: 'Plan Pro' }
+  ];
+
+  /**
+   * Toma un elemento DOM con textContent y reemplaza las menciones
+   * de kits/planes con <a> links, usando DOM seguro (sin innerHTML).
+   */
+  function linkifyProductNames_(element) {
+    if (!element || !element.textContent) return;
+    var text = element.textContent;
+
+    // Buscar todos los matches con su posicion.
+    var matches = [];
+    for (var i = 0; i < PRODUCT_LINK_MAP.length; i++) {
+      var entry = PRODUCT_LINK_MAP[i];
+      var re = new RegExp(entry.pattern.source, entry.pattern.flags);
+      var m;
+      while ((m = re.exec(text)) !== null) {
+        // Verificar que esta posicion no fue tomada por un match mas largo previo.
+        var overlap = false;
+        for (var j = 0; j < matches.length; j++) {
+          if (m.index < matches[j].end && (m.index + m[0].length) > matches[j].start) {
+            overlap = true;
+            break;
+          }
+        }
+        if (!overlap) {
+          matches.push({ start: m.index, end: m.index + m[0].length, url: entry.url, original: m[0] });
+        }
+      }
+    }
+
+    if (matches.length === 0) return;
+
+    // Ordenar por posicion.
+    matches.sort(function (a, b) { return a.start - b.start; });
+
+    // Construir fragmento DOM seguro.
+    var frag = document.createDocumentFragment();
+    var cursor = 0;
+    for (var k = 0; k < matches.length; k++) {
+      var match = matches[k];
+      // Texto antes del match.
+      if (match.start > cursor) {
+        frag.appendChild(document.createTextNode(text.slice(cursor, match.start)));
+      }
+      // Link.
+      var a = document.createElement('a');
+      a.href = match.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.className = 'chat-ia-product-link';
+      a.textContent = match.original;
+      frag.appendChild(a);
+      cursor = match.end;
+    }
+    // Texto restante.
+    if (cursor < text.length) {
+      frag.appendChild(document.createTextNode(text.slice(cursor)));
+    }
+
+    // Reemplazar contenido del elemento.
+    while (element.firstChild) {
+      element.removeChild(element.firstChild);
+    }
+    element.appendChild(frag);
+  }
+
   function appendMessage(sender, text, trackHistory, options) {
     const msg = document.createElement('article');
     msg.className = 'chat-ia-msg is-' + sender;
@@ -2582,6 +2664,7 @@ function initChatIAWidget_(contenedor) {
       msg.appendChild(statusEl);
     } else {
       msg.textContent = cleanText;
+      linkifyProductNames_(msg);
     }
 
     messages.appendChild(msg);

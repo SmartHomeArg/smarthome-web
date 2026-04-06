@@ -901,6 +901,7 @@ function buildBotReply_(ctx, signal, props, cfg) {
       '\n- No repitas saludo inicial en cada turno.',
       '\n- Responde en espanol, maximo 150 palabras.',
       '\n- Escribe en tono humano y natural, sin formato markdown, sin asteriscos, sin listas con guiones.',
+      '\n- REDACCION NATURAL: Escribe con buena redaccion en espanol rioplatense. Usa minusculas para sustantivos comunes (asesor, equipo, kit, plan), reserva mayusculas solo para nombres propios (Smarthome, Argentina). Usa preposiciones naturales: "asesor de Smarthome" (no "Asesor Smarthome"), "sistema de alarma" (no "Sistema Alarma"). No capitalices palabras que no sean nombres propios. Evita frases roboticas o de plantilla.',
       '\n- Si ya hay historial, no saludes.',
       '\n- No cierres con frases incompletas.',
       '\n- No pidas de nuevo datos ya confirmados en DATOS CONFIRMADOS.',
@@ -1801,6 +1802,12 @@ function postProcessReply_(text, ctx) {
 function salvageTruncatedReply_(text) {
   var t = cleanText_(text);
   if (!t) return t;
+
+  // Respuestas cortas (< 200 chars) no fueron truncadas por MAX_TOKENS.
+  // Dejarlas intactas si terminan en signo de cierre valido.
+  if (t.length < 200 && /[.!?]$/.test(t)) {
+    return t;
+  }
 
   // Si ya termina en signo de cierre valido, verificar que no sea truncado.
   if (/[.!?]$/.test(t) && !hasAbruptEnding_(t)) {
