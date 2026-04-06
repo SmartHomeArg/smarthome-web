@@ -46,7 +46,9 @@ var PROMPT_OPT = {
   GEMINI_RESCUE_TIMEOUT_MS: 12000,
   GEMINI_RESCUE_MODELS: 2,
   ENABLE_RESCUE_PASS: true,
-  PROVIDER_CIRCUIT_SECONDS: 60
+  PROVIDER_CIRCUIT_SECONDS: 60,
+  PROVIDER_CIRCUIT_FAIL_THRESHOLD: 2,
+  PROVIDER_FAIL_COUNT_SECONDS: 180
 };
 
 function doGet(e) {
@@ -129,6 +131,7 @@ function processChatRequest_(payload) {
           canDeriveToAdvisor: leadStatus !== 'frio',
           fallbackReason: botReplyResult.fallbackReason || '',
           providerCode: botReplyResult.providerCode || '',
+          diagnosticCode: buildDiagnosticCode_(botReplyResult.fallbackReason, botReplyResult.providerCode),
           providerMessage: botReplyResult.providerMessage || '',
           syncedToOfficialLeads: false,
           syncDetail: 'omitido_en_fallback',
@@ -174,6 +177,7 @@ function processChatRequest_(payload) {
         canDeriveToAdvisor: leadStatus !== 'frio',
         fallbackReason: botReplyResult.fallbackReason || '',
         providerCode: botReplyResult.providerCode || '',
+        diagnosticCode: '',
         providerMessage: botReplyResult.providerMessage || '',
         syncedToOfficialLeads: syncResult.synced,
         syncDetail: syncResult.detail,
@@ -191,6 +195,7 @@ function processChatRequest_(payload) {
       data: {
         fallbackReason: 'runtime_error',
         providerCode: 'runtime',
+        diagnosticCode: buildDiagnosticCode_('runtime_error', 'runtime'),
         providerMessage: msg.slice(0, 300)
       }
     };
@@ -1384,6 +1389,10 @@ function providerCircuitCacheKey_() {
   return 'chat_provider_circuit_until';
 }
 
+function providerFailureCountCacheKey_() {
+  return 'chat_provider_fail_count';
+}
+
 function isProviderCircuitOpen_() {
   try {
     var cache = CacheService.getScriptCache();
@@ -1404,6 +1413,15 @@ function noteProviderFailure_(providerCode, errMsg) {
     // Los 429 de cuota son por modelo, no globales, asi que no debemos
     // bloquear intentos con otros modelos.
     if (isQuotaOrRateError_(errMsg)) return;
+    var failTtl = Math.max(60, toNumber_(PROMPT_OPT.PROVIDER_FAIL_COUNT_SECONDS, 180));
+    var failCount = toNumber_(cache.get(providerFailureCountCacheKey_()), 0) + 1;
+    cache.put(providerFailureCountCacheKey_(), String(failCount), failTtl);
+
+    var failThreshold = Math.max(2, toNumber_(PROMPT_OPT.PROVIDER_CIRCUIT_FAIL_THRESHOLD, 2));
+    if (failCount < failThreshold) {
+      return;
+    }
+
     var seconds = Math.max(20, toNumber_(PROMPT_OPT.PROVIDER_CIRCUIT_SECONDS, 60));
     var untilTs = Date.now() + (seconds * 1000);
     cache.put(providerCircuitCacheKey_(), String(untilTs), seconds);
@@ -1416,6 +1434,7 @@ function noteProviderSuccess_() {
   try {
     var cache = CacheService.getScriptCache();
     cache.remove(providerCircuitCacheKey_());
+    cache.remove(providerFailureCountCacheKey_());
     cache.remove('chat_provider_last_error_code');
     cache.remove('chat_provider_last_error_msg');
   } catch (_err) {}
@@ -2264,6 +2283,37 @@ function detectProviderCode_(errMsg) {
   if (t.indexOf('401') !== -1 || t.indexOf('403') !== -1) return 'auth_error';
   if (t.indexOf('400') !== -1 || t.indexOf('invalid argument') !== -1 || t.indexOf('invalid model') !== -1) return 'invalid_request';
   return 'provider_error';
+}
+
+function buildDiagnosticCode_(fallbackReason, providerCode) {
+  var reason = String(fallbackReason || '').toLowerCase();
+  var provider = String(providerCode || '').toLowerCase();
+
+  var reasonMap = {
+    circuit_breaker_open: 'CBO',
+    no_api_key: 'NAK',
+    provider_rate_limit: 'RAT',
+    provider_quota: 'QTA',
+    provider_auth: 'AUT',
+    provider_error: 'PER',
+    runtime_error: 'RUN',
+    unknown_error: 'UNK'
+  };
+
+  var providerMap = {
+    rate_limited: '429',
+    quota_exceeded: 'QTA',
+    auth_error: 'AUT',
+    invalid_request: 'INV',
+    provider_error: 'PRV',
+    runtime: 'RUN',
+    docs_error: 'DOC',
+    circuit_open: 'CBO'
+  };
+
+  var reasonCode = reasonMap[reason] || 'GEN';
+  var providerCodeShort = providerMap[provider] || 'GEN';
+  return 'SHC-' + reasonCode + '-' + providerCodeShort;
 }
 
 function isIaUnavailableError_(errMsg) {

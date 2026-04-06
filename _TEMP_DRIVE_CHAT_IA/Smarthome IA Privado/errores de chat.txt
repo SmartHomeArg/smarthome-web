@@ -1,0 +1,27 @@
+Errores de frontend (fallo antes de recibir respuesta usable del backend)
+
+SHC-FE-COR: bloqueo de acceso al backend desde el navegador (normalmente CORS, muy común en pruebas con Live Server).
+SHC-FE-JTO: el intento por JSONP tardó demasiado y venció el tiempo de espera.
+SHC-FE-JLD: el script JSONP no pudo cargarse.
+SHC-FE-JSN: llegó respuesta, pero no era JSON válido.
+SHC-FE-HTP: el backend respondió con HTTP de error (por ejemplo 4xx/5xx) y no se pudo procesar bien.
+SHC-FE-NET: error de red genérico no clasificado (no necesariamente “sin internet”).
+SHC-FE-PAY: payload inválido o incompleto para seguir el flujo.
+SHC-FE-GEN: fallo genérico del frontend sin causa más específica.
+Errores de backend (código diagnóstico SHC-XXX-YYY)
+
+SHC-CBO-CBO: circuit breaker activo; el sistema se protege y evita intentar IA por un rato.
+SHC-NAK-PRV: falta clave de API configurada en backend.
+SHC-RAT-429: límite de ritmo (rate limit) del proveedor.
+SHC-QTA-QTA: cuota de uso agotada.
+SHC-AUT-AUT: problema de autenticación/permisos con el proveedor.
+SHC-PER-INV: request inválido hacia el proveedor (parámetros/modelo no aceptados).
+SHC-PER-PRV: error general del proveedor IA.
+SHC-RUN-RUN: error interno del backend (runtime).
+SHC-UNK-PRV: causa no clasificada por fallbackReason, pero asociada a error de proveedor.
+SHC-GEN-GEN: caso no mapeado (código de respaldo).
+Lectura rápida práctica
+
+Si empieza con SHC-FE: el problema está en transporte/navegador/conexión con el endpoint.
+Si empieza con SHC- y no tiene FE: el backend sí respondió y te está indicando causa interna/proveedor.
+Si ves SHC-FE-COR en Live Server: suele ser configuración de acceso/origen, no caída de internet.

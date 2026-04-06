@@ -2528,6 +2528,54 @@ function initChatIAWidget_(contenedor) {
     return !!mode && mode !== 'ia';
   }
 
+  function getFallbackMeta_(data) {
+    var payload = (data && data.data && typeof data.data === 'object') ? data.data : {};
+    return {
+      fallbackReason: String(payload.fallbackReason || ''),
+      providerCode: String(payload.providerCode || ''),
+      diagnosticCode: String(payload.diagnosticCode || '')
+    };
+  }
+
+  function resolveFrontendDiagnosticCode_(error) {
+    var msg = String((error && error.message) ? error.message : (error || '')).toLowerCase();
+    if (!msg) return 'SHC-FE-GEN';
+
+    if (msg.indexOf('jsonp timeout') !== -1) return 'SHC-FE-JTO';
+    if (msg.indexOf('jsonp load error') !== -1) return 'SHC-FE-JLD';
+    if (msg.indexOf('invalid json response') !== -1) return 'SHC-FE-JSN';
+    if (msg.indexOf('http ') !== -1) return 'SHC-FE-HTP';
+
+    // En Live Server suele aparecer como "Failed to fetch" cuando hay bloqueo CORS.
+    if (
+      msg.indexOf('failed to fetch') !== -1 ||
+      msg.indexOf('networkerror') !== -1 ||
+      msg.indexOf('network request failed') !== -1 ||
+      msg.indexOf('cors') !== -1
+    ) {
+      return 'SHC-FE-COR';
+    }
+
+    return 'SHC-FE-NET';
+  }
+
+  function buildDiagnosticSuffix_(data, fallbackSource, error) {
+    var meta = getFallbackMeta_(data);
+    var code = String(meta.diagnosticCode || '').trim();
+
+    if (!code) {
+      if (error) {
+        code = resolveFrontendDiagnosticCode_(error);
+      } else {
+        var source = String(fallbackSource || '').toLowerCase();
+        if (source === 'invalid_payload') code = 'SHC-FE-PAY';
+        else code = 'SHC-FE-GEN';
+      }
+    }
+
+    return '\n\nCodigo de diagnostico: ' + code;
+  }
+
   function appendFallbackSupportCard_() {
     const card = document.createElement('article');
     card.className = 'chat-ia-msg is-bot chat-ia-support';
@@ -2847,6 +2895,12 @@ function initChatIAWidget_(contenedor) {
         if (!res.ok && !data) {
           throw new Error('HTTP ' + res.status);
         }
+
+        // Si el backend responde texto no JSON (intermitencia Apps Script/proxy),
+        // reintentar por JSONP antes de marcar el mensaje como no entregado.
+        if (!data) {
+          throw new Error('Invalid JSON response');
+        }
       } catch (_postError) {
         setUserMessageStatus_(userMsgEl, '✓ Enviado');
         showTypingIndicator_();
@@ -2857,12 +2911,14 @@ function initChatIAWidget_(contenedor) {
       const hasBackendMessage = !!(data && (data.reply || data.message));
       if (!data) {
         setUserMessageStatus_(userMsgEl, 'No entregado');
-        appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.');
+        appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.' + buildDiagnosticSuffix_(null, 'invalid_payload', null));
         appendFallbackSupportCard_();
       } else if (hasBackendMessage) {
-        setUserMessageStatus_(userMsgEl, '✓✓ Leido');
-        appendMessage('bot', data.reply || data.message);
-        if (isFallbackMode_(data)) {
+        const fallbackMode = isFallbackMode_(data);
+        setUserMessageStatus_(userMsgEl, fallbackMode ? '✓✓ Recibido' : '✓✓ Leido');
+        const botText = String(data.reply || data.message || '');
+        appendMessage('bot', fallbackMode ? (botText + buildDiagnosticSuffix_(data, 'fallback', null)) : botText);
+        if (fallbackMode) {
           appendFallbackSupportCard_();
         }
       } else if (data.ok === true) {
@@ -2870,13 +2926,13 @@ function initChatIAWidget_(contenedor) {
         appendMessage('bot', data.reply || 'Te leo. Si quieres, puedo ayudarte a cotizar ahora.');
       } else {
         setUserMessageStatus_(userMsgEl, 'No entregado');
-        appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.');
+        appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.' + buildDiagnosticSuffix_(data, 'invalid_payload', null));
         appendFallbackSupportCard_();
       }
     } catch (error) {
       hideTypingIndicator_();
       setUserMessageStatus_(userMsgEl, 'No entregado');
-      appendMessage('bot', 'En este momento no hay operador disponible para atencion. Comunicate por WhatsApp o completa el formulario y te contactamos a la brevedad.');
+      appendMessage('bot', 'En este momento no hay operador disponible para atencion. Comunicate por WhatsApp o completa el formulario y te contactamos a la brevedad.' + buildDiagnosticSuffix_(null, 'network', error));
       appendFallbackSupportCard_();
       console.error('Error enviando mensaje al chat IA:', error);
     } finally {
