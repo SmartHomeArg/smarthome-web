@@ -18,7 +18,7 @@
  * - FORMS_WEBAPP_URL (opcional)
  */
 
-var CHAT_VERSION = '1.0.0';
+var CHAT_VERSION = '1.1.0';
 var IA_UNAVAILABLE_MESSAGE = 'En este momento no hay operador disponible para atencion. Comunicate por WhatsApp o completa el formulario y te contactamos a la brevedad.';
 
 var OP_SHEETS = {
@@ -30,14 +30,14 @@ var OP_SHEETS = {
 
 var PROMPT_OPT = {
   HISTORY_ITEMS: 6,
-  MAX_INSTRUCTIONS_CHARS: 1400,
-  MAX_KNOWLEDGE_CHARS: 1000,
-  MAX_EVENTS_CHARS: 650,
+  MAX_INSTRUCTIONS_CHARS: 2400,
+  MAX_KNOWLEDGE_CHARS: 3500,
+  MAX_EVENTS_CHARS: 800,
   DOCS_CACHE_SECONDS: 300,
   MODELS_CACHE_SECONDS: 900,
   DISCOVERY_MAX_MODELS: 10,
   ENABLE_MODEL_DISCOVERY: false,
-  MAX_OUTPUT_TOKENS: 520,
+  MAX_OUTPUT_TOKENS: 700,
   MIN_REPLY_CHARS: 45,
   GEMINI_RETRY_ATTEMPTS: 2,
   GEMINI_RETRY_BASE_MS: 450,
@@ -549,35 +549,66 @@ function persistConversationTranscript_(ctx, botReplyText, props) {
     var doc;
 
     if (docId) {
-      doc = DocumentApp.openById(docId);
-    } else {
-      var title = 'chat_' + ctx.sessionId;
+      try {
+        doc = DocumentApp.openById(docId);
+      } catch (_openErr) {
+        // Si el doc anterior fue borrado o es inaccesible, crear uno nuevo.
+        docId = '';
+      }
+    }
+
+    if (!docId) {
+      var dateStr = Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd_HHmmss');
+      var title = 'chat_' + ctx.sessionId + '_' + dateStr;
       doc = DocumentApp.create(title);
       docId = doc.getId();
 
+      // Mover a la carpeta Chats_History configurada en CHAT_TRANSCRIPTS_FOLDER_ID.
+      // Usa moveTo (API moderna) en lugar de addFile/removeFile (deprecado).
       if (props.CHAT_TRANSCRIPTS_FOLDER_ID) {
         try {
           var file = DriveApp.getFileById(docId);
           var folder = DriveApp.getFolderById(props.CHAT_TRANSCRIPTS_FOLDER_ID);
-          folder.addFile(file);
-          DriveApp.getRootFolder().removeFile(file);
-        } catch (_moveErr) {}
+          file.moveTo(folder);
+        } catch (_moveErr) {
+          // Si moveTo no esta disponible (version antigua), intentar metodo clasico.
+          try {
+            var fileFallback = DriveApp.getFileById(docId);
+            var folderFallback = DriveApp.getFolderById(props.CHAT_TRANSCRIPTS_FOLDER_ID);
+            folderFallback.addFile(fileFallback);
+            var parents = fileFallback.getParents();
+            while (parents.hasNext()) {
+              var parent = parents.next();
+              if (parent.getId() !== folderFallback.getId()) {
+                parent.removeFile(fileFallback);
+              }
+            }
+          } catch (_fallbackMoveErr) {}
+        }
       }
 
       var head = doc.getBody();
-      head.appendParagraph('Session: ' + ctx.sessionId);
+      head.appendParagraph('=== Transcripcion de Chat Smarthome ===');
+      head.appendParagraph('Session ID: ' + ctx.sessionId);
       head.appendParagraph('Creado UTC: ' + new Date().toISOString());
       head.appendParagraph('Pagina origen: ' + (ctx.sourcePage || 'n/a'));
+      head.appendParagraph('User Agent: ' + (ctx.userAgent || 'n/a'));
+      if (ctx.lead && ctx.lead.tipoCliente) {
+        head.appendParagraph('Tipo cliente: ' + ctx.lead.tipoCliente);
+      }
       head.appendParagraph('---');
     }
 
     var body = doc.getBody();
-    body.appendParagraph('[' + new Date().toISOString() + '] CLIENTE: ' + (ctx.userMessage || ''));
-    body.appendParagraph('[' + new Date().toISOString() + '] ASESOR: ' + (botReplyText || ''));
+    var ts = new Date().toISOString();
+    body.appendParagraph('[' + ts + '] CLIENTE: ' + (ctx.userMessage || ''));
+    body.appendParagraph('[' + ts + '] ASESOR: ' + (botReplyText || ''));
 
     out.docId = docId;
     out.docUrl = 'https://docs.google.com/document/d/' + docId + '/edit';
-  } catch (_err) {}
+  } catch (_err) {
+    writeErrorSafe_(ctx.sessionId, 'transcript_persist_error', String(_err), 'transcript', true);
+  }
 
   return out;
 }
@@ -708,10 +739,12 @@ function buildBotReply_(ctx, signal, props, cfg) {
   var prompt = useLightPrompt
     ? buildLightIaPrompt_(ctx, signal, knownFacts, sessionCompact)
     : [
+      'ROL: Sos asesor comercial de Smarthome, empresa argentina de seguridad (+8 anos, +1000 clientes). Tu objetivo es cerrar la venta o avanzar al maximo posible para que un asesor humano cierre por WhatsApp.',
+      '\n\nINSTRUCCIONES DE COMPORTAMIENTO:\n',
       instructionsCompact,
-      '\n\nCONOCIMIENTO:\n',
+      '\n\nCONOCIMIENTO COMERCIAL (PRECIOS, KITS, PLANES):\n',
       knowledgeCompact,
-      '\n\nEVENTOS:\n',
+      '\n\nEVENTOS COMERCIALES:\n',
       eventsCompact,
       '\n\nHISTORIAL RECIENTE:\n',
       historyText,
@@ -725,22 +758,22 @@ function buildBotReply_(ctx, signal, props, cfg) {
       JSON.stringify(ctx.lead),
       '\n\nINTENCION DETECTADA: ', signal.intent,
       '\n\nREGLAS DE RESPUESTA:',
-      '\n- No te vuelvas a presentar si ya hay historial.',
-        '\n- No te vuelvas a presentar si ya hay historial o si CONTEXTO DE SESION indica turnos previos.',
+      '\n- No te vuelvas a presentar si ya hay historial o si turnCount > 0.',
       '\n- No repitas saludo inicial en cada turno.',
-      '\n- Responde en espanol, maximo 120 palabras.',
-      '\n- Evita frases de relleno como "hola de nuevo" o "estoy aqui para ayudarte" si no aportan informacion.',
+      '\n- Responde en espanol, maximo 150 palabras.',
+      '\n- Escribe en tono humano y natural, sin formato markdown, sin asteriscos, sin listas con guiones.',
       '\n- Si ya hay historial, no saludes.',
-        '\n- Si hay continuidad de sesion (turnCount > 0), no saludes ni reinicies conversacion.',
-      '\n- No cierres con frases incompletas (ej: "para poder").',
-      '\n- No pidas de nuevo datos ya confirmados (tipo de cliente, localidad, cobertura, contacto).',
-      '\n- Usa CONOCIMIENTO y EVENTOS como fuente principal para responder con precision comercial.',
-      '\n- Escribe en tono humano y natural, sin formato markdown.',
-      '\n- No uses asteriscos, ni listas con guiones, ni encabezados tipo "Info util".',
+      '\n- No cierres con frases incompletas.',
+      '\n- No pidas de nuevo datos ya confirmados en DATOS CONFIRMADOS.',
+      '\n- Usa CONOCIMIENTO COMERCIAL como fuente principal. NUNCA inventes precios ni datos.',
+      '\n- Si preguntan precios, respondelos con los datos de CONOCIMIENTO COMERCIAL.',
+      '\n- Si el cliente pregunta que vendemos, explica brevemente: alarmas, camaras, monitoreo 24/7, equipamiento en comodato, instalacion profesional.',
       '\n- Da una respuesta util y luego 1 pregunta puntual para avanzar comercialmente.',
-      '\n- Si el cliente pregunta que vendemos o no entiende la propuesta, primero explica en 1-2 frases que ofrece Smarthome (alarmas, camaras, monitoreo y planes) antes de pedir datos.',
+      '\n- Estrategia de cierre: detectar necesidad -> recomendar kit/plan -> pedir datos -> confirmar -> derivar asesor.',
+      '\n- Si el cliente tiene dudas, respondelas primero y luego avanza.',
+      '\n- Si el cliente muestra intencion de compra, pedi nombre, telefono y localidad para derivar a un asesor.',
+      '\n- Antes de derivar a asesor, confirma: "Puedo pasarle tus datos a un asesor para que te contacte?"',
       '\n- No repitas textualmente la misma pregunta de turnos previos.',
-      '\n- Antes de pedir un dato, verifica si ya esta en DATOS CONFIRMADOS.',
       '\n- Si el cliente esta confundido, responde primero su duda y recien despues hace una pregunta de avance.'
     ].join('');
 
@@ -810,7 +843,6 @@ function shouldUseLightIaPrompt_(ctx, signal) {
   var msg = cleanText_(ctx && ctx.userMessage).toLowerCase();
   var turnCount = toNumber_(state.turnCount, 0);
   var isEarlyConversation = (history.length === 0 && turnCount <= 0);
-  var isLowContextTurn = (history.length <= 1 && turnCount <= 1 && msg.length > 0 && msg.length <= 120);
   var hasCommercialIntent = !!(signal && (signal.intent === 'cotizacion' || signal.intent === 'compra'));
   var hasLeadContext = !!(
     (ctx && ctx.lead && cleanText_(ctx.lead.tipoCliente)) ||
@@ -818,21 +850,25 @@ function shouldUseLightIaPrompt_(ctx, signal) {
     (ctx && ctx.lead && cleanText_(ctx.lead.interes))
   );
 
-  // Estrategia robusta por etapa: usar prompt liviano en turnos tempranos o
-  // de bajo contexto, salvo cuando ya hay senales comerciales fuertes.
-  if (isEarlyConversation) return true;
-  if (isLowContextTurn && !hasCommercialIntent && !hasLeadContext) return true;
+  // NUNCA usar prompt liviano si hay intencion comercial o pregunta de precios/planes
+  if (hasCommercialIntent || hasLeadContext) return false;
+  if (/precio|cuanto|valor|cuesta|sale|plan|kit|cotiz|presupuesto|instalar|contratar/.test(msg)) return false;
+
+  // Solo usar prompt liviano para saludos simples sin contexto
+  if (isEarlyConversation && isGreetingOnly_(msg)) return true;
 
   return false;
 }
 
 function buildLightIaPrompt_(ctx, signal, knownFacts, sessionCompact) {
   return [
-    'Responde como asesor comercial de Smarthome en espanol, en tono humano y natural.',
-    'No uses markdown ni listas con guiones.',
-    'Si es primer saludo, responde breve y despues hace 1 pregunta comercial para avanzar.',
+    'Sos asesor comercial de Smarthome, empresa de seguridad en Argentina (+8 anos, +1000 clientes).',
+    'Ofrecemos alarmas, camaras y monitoreo 24/7 con equipamiento en comodato e instalacion profesional.',
+    'Planes para hogar: Video ($32.830/mes), Basic ($41.230/mes), Plus ($44.030/mes), Pro ($48.993/mes). Comercio: Comercial ($62.930/mes). Precios con 30% dto por 6 meses.',
+    'Responde en espanol, tono humano y natural. No uses markdown ni listas con guiones.',
+    'Si es primer saludo, presentate breve como asesor de Smarthome y pregunta si busca proteger su hogar o comercio.',
     'Si ya hay continuidad de sesion, no saludes ni reinicies la conversacion.',
-    'Maximo 80 palabras.',
+    'Maximo 100 palabras.',
     'MENSAJE CLIENTE: ' + String((ctx && ctx.userMessage) || ''),
     'INTENCION: ' + String((signal && signal.intent) || 'info'),
     'DATOS CONFIRMADOS: ' + String(knownFacts || ''),
@@ -896,7 +932,7 @@ function tryLastResortDirectCall_(ctx, props) {
   if (!props || !props.GEMINI_API_KEY) return null;
 
   var msg = cleanText_(ctx && ctx.userMessage) || 'hola';
-  var miniPrompt = 'Sos un asesor comercial de Smarthome (alarmas, camaras, monitoreo 24/7). Responde breve en espanol al cliente: ' + msg;
+  var miniPrompt = 'Sos un asesor comercial de Smarthome (alarmas, camaras, monitoreo 24/7 en Argentina). Planes desde $32.830/mes con 30% dto. Equipamiento en comodato. Responde breve en espanol al cliente: ' + msg;
 
   // Ultimo intento con Flash Lite (tiene mas cuota disponible en capa gratuita).
   try {
@@ -1006,6 +1042,16 @@ function buildCompactKnowledgeContext_(knowledgeText, ctx, signal) {
     String((ctx && ctx.lead && ctx.lead.tipoCliente) || ''),
     String((ctx && ctx.lead && ctx.lead.interes) || '')
   ].join(' ').trim();
+
+  // Para intenciones comerciales (cotizacion, compra) siempre enviar conocimiento completo
+  // truncado solo por limite de chars, no por filtering.
+  var isCommercial = !!(signal && (signal.intent === 'cotizacion' || signal.intent === 'compra'));
+  var msgLower = String((ctx && ctx.userMessage) || '').toLowerCase();
+  var asksPricing = /precio|cuanto|valor|cuesta|sale|plan|kit|cotiz|presupuesto/.test(msgLower);
+
+  if (isCommercial || asksPricing) {
+    return trimForPrompt_(knowledgeText, PROMPT_OPT.MAX_KNOWLEDGE_CHARS);
+  }
 
   var extracted = extractRelevantKnowledge_(q, knowledgeText);
   return trimForPrompt_(extracted, PROMPT_OPT.MAX_KNOWLEDGE_CHARS);
@@ -1262,10 +1308,11 @@ function isRetryableNoOutputError_(errMsg) {
 
 function buildRescuePrompt_(ctx, signal) {
   return [
-    'Responde como asesor comercial de Smarthome en espanol, de forma breve y clara.',
-    'No saludes si ya hay continuidad. No uses markdown.',
-    'Primero responde la duda del cliente y luego una sola pregunta de avance.',
-    'Maximo 80 palabras.',
+    'Sos asesor comercial de Smarthome (alarmas, camaras, monitoreo 24/7 en Argentina).',
+    'Planes hogar: Video $32.830/mes, Basic $41.230/mes, Plus $44.030/mes, Pro $48.993/mes. Comercio: Comercial $62.930/mes. Equipamiento en comodato. 30% dto 6 meses.',
+    'Responde breve en espanol, tono humano. No uses markdown.',
+    'Si preguntan precios, da los valores reales. Primero responde la duda y luego una sola pregunta de avance.',
+    'Maximo 100 palabras.',
     'MENSAJE CLIENTE: ' + String((ctx && ctx.userMessage) || ''),
     'INTENCION: ' + String((signal && signal.intent) || 'info'),
     'DATOS CONFIRMADOS: ' + buildKnownFactsForPrompt_(ctx),
@@ -1689,17 +1736,34 @@ function extractRelevantKnowledge_(query, text) {
       return true;
     });
 
+  // Para preguntas de precios, planes o kits, incluir TODAS las lineas relevantes.
+  var isPricingQuery = /precio|cotiz|valor|cuanto|cuesta|sale|plan|kit|promo|descuento|abono|instal/.test(q);
+  var maxLines = isPricingQuery ? 20 : 10;
+
   var scored = lines.map(function(line) {
     var l = line.toLowerCase();
     var score = 0;
+
+    // Relevancia directa a la query
+    var qWords = q.split(/\s+/).filter(function(w) { return w.length > 2; });
+    for (var wi = 0; wi < qWords.length; wi++) {
+      if (l.indexOf(qWords[wi]) !== -1) score += 2;
+    }
+
+    // Bonus por contenido comercial clave
     if (/kit|plan|monitoreo|camara|alarma|comercio|hogar/.test(l)) score += 1;
-    if (q && l.indexOf(q.split(' ')[0]) !== -1) score += 2;
-    if (q && /precio|cotiz|plan|kit/.test(q) && /precio|plan|kit/.test(l)) score += 2;
+    if (/precio|valor|\$|cuota|abono|instalacion|descuento|promo/.test(l)) score += 2;
+    if (/incluye|sensor|sirena|central|app|wifi|4g/.test(l)) score += 1;
+
     return { line: line, score: score };
   });
 
   scored.sort(function(a, b) { return b.score - a.score; });
-  var top = scored.filter(function(s) { return s.score > 0; }).slice(0, 2).map(function(s) { return normalizeKnowledgeLine_(s.line); });
+
+  var top = scored
+    .filter(function(item) { return item.score > 0; })
+    .slice(0, maxLines)
+    .map(function(item) { return normalizeKnowledgeLine_(item.line); });
 
   if (!top.length) return '';
   return top.join(' ');

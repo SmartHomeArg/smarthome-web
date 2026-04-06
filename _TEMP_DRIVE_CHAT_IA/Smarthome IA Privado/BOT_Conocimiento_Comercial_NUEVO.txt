@@ -1,0 +1,329 @@
+[TIPO DE DOCUMENTO]
+Base de conocimiento comercial Smarthome
+Version: 1.1.0 - Actualizado 2026-04
+IMPORTANTE: Este documento es la UNICA fuente de verdad para precios, kits y planes.
+No inventar ni modificar datos que no esten aqui.
+
+[EMPRESA]
+Nombre: Smarthome
+Sitio web: smarthome.com.ar
+Ubicacion: San Juan, Argentina
+Cobertura: Nacional (toda Argentina)
+Experiencia: Mas de 8 anos en el mercado
+Clientes: Mas de 1000 hogares y comercios protegidos
+WhatsApp comercial: +54 9 264 630 4866
+Email: institucional.smarthome@gmail.com
+
+[PROPUESTA DE VALOR]
+"Tecnologia y personas al servicio de tu tranquilidad"
+- Instalacion profesional incluida en todos los planes.
+- Equipamiento en comodato: el cliente NO compra el equipo, Smarthome lo presta.
+- Monitoreo 24/7, los 365 dias del ano, desde central de monitoreo profesional.
+- Control remoto desde app movil (Android e iOS).
+- Servicio tecnico y mantenimiento gratuito incluido.
+- Marca de alarma: Hellgrun, modelo Kummert K1 Ultra.
+- Marca de camara: Imou.
+
+[PILARES]
+1. Proteccion integral: alarmas, camaras y monitoreo profesional.
+2. Atencion cercana: equipo local, soporte personalizado.
+3. Innovacion util: tecnologia moderna al servicio de la seguridad real.
+
+[MODELO DE NEGOCIO]
+- Equipamiento entregado en COMODATO (prestamo). Smarthome es dueno del equipo.
+- Se paga una UNICA vez la instalacion profesional.
+- Se paga un ABONO MENSUAL por el plan de monitoreo/servicio.
+- Cada kit esta vinculado a un plan especifico. No se pueden mezclar.
+- Garantia: 6 meses desde la instalacion.
+
+[PROMOCION VIGENTE]
+30% de descuento en el abono mensual durante los primeros 6 meses.
+Aplica a TODOS los planes.
+Pago con tarjeta de credito o debito.
+
+[PROCESO DE CONTRATACION - 4 PASOS]
+1. Selecciona tu plan: elige el que mejor se adapte a tu necesidad.
+2. Ingresa tus datos: nombre, telefono, localidad.
+3. Elige medio de pago: tarjeta de credito o debito.
+4. Te contactamos: un asesor se comunica para coordinar instalacion.
+Nota: Un asesor se pondra en contacto para terminar el proceso de cobro del abono mensual.
+
+======================================================================
+KITS Y PRECIOS
+======================================================================
+
+[KIT CAM+] - Solo camara, sin alarma
+Precio instalacion: $49.900 (unico pago)
+Plan asociado: Plan Video
+Abono mensual lista: $46.900/mes
+Abono con 30% dto (6 meses): $32.830/mes
+Componentes incluidos:
+- 1 Carteleria SmartHome disuasiva
+- 1 Camara Wi-Fi interior/exterior Imou
+- 1 Caja estanca (gabinete protector)
+- 1 Cable de conexion a energia
+- 1 Tarjeta de memoria para grabacion local
+- 1 Jaula antivandalica
+Nota: Este kit NO incluye sistema de alarma ni monitoreo 24/7.
+Ideal para: quien solo necesita vigilancia visual.
+
+[KIT SMART 1.1] - Alarma basica
+Precio instalacion: $59.900 (unico pago)
+Plan asociado: Plan Basic
+Abono mensual lista: $58.900/mes
+Abono con 30% dto (6 meses): $41.230/mes
+Componentes incluidos:
+- 1 Central de alarma Hellgrun K1 Ultra
+- 1 Sensor de apertura inalambrico (puerta/ventana)
+- 1 Sensor de movimiento interior
+- 1 Llavero de control remoto
+- 1 Gabinete metalico
+- 1 Fuente de alimentacion
+- 1 Bateria de respaldo (funciona sin luz)
+- 1 Carteleria SmartHome disuasiva
+- 1 Sirena interior
+Ideal para: hogar chico o departamento con 1-2 accesos.
+
+[KIT SMART 2.2] - Alarma ampliada
+Precio instalacion: $79.900 (unico pago)
+Plan asociado: Plan Plus
+Abono mensual lista: $62.900/mes
+Abono con 30% dto (6 meses): $44.030/mes
+Componentes incluidos:
+- 1 Central de alarma Hellgrun K1 Ultra
+- 2 Sensores de apertura inalambricos
+- 2 Sensores de movimiento interior
+- 1 Llavero de control remoto
+- 1 Gabinete metalico
+- 1 Fuente de alimentacion
+- 1 Bateria de respaldo
+- 1 Carteleria SmartHome disuasiva
+- 1 Sirena interior
+Ideal para: hogar mediano con 2-4 accesos.
+
+[KIT SMART CAM 2.2] - Alarma + Camara
+Precio instalacion: $89.900 (unico pago)
+Plan asociado: Plan Pro
+Abono mensual lista: $69.990/mes
+Abono con 30% dto (6 meses): $48.993/mes
+Componentes incluidos (todo lo del Smart 2.2 + Cam+):
+- 1 Central de alarma Hellgrun K1 Ultra
+- 2 Sensores de apertura inalambricos
+- 2 Sensores de movimiento interior
+- 1 Llavero de control remoto
+- 1 Gabinete metalico
+- 1 Fuente de alimentacion
+- 1 Bateria de respaldo
+- 1 Carteleria de seguridad SmartHome
+- 1 Sirena interior
+- 1 Camara Wi-Fi interior/exterior Imou
+- 1 Caja estanca
+- 1 Cable de conexion a energia
+- 1 Tarjeta de memoria
+- 1 Jaula antivandalica
+Ideal para: hogar mediano-grande que quiere alarma Y video.
+
+[KIT INDUSTRIAL] - Alarma comercial/industrial
+Precio instalacion: $149.000 (unico pago)
+Plan asociado: Plan Comercial
+Abono mensual lista: $89.900/mes
+Abono con 30% dto (6 meses): $62.930/mes
+Componentes incluidos:
+- 1 Central de alarma Hellgrun K1 Ultra
+- 1 Sensor de apertura inalambrico
+- 1 Sensor de movimiento interior
+- 1 Llavero de control remoto
+- 1 Gabinete metalico
+- 1 Fuente de alimentacion
+- 1 Bateria de respaldo
+- 1 Carteleria SmartHome disuasiva
+- 1 Sirena interior
+- 1 Sirena exterior disuasiva
+- 1 Sensor exterior de movimiento doble tecnologia (PIR + microondas)
+Ideal para: comercios, locales, depositos, industrias.
+
+======================================================================
+PLANES - DETALLE DE PRESTACIONES
+======================================================================
+
+[PLAN VIDEO]
+Kit asociado: Kit Cam+
+Eslogan: "Vigilancia visual desde cualquier lugar"
+Monitoreo 24/7 con central: NO (solo video)
+Prestaciones:
+- Video en vivo desde la app (celular o tablet)
+- Grabaciones en la nube
+- Grabacion local en tarjeta de memoria
+- Alertas de movimiento y presencia humana
+- Control de camara desde la app
+- Carteleria disuasiva incluida
+- Gabinete estanco y jaula antivandalica
+- Mantenimiento y diagnostico remoto
+Conectividad: Solo Wi-Fi (no incluye 4G)
+NO incluye: alarma, monitoreo 24/7, boton de panico.
+
+[PLAN BASIC]
+Kit asociado: Kit Smart 1.1
+Eslogan: "Proteccion esencial con monitoreo 24/7"
+Monitoreo 24/7 con central: SI
+Prestaciones:
+- Monitoreo 24/7 con central de monitoreo profesional
+- Control desde app (armar/desarmar)
+- Alertas y notificaciones en tiempo real
+- Codigos de usuario personalizados
+- Boton de panico, emergencia medica y bomberos
+- Comunicacion multivia Wi-Fi + 4G (redundante)
+- Historial de eventos
+- Mantenimiento y diagnostico remoto
+NO incluye: programacion horaria, video en vivo (disponible como adicional).
+
+[PLAN PLUS]
+Kit asociado: Kit Smart 2.2
+Eslogan: "Mas cobertura y control avanzado"
+Monitoreo 24/7 con central: SI
+Prestaciones (todo lo del Basic mas):
+- Programacion horaria de apertura y cierre
+- Gestion de hasta 4 particiones independientes
+- Modo ausente y presente
+- Todo lo del Plan Basic
+NO incluye: video en vivo (disponible como adicional).
+
+[PLAN PRO]
+Kit asociado: Kit Smart Cam 2.2
+Eslogan: "Alarma y camara en un solo plan"
+Monitoreo 24/7 con central: SI
+Prestaciones (todo lo del Plus mas):
+- Video en vivo desde la app
+- Grabaciones en la nube y en tarjeta de memoria
+- Deteccion de movimiento y presencia humana por camara
+- Verificacion visual de eventos en tiempo real
+- Todo lo del Plan Plus
+
+[PLAN COMERCIAL]
+Kit asociado: Kit Industrial
+Eslogan: "Proteccion integral para tu negocio"
+Monitoreo 24/7 con central: SI
+Prestaciones (todo lo del Plus mas):
+- Proteccion perimetral con sensores exterior de doble tecnologia
+- Sirena exterior disuasiva
+- Aviso de apertura fuera de horario
+- Programacion horaria de apertura y cierre
+- Gestion de hasta 4 particiones
+
+======================================================================
+COMPARACION RAPIDA DE PLANES
+======================================================================
+
+Monitoreo 24/7: Video=No, Basic=Si, Plus=Si, Pro=Si, Comercial=Si
+Armar/desarmar app: Video=No, Basic=Si, Plus=Si, Pro=Si, Comercial=Si
+Boton de panico: Video=No, Basic=Si, Plus=Si, Pro=Si, Comercial=Si
+Comunicacion 4G: Video=No, Basic=Si, Plus=Si, Pro=Si, Comercial=Si
+Programacion horaria: Video=No, Basic=No, Plus=Si, Pro=Si, Comercial=Si
+Video en vivo: Video=Si, Basic=Adicional, Plus=Adicional, Pro=Si, Comercial=Adicional
+Proteccion exterior: Video=No, Basic=Adicional, Plus=Adicional, Pro=Adicional, Comercial=Si
+Sirena exterior: Video=No, Basic=Adicional, Plus=Adicional, Pro=Adicional, Comercial=Si
+Aviso apertura fuera horario: Video=No, Basic=No, Plus=No, Pro=No, Comercial=Si
+"Adicional" = disponible como complemento con costo extra.
+
+======================================================================
+GUIA DE RECOMENDACION POR NECESIDAD
+======================================================================
+
+[HOGAR CHICO / DEPARTAMENTO - 1-2 accesos]
+Recomendacion base: Kit Smart 1.1 + Plan Basic ($59.900 instalacion + $41.230/mes)
+Si quiere camara tambien: Kit Smart Cam 2.2 + Plan Pro ($89.900 + $48.993/mes)
+Si solo quiere camara: Kit Cam+ + Plan Video ($49.900 + $32.830/mes)
+
+[HOGAR MEDIANO - 3-4 accesos]
+Recomendacion: Kit Smart 2.2 + Plan Plus ($79.900 + $44.030/mes)
+Si quiere camara tambien: Kit Smart Cam 2.2 + Plan Pro ($89.900 + $48.993/mes)
+
+[HOGAR GRANDE - 5+ accesos]
+Recomendacion: Kit Smart Cam 2.2 + Plan Pro ($89.900 + $48.993/mes)
+Nota: para mas de 5 accesos se pueden agregar sensores adicionales.
+
+[COMERCIO / LOCAL / DEPOSITO / INDUSTRIA]
+Recomendacion: Kit Industrial + Plan Comercial ($149.000 + $62.930/mes)
+Incluye proteccion perimetral exterior y sirena exterior.
+
+======================================================================
+CENTRAL DE MONITOREO - COMO FUNCIONA
+======================================================================
+
+Ciclo de respuesta ante una alarma:
+1. RECEPCION INMEDIATA: El panel envia senal en segundos a la central.
+2. VERIFICACION DEL EVENTO: Operadores especializados validan la alerta.
+3. NOTIFICACION AL TITULAR: Se notifica al cliente en tiempo real por app/llamada.
+4. RESPUESTA COORDINADA: Se despacha policia, bomberos o medicos segun protocolo.
+
+La central monitorea:
+- Intrusion, apertura, movimiento en zonas protegidas.
+- Alertas de panico y pedidos de ayuda urgente.
+- Sabotaje o desconexion del sistema.
+- Estado general del panel y continuidad de monitoreo.
+
+======================================================================
+FUNCIONALIDADES DEL SISTEMA
+======================================================================
+
+1. Seguridad monitoreada profesionalmente 24/7
+2. Comunicacion multivia (Wi-Fi + 4G, redundante contra sabotaje)
+3. Video en vivo y grabacion en la nube (segun plan)
+4. Apertura y cierre programado (segun plan)
+5. Central de monitoreo 24/7 con operadores capacitados
+6. Codigos de usuario personalizados
+7. Smart Cam: monitoreo visual inteligente
+8. Equipamiento en comodato (sin inversion inicial en equipo)
+9. Compatible con mascotas (tecnologia anti-falsas alarmas)
+10. Mantenimiento remoto del sistema incluido
+11. Notificaciones inteligentes por app
+12. Proteccion 24 horas, los 365 dias del ano
+13. Servicio de ciberasistencia incluido gratis
+
+======================================================================
+FAQ - PREGUNTAS FRECUENTES
+======================================================================
+
+P: El Kit Cam+ incluye monitoreo de alarma?
+R: No. El Kit Cam+ es solo de video vigilancia. Para monitoreo 24/7 necesitas un kit con alarma (Smart 1.1, Smart 2.2, Smart Cam 2.2 o Industrial).
+
+P: Se pueden mezclar planes entre kits?
+R: No. Cada kit tiene su plan asociado. Si necesitas mas prestaciones, elegis el kit/plan superior.
+
+P: Se controla desde el celular?
+R: Si, todos los planes incluyen control desde app movil para Android e iOS.
+
+P: Que pasa si se corta la luz?
+R: Todos los kits con alarma incluyen bateria de respaldo. Ademas, la comunicacion 4G sigue funcionando sin Wi-Fi.
+
+P: Que pasa si me quieren inhibir la alarma?
+R: La central Hellgrun K1 Ultra tiene deteccion de inhibicion/jamming y alerta a la central de monitoreo.
+
+P: Puedo agregar mas sensores?
+R: Si, se pueden agregar sensores adicionales al kit elegido. Consulta con un asesor para precio de adicionales.
+
+P: Que significa "comodato"?
+R: Significa que Smarthome te presta el equipo. No lo compras. Si das de baja el servicio, se devuelve el equipo.
+
+P: Cuanto tiempo tarda la instalacion?
+R: La instalacion se coordina con un asesor despues de la contratacion. Generalmente se programa dentro de los 7 dias habiles.
+
+P: Hay permanencia obligatoria?
+R: Consultar con asesor las condiciones del contrato vigente.
+
+P: Que zonas cubren?
+R: Cobertura nacional, toda Argentina.
+
+P: Que medios de pago aceptan?
+R: Tarjeta de credito o debito.
+
+P: El servicio tecnico tiene costo?
+R: No, el servicio tecnico y mantenimiento esta incluido en todos los planes.
+
+======================================================================
+NOTAS PARA ACTUALIZACION
+======================================================================
+- ACTUALIZAR PRECIOS: si cambian los precios, modificar este documento y el bot usara los nuevos automaticamente.
+- AGREGAR PROMOS: agregar seccion [PROMOCIONES VIGENTES] con detalle y vigencia.
+- AGREGAR COBERTURA: si cambia la cobertura, actualizar la seccion [EMPRESA].
+- AGREGAR HORARIOS: cuando se definan horarios de atencion comercial, agregar seccion.

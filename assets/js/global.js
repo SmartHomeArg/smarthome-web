@@ -2909,6 +2909,19 @@ function initChatIAWidget_(contenedor) {
 
       hideTypingIndicator_();
       const hasBackendMessage = !!(data && (data.reply || data.message));
+
+      // Sincronizar sessionId devuelto por el backend (puede cambiar si
+      // el backend fuerza nueva sesion o resuelve un alias).
+      if (data && data.data && data.data.sessionId) {
+        var backendSessionId = String(data.data.sessionId).trim();
+        if (backendSessionId && backendSessionId !== sessionId) {
+          sessionId = backendSessionId;
+          try {
+            sessionStorage.setItem(CHAT_SESSION_ID_KEY, JSON.stringify({ id: sessionId, createdAt: Date.now() }));
+          } catch (_syncErr) {}
+        }
+      }
+
       if (!data) {
         setUserMessageStatus_(userMsgEl, 'No entregado');
         appendMessage('bot', 'No pude responder en este momento. Intentalo nuevamente en unos segundos.' + buildDiagnosticSuffix_(null, 'invalid_payload', null));
