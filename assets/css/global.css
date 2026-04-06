@@ -4845,7 +4845,7 @@ FOOTER
 .chat-ia-messages {
   padding: 12px;
   overflow-y: auto;
-  background: linear-gradient(180deg, #f7faff 0%, #ffffff 55%);
+  background: #f5f7fb url("../../components/chat-ia-float/wallpaper-chat.webp") center center / cover no-repeat !important;
 }
 
 .chat-ia-msg {
