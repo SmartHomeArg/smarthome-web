@@ -37,7 +37,7 @@ var PROMPT_OPT = {
   MODELS_CACHE_SECONDS: 900,
   DISCOVERY_MAX_MODELS: 10,
   ENABLE_MODEL_DISCOVERY: false,
-  MAX_OUTPUT_TOKENS: 700,
+  MAX_OUTPUT_TOKENS: 1024,
   MIN_REPLY_CHARS: 45,
   GEMINI_RETRY_ATTEMPTS: 2,
   GEMINI_RETRY_BASE_MS: 450,
@@ -766,15 +766,16 @@ function buildBotReply_(ctx, signal, props, cfg) {
       '\n- No cierres con frases incompletas.',
       '\n- No pidas de nuevo datos ya confirmados en DATOS CONFIRMADOS.',
       '\n- Usa CONOCIMIENTO COMERCIAL como fuente principal. NUNCA inventes precios ni datos.',
-      '\n- Si preguntan precios, respondelos con los datos de CONOCIMIENTO COMERCIAL.',
+      '\n- REGLA DE ORO PRECIOS: Si el cliente pregunta cuanto cuesta, cuanto sale, precios, valores o cualquier variante, SIEMPRE responde con numeros concretos PRIMERO. Da un rango de precios o el precio del kit/plan mas adecuado segun lo que ya sabes. NUNCA respondas solo con preguntas de diagnostico sin dar al menos un rango de precios. Ejemplo correcto: "Para una casa con alarma, los planes arrancan en $32.830/mes (Plan Video) y el kit desde $49.900 de instalacion. Dependiendo del tamaño de tu casa te conviene uno u otro. Cuantos ambientes tiene?"',
       '\n- Si el cliente pregunta que vendemos, explica brevemente: alarmas, camaras, monitoreo 24/7, equipamiento en comodato, instalacion profesional.',
-      '\n- Da una respuesta util y luego 1 pregunta puntual para avanzar comercialmente.',
-      '\n- Estrategia de cierre: detectar necesidad -> recomendar kit/plan -> pedir datos -> confirmar -> derivar asesor.',
-      '\n- Si el cliente tiene dudas, respondelas primero y luego avanza.',
+      '\n- Da una respuesta util con informacion concreta y luego 1 pregunta puntual para avanzar.',
+      '\n- Estrategia: responder la consulta del cliente PRIMERO con datos reales, luego preguntar para refinar la recomendacion.',
+      '\n- Si el cliente tiene dudas, respondelas primero con datos concretos y luego avanza.',
       '\n- Si el cliente muestra intencion de compra, pedi nombre, telefono y localidad para derivar a un asesor.',
       '\n- Antes de derivar a asesor, confirma: "Puedo pasarle tus datos a un asesor para que te contacte?"',
       '\n- No repitas textualmente la misma pregunta de turnos previos.',
-      '\n- Si el cliente esta confundido, responde primero su duda y recien despues hace una pregunta de avance.'
+      '\n- Si el cliente esta confundido, responde primero su duda y recien despues hace una pregunta de avance.',
+      '\n- IMPORTANTE: SIEMPRE termina tu respuesta con una oracion completa. Nunca dejes una frase a mitad. Si te quedas sin espacio, cierra con lo que tengas y una pregunta corta.'
     ].join('');
 
   if (!props.GEMINI_API_KEY) {
@@ -865,10 +866,12 @@ function buildLightIaPrompt_(ctx, signal, knownFacts, sessionCompact) {
     'Sos asesor comercial de Smarthome, empresa de seguridad en Argentina (+8 anos, +1000 clientes).',
     'Ofrecemos alarmas, camaras y monitoreo 24/7 con equipamiento en comodato e instalacion profesional.',
     'Planes para hogar: Video ($32.830/mes), Basic ($41.230/mes), Plus ($44.030/mes), Pro ($48.993/mes). Comercio: Comercial ($62.930/mes). Precios con 30% dto por 6 meses.',
+    'Kits de alarma desde $49.900 instalacion. Kits con camaras desde $94.900. Equipamiento en comodato (no se compra).',
+    'REGLA: Si preguntan cuanto cuesta o precios, SIEMPRE responder con numeros concretos PRIMERO, luego preguntar para refinar.',
     'Responde en espanol, tono humano y natural. No uses markdown ni listas con guiones.',
     'Si es primer saludo, presentate breve como asesor de Smarthome y pregunta si busca proteger su hogar o comercio.',
     'Si ya hay continuidad de sesion, no saludes ni reinicies la conversacion.',
-    'Maximo 100 palabras.',
+    'Maximo 100 palabras. SIEMPRE termina con una oracion completa, nunca dejes una frase cortada.',
     'MENSAJE CLIENTE: ' + String((ctx && ctx.userMessage) || ''),
     'INTENCION: ' + String((signal && signal.intent) || 'info'),
     'DATOS CONFIRMADOS: ' + String(knownFacts || ''),
@@ -1048,6 +1051,21 @@ function buildCompactKnowledgeContext_(knowledgeText, ctx, signal) {
   var isCommercial = !!(signal && (signal.intent === 'cotizacion' || signal.intent === 'compra'));
   var msgLower = String((ctx && ctx.userMessage) || '').toLowerCase();
   var asksPricing = /precio|cuanto|valor|cuesta|sale|plan|kit|cotiz|presupuesto/.test(msgLower);
+
+  // Tambien revisar historial reciente: si en los ultimos turnos el usuario pregunto precios,
+  // seguimos enviando contexto completo de pricing porque la conversacion sigue en ese tema.
+  if (!asksPricing && ctx && ctx.chatHistory) {
+    for (var hi = Math.max(0, ctx.chatHistory.length - 6); hi < ctx.chatHistory.length; hi++) {
+      var entry = ctx.chatHistory[hi];
+      if (entry && entry.role === 'user') {
+        var histMsg = String(entry.text || '').toLowerCase();
+        if (/precio|cuanto|valor|cuesta|sale|cotiz|presupuesto/.test(histMsg)) {
+          asksPricing = true;
+          break;
+        }
+      }
+    }
+  }
 
   if (isCommercial || asksPricing) {
     return trimForPrompt_(knowledgeText, PROMPT_OPT.MAX_KNOWLEDGE_CHARS);
@@ -1310,9 +1328,11 @@ function buildRescuePrompt_(ctx, signal) {
   return [
     'Sos asesor comercial de Smarthome (alarmas, camaras, monitoreo 24/7 en Argentina).',
     'Planes hogar: Video $32.830/mes, Basic $41.230/mes, Plus $44.030/mes, Pro $48.993/mes. Comercio: Comercial $62.930/mes. Equipamiento en comodato. 30% dto 6 meses.',
+    'Kits alarma desde $49.900 instalacion. Kits con camaras desde $94.900.',
     'Responde breve en espanol, tono humano. No uses markdown.',
-    'Si preguntan precios, da los valores reales. Primero responde la duda y luego una sola pregunta de avance.',
-    'Maximo 100 palabras.',
+    'REGLA: Si preguntan cuanto cuesta o precios, SIEMPRE dar numeros concretos PRIMERO. Nunca esquivar con solo preguntas.',
+    'Si preguntan precios, da los valores reales. Primero responde la duda con datos y luego una sola pregunta de avance.',
+    'Maximo 100 palabras. SIEMPRE termina con oracion completa.',
     'MENSAJE CLIENTE: ' + String((ctx && ctx.userMessage) || ''),
     'INTENCION: ' + String((signal && signal.intent) || 'info'),
     'DATOS CONFIRMADOS: ' + buildKnownFactsForPrompt_(ctx),
@@ -1511,9 +1531,9 @@ function postProcessReply_(text, ctx) {
     out = cleanText_(out);
   }
 
-  if (!/[.!?]$/.test(out)) {
-    out += '.';
-  }
+  // --- ANTI-TRUNCADO: si Gemini corto a mitad de frase, recortar al ultimo ---
+  // --- punto/signo completo en vez de dejar texto colgando. ---
+  out = salvageTruncatedReply_(out);
 
   // Normalizar espacios y duplicados de puntuacion residuales.
   out = out
@@ -1523,6 +1543,49 @@ function postProcessReply_(text, ctx) {
     .trim();
 
   return out;
+}
+
+/**
+ * Si el texto termina con una frase incompleta (truncado por MAX_TOKENS),
+ * recorta hasta la ultima oracion completa que termine en . ! o ?
+ * Si no hay ninguna oracion completa, agrega un cierre generico.
+ */
+function salvageTruncatedReply_(text) {
+  var t = cleanText_(text);
+  if (!t) return t;
+
+  // Si ya termina en signo de cierre valido, verificar que no sea truncado.
+  if (/[.!?]$/.test(t) && !hasAbruptEnding_(t)) {
+    return t;
+  }
+
+  // Buscar la ultima oracion completa (terminada en . ! o ?).
+  var lastDot = t.lastIndexOf('.');
+  var lastBang = t.lastIndexOf('!');
+  var lastQuestion = t.lastIndexOf('?');
+  var bestCut = Math.max(lastDot, lastBang, lastQuestion);
+
+  // Si encontramos un corte razonable (al menos 40 chars de contenido util).
+  if (bestCut >= 40) {
+    var salvaged = t.slice(0, bestCut + 1).trim();
+    // Verificar que lo salvado no tenga final abrupto.
+    if (!hasAbruptEnding_(salvaged) && salvaged.length >= 40) {
+      return salvaged;
+    }
+  }
+
+  // Si la oracion entera se corto, intentar cortar en la ultima coma.
+  var lastComma = t.lastIndexOf(',');
+  if (lastComma >= 40) {
+    return t.slice(0, lastComma).trim() + '. Escribime si queres mas detalle.';
+  }
+
+  // Ultimo recurso: agregar cierre generico.
+  if (!/[.!?]$/.test(t)) {
+    t += '. Si queres, puedo darte mas detalles.';
+  }
+
+  return t;
 }
 
 function buildSessionContextForPrompt_(ctx) {
@@ -1603,11 +1666,17 @@ function hasAbruptEnding_(text) {
   if (/\b(opcion|kit|plan)\s+[a-z]\.$/.test(t)) return true;
 
   // Conectores colgando al final.
-  if (/\s+(o|y|de|con|para|por)\.$/.test(t)) return true;
+  if (/\s+(o|y|de|con|para|por|el|la|los|las|un|una|tu|al|del|que|como|su|te|se|me|es|en)\.$/.test(t)) return true;
 
   // Cierres tipicos de respuesta inconclusa detectados en produccion.
-  if (/(ofrecemos|incluye|incluyen|especializamos|protegemos)\.$/.test(t)) return true;
+  if (/(ofrecemos|incluye|incluyen|especializamos|protegemos|recomendarte|contarte|darte|ayudarte|pasarte|brindarte)\.$/.test(t)) return true;
   if (/\.\.\.$/.test(t)) return true;
+
+  // Frases que terminan con verbo infinitivo truncado.
+  if (/\b(poder|tener|saber|hacer|ver|dar|poner|decir)\.$/.test(t)) return true;
+
+  // Articulo o preposicion como ultima palabra antes del punto.
+  if (/\s+(del|al|el|la|lo|los|las|un|una|unos|unas)\.$/.test(t)) return true;
 
   return false;
 }
