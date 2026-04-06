@@ -965,6 +965,8 @@ function buildBotReply_(ctx, signal, props, cfg) {
       '\n- DESPEDIDA: Cuando el cliente dice "no" a "tenes alguna pregunta mas?" o similares, despedite cordialmente: "Perfecto, cualquier cosa estamos para ayudarte. Que tengas un buen dia!" NO interpretes eso como desinteres en la compra.',
       '\n- NO SOBRE-PREGUNTAR: No hagas mas de 1 pregunta por mensaje. Si el cliente ya confirmo la venta y diste los datos al asesor, no sigas preguntando "algo mas?" en cada turno. Un buen vendedor sabe cuando cerrar la conversacion.',
       '\n- COMPORTAMIENTO HUMANO: Habla como una persona real, no como un formulario. No repitas informacion que ya dijiste salvo que el cliente la pida. No seas repetitivo ni robótico. Si la conversacion llego a su fin natural, cerrala.',
+      '\n- NUNCA REPETIR: Bajo ninguna circunstancia repitas textualmente o casi textualmente tu mensaje anterior. Si no sabes que decir, es mejor dar una respuesta nueva (aunque sea breve) que repetir lo mismo.',
+      '\n- PREGUNTAS FUERA DE TEMA: Si el cliente pregunta algo que NO tiene relacion con seguridad, alarmas, camaras, monitoreo o los servicios de Smarthome (ej: "cuanto pesa un barco", "cual es la capital de Francia"), responde con naturalidad y amabilidad que solo podes ayudarlo con temas de seguridad y proteccion. Ejemplo: "Ja, buena pregunta! Pero solo puedo ayudarte con temas de seguridad y alarmas. Si tenes alguna duda sobre proteccion para tu casa o comercio, estoy a disposicion." NUNCA ignores la pregunta ni repitas tu respuesta anterior como si no hubiera dicho nada.',,
       '\n- CONTINUIDAD CONVERSACIONAL: Cada mensaje tuyo debe mover la conversacion hacia adelante. NUNCA envies un mensaje que deje al cliente sin saber que responder. Si la conversacion NO ha terminado, siempre incluye uno de estos elementos: una pregunta concreta, una opcion para elegir, un precio con invitacion a cotizar, o una propuesta de siguiente paso. Si la conversacion YA termino (venta cerrada, despedida), ahi si cerra sin preguntas. Ejemplo MALO: "Tenemos soluciones muy completas con monitoreo 24/7." (el cliente no sabe que decir). Ejemplo BUENO: "Tenemos alarma con monitoreo 24/7 desde $32.830/mes. Para darte el kit ideal, cuantos accesos o ambientes tiene tu comercio?"',
       '\n- IMPORTANTE: SIEMPRE termina tu respuesta con una oracion completa. Nunca dejes una frase a mitad. Si te quedas sin espacio, cierra con lo que tengas.'
     ].join('');
@@ -1153,12 +1155,41 @@ function avoidLoopingReply_(reply, ctx, signal, knowledgeText) {
   var lastBot = cleanText_(getLastBotMessage_(ctx));
   if (!lastBot) return out;
 
-  if (out.toLowerCase() === lastBot.toLowerCase()) {
-    // En modo IA exitoso, no inyectar respuestas hardcodeadas: conservar salida del modelo.
-    return out;
+  // Detectar repeticion exacta o casi exacta (>85% similar).
+  var outLower = out.toLowerCase().trim();
+  var lastLower = lastBot.toLowerCase().trim();
+  if (outLower !== lastLower) {
+    // Verificar similitud alta (misma respuesta con puntuacion diferente).
+    var shorter = outLower.length < lastLower.length ? outLower : lastLower;
+    var longer = outLower.length >= lastLower.length ? outLower : lastLower;
+    if (shorter.length > 20 && longer.indexOf(shorter.slice(0, Math.floor(shorter.length * 0.85))) === -1) {
+      return out; // Suficientemente diferente.
+    }
+    if (shorter.length <= 20) return out;
   }
 
-  return out;
+  // El modelo repitio su respuesta anterior. Reintentar con instruccion explicita.
+  try {
+    var antiLoopPrompt = [
+      'El cliente acaba de decir: "' + String(ctx.userMessage || '') + '".',
+      'Tu respuesta anterior fue: "' + lastBot.slice(0, 200) + '".',
+      'PROBLEMA: ibas a repetir exactamente la misma respuesta. Eso no esta bien.',
+      'REGLA: NUNCA repitas tu mensaje anterior. Responde algo DIFERENTE y relevante al mensaje actual del cliente.',
+      'Si el cliente pregunto algo que no tiene que ver con seguridad/alarmas/camaras/Smarthome, decile amablemente que solo podes ayudarlo con temas de seguridad.',
+      'Si el cliente se despidio, despedite vos tambien.',
+      'Maximo 60 palabras. Sin markdown. Espanol rioplatense.'
+    ].join('\n');
+    var retryText = callGeminiWithMultiKey_(antiLoopPrompt, 'gemini-2.5-flash-lite');
+    var retryClean = cleanText_(retryText);
+    if (retryClean && retryClean.toLowerCase().trim() !== lastLower) {
+      return retryClean;
+    }
+  } catch (_retryErr) {}
+
+  // Si el reintento tambien fallo, al menos no repetir: dar respuesta generica contextual.
+  var userMsg = String(ctx.userMessage || '').toLowerCase();
+  if (isGreetingOnly_(userMsg)) return 'Hola! En que te puedo ayudar con seguridad hoy?';
+  return 'Solo puedo ayudarte con temas de seguridad, alarmas y camaras. Si tenes alguna consulta sobre proteccion para tu casa o comercio, preguntame!';
 }
 
 function buildKnownFactsForPrompt_(ctx) {
