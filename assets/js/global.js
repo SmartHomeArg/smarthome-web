@@ -2898,6 +2898,141 @@ function initChatIAWidget_(contenedor) {
     messages.scrollTop = messages.scrollHeight;
   }
 
+  /**
+   * Muestra un formulario de captura de lead dentro del chat.
+   * Se dispara cuando el backend indica showLeadForm: true.
+   * Envía los datos al mismo endpoint que el hero form del sitio.
+   */
+  function appendLeadFormCard_() {
+    // Evitar mostrar dos formularios en la misma sesion.
+    if (messages.querySelector('[data-chat-lead-form]')) return;
+
+    var card = document.createElement('article');
+    card.className = 'chat-ia-msg is-bot chat-ia-lead-form-card';
+    card.innerHTML = [
+      '<p class="chat-ia-lead-form__title">Completa tus datos para que un asesor te contacte:</p>',
+      '<form class="chat-ia-lead-form" data-chat-lead-form novalidate>',
+      '  <input type="text" name="nombreApellido" placeholder="Nombre y apellido" maxlength="80" required autocomplete="name">',
+      '  <input type="tel" name="telefono" placeholder="Telefono (10 digitos, sin 0 y sin 15)" inputmode="numeric" maxlength="10" required>',
+      '  <select name="provincia" required>',
+      '    <option value="">Provincia</option>',
+      '    <option value="Buenos Aires">Buenos Aires</option>',
+      '    <option value="CABA">CABA</option>',
+      '    <option value="Catamarca">Catamarca</option>',
+      '    <option value="Chaco">Chaco</option>',
+      '    <option value="Chubut">Chubut</option>',
+      '    <option value="Cordoba">Cordoba</option>',
+      '    <option value="Corrientes">Corrientes</option>',
+      '    <option value="Entre Rios">Entre Rios</option>',
+      '    <option value="Formosa">Formosa</option>',
+      '    <option value="Jujuy">Jujuy</option>',
+      '    <option value="La Pampa">La Pampa</option>',
+      '    <option value="La Rioja">La Rioja</option>',
+      '    <option value="Mendoza">Mendoza</option>',
+      '    <option value="Misiones">Misiones</option>',
+      '    <option value="Neuquen">Neuquen</option>',
+      '    <option value="Rio Negro">Rio Negro</option>',
+      '    <option value="Salta">Salta</option>',
+      '    <option value="San Juan">San Juan</option>',
+      '    <option value="San Luis">San Luis</option>',
+      '    <option value="Santa Cruz">Santa Cruz</option>',
+      '    <option value="Santa Fe">Santa Fe</option>',
+      '    <option value="Santiago del Estero">Santiago del Estero</option>',
+      '    <option value="Tierra del Fuego">Tierra del Fuego</option>',
+      '    <option value="Tucuman">Tucuman</option>',
+      '  </select>',
+      '  <input type="email" name="mail" placeholder="Email" maxlength="120" required autocomplete="email">',
+      '  <button type="submit" class="chat-ia-lead-form__submit">Enviar datos</button>',
+      '  <p class="chat-ia-lead-form__msg" data-chat-lead-form-msg></p>',
+      '</form>'
+    ].join('');
+
+    var leadForm = card.querySelector('[data-chat-lead-form]');
+    var formMsg = card.querySelector('[data-chat-lead-form-msg]');
+
+    function showFormMsg(text, type) {
+      if (!formMsg) return;
+      formMsg.textContent = String(text || '');
+      formMsg.classList.remove('is-error', 'is-success');
+      if (type) formMsg.classList.add(type);
+    }
+
+    function digits(value) {
+      return String(value || '').replace(/\D/g, '');
+    }
+
+    function emailValid(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+    }
+
+    // Formatear telefono mientras escribe.
+    var phoneInput = leadForm ? leadForm.querySelector('input[name="telefono"]') : null;
+    if (phoneInput) {
+      phoneInput.addEventListener('input', function () {
+        this.value = digits(this.value).slice(0, 10);
+      });
+    }
+
+    if (leadForm) {
+      leadForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        showFormMsg('', '');
+
+        var fd = new FormData(leadForm);
+        var nombre = String(fd.get('nombreApellido') || '').trim();
+        var telefono = digits(fd.get('telefono')).slice(0, 10);
+        var provincia = String(fd.get('provincia') || '').trim();
+        var mail = String(fd.get('mail') || '').trim();
+
+        if (nombre.length < 3) { showFormMsg('Ingresa nombre y apellido.', 'is-error'); return; }
+        if (telefono.length !== 10) { showFormMsg('Ingresa 10 digitos de telefono, sin 0 y sin 15.', 'is-error'); return; }
+        if (!provincia) { showFormMsg('Selecciona una provincia.', 'is-error'); return; }
+        if (!emailValid(mail)) { showFormMsg('Ingresa un email valido.', 'is-error'); return; }
+
+        var submitBtn = leadForm.querySelector('button[type="submit"]');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enviando...'; }
+
+        var payload = {
+          nombreApellido: nombre,
+          telefono: telefono,
+          provincia: provincia,
+          mail: mail,
+          website: '',
+          tiempoSegundos: 10,
+          pagina: 'chat_ia_lead',
+          url: window.location.href,
+          userAgent: navigator.userAgent
+        };
+
+        try {
+          var response = await fetch(SHARED_APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
+
+          var result = await response.json();
+          if (result && result.ok) {
+            showFormMsg('Datos enviados correctamente. Un asesor te va a contactar pronto.', 'is-success');
+            leadForm.reset();
+            if (submitBtn) { submitBtn.textContent = 'Enviado'; }
+            // Agregar mensaje del bot confirmando.
+            appendMessage('bot', 'Tus datos fueron enviados. En breve un asesor se va a comunicar con vos. Gracias por confiar en Smarthome.');
+          } else {
+            showFormMsg('No se pudo enviar. Intenta nuevamente.', 'is-error');
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Enviar datos'; }
+          }
+        } catch (_err) {
+          showFormMsg('Error de conexion. Intenta nuevamente.', 'is-error');
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Enviar datos'; }
+        }
+      });
+    }
+
+    messages.appendChild(card);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
   function updatePanelAnchorFromRoot_() {
     const rect = root.getBoundingClientRect();
     panelAnchor.right = Math.max(0, Math.round(window.innerWidth - rect.right));
@@ -3097,6 +3232,10 @@ function initChatIAWidget_(contenedor) {
         appendMessage('bot', fallbackMode ? (botText + buildDiagnosticSuffix_(data, 'fallback', null)) : (botText + debugSuffix));
         if (fallbackMode) {
           appendFallbackSupportCard_();
+        }
+        // Si el backend indica mostrar formulario de lead, insertarlo.
+        if (!fallbackMode && data.data && data.data.showLeadForm) {
+          appendLeadFormCard_();
         }
       } else if (data.ok === true) {
         setUserMessageStatus_(userMsgEl, '✓✓ Leido');

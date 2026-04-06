@@ -154,7 +154,7 @@ function processChatRequest_(payload) {
     validateInput_(ctx, cfg);
     enrichLeadFromMessage_(ctx, cfg);
 
-    var signal = detectCommercialSignal_(ctx.userMessage);
+    var signal = detectCommercialSignal_(ctx.userMessage, ctx.chatHistory);
     var leadScore = scoreLead_(signal, ctx, cfg);
     var leadStatus = classifyLeadStatus_(leadScore, cfg);
 
@@ -226,6 +226,7 @@ function processChatRequest_(payload) {
         leadScore: leadScore,
         leadStatus: leadStatus,
         canDeriveToAdvisor: leadStatus !== 'frio',
+        showLeadForm: shouldShowLeadForm_(signal, ctx, cfg, leadScore),
         fallbackReason: botReplyResult.fallbackReason || '',
         providerCode: botReplyResult.providerCode || '',
         diagnosticCode: '',
@@ -790,24 +791,42 @@ function validateInput_(ctx, cfg) {
   }
 }
 
-function detectCommercialSignal_(text) {
+function detectCommercialSignal_(text, chatHistory) {
   var t = String(text || '').toLowerCase();
 
-  var hasQuote = /(precio|cotiza|cotizacion|presupuesto|cuanto sale|valor|plan)/.test(t);
-  var hasUrgency = /(hoy|urgente|esta semana|ya|cuanto antes|rapido)/.test(t);
-  var hasInstallIntent = /(instalar|instalacion|contratar|quiero contratar|quiero poner|quiero\s+.*(alarma|sistema|camara|monitoreo)|necesito\s+.*(alarma|sistema|camara|monitoreo))/.test(t);
-  var asksAdvisor = /(asesor|llamenme|llamame|contactenme|me contactan)/.test(t);
+  // Combinar todo el historial del usuario para detectar senales acumuladas.
+  var fullUserText = t;
+  if (chatHistory && chatHistory.length > 0) {
+    for (var i = 0; i < chatHistory.length; i++) {
+      if (chatHistory[i] && chatHistory[i].role === 'user') {
+        fullUserText += ' ' + String(chatHistory[i].text || '').toLowerCase();
+      }
+    }
+  }
+
+  var hasQuote = /(precio|cotiza|cotizacion|presupuesto|cuanto sale|cuanto cuesta|valor|plan)/.test(fullUserText);
+  var hasUrgency = /(hoy|urgente|esta semana|ya|cuanto antes|rapido)/.test(fullUserText);
+  var hasInstallIntent = /(instalar|instalacion|contratar|quiero contratar|quiero poner|quiero\s+.*(alarma|sistema|camara|monitoreo)|necesito\s+.*(alarma|sistema|camara|monitoreo))/.test(fullUserText);
+  var asksAdvisor = /(asesor|llamenme|llamame|contactenme|me contactan)/.test(fullUserText);
+
+  // Detectar confirmacion de compra explicita en cualquier turno del historial.
+  var hasExplicitBuy = /(lo quiero|quiero comprarlo|quiero avanzar|dale|bueno lo quiero|lo compro|si.{0,10}quiero|perfecto.{0,10}avanzar|cerrar|cerramos)/.test(fullUserText);
+
+  // Detectar que el cliente proporciono datos de contacto voluntariamente.
+  var gaveContactData = /(soy de|vivo en|mi nombre|me llamo|mi telefono|mi numero)/.test(fullUserText);
 
   var intent = 'info';
   if (hasQuote) intent = 'cotizacion';
-  if (hasInstallIntent || /(comprar|quiero avanzar|cerrar)/.test(t)) intent = 'compra';
+  if (hasInstallIntent || hasExplicitBuy) intent = 'compra';
 
   return {
     intent: intent,
     hasQuote: hasQuote,
     hasUrgency: hasUrgency,
     hasInstallIntent: hasInstallIntent,
-    asksAdvisor: asksAdvisor
+    asksAdvisor: asksAdvisor,
+    hasExplicitBuy: hasExplicitBuy,
+    gaveContactData: gaveContactData
   };
 }
 
@@ -820,6 +839,17 @@ function scoreLead_(signal, ctx, cfg) {
   if (signal.hasInstallIntent) score += cfg.scoreConfirmaInstalacion;
   if (signal.asksAdvisor) score += cfg.scoreAceptaContactoAsesor;
 
+  // Confirmacion de compra explicita: bonus fuerte.
+  if (signal.hasExplicitBuy) score += 30;
+
+  // Si ademas de confirmar compra, dio datos de contacto voluntariamente: lead cerrado.
+  if (signal.hasExplicitBuy && hasValidContact_(ctx, cfg)) score = Math.max(score, 95);
+
+  // Si tiene nombre + telefono + localidad, es un lead con datos completos.
+  if (ctx.lead.nombre && hasValidContact_(ctx, cfg) && ctx.lead.localidad) {
+    score = Math.max(score, 70);
+  }
+
   return Math.max(0, Math.min(100, score));
 }
 
@@ -827,6 +857,23 @@ function classifyLeadStatus_(score, cfg) {
   if (score >= cfg.umbralLeadCaliente) return 'caliente';
   if (score >= 40) return 'tibio';
   return 'frio';
+}
+
+/**
+ * Determinar si el frontend debe mostrar el formulario de lead en el chat.
+ * Se muestra cuando hay intencion de compra/cotizacion y el cliente aun
+ * no proporcionó datos de contacto completos.
+ */
+function shouldShowLeadForm_(signal, ctx, cfg, score) {
+  // Si ya tiene datos completos, no mostrar formulario (ya se registraron).
+  if (ctx.lead.nombre && hasValidContact_(ctx, cfg) && ctx.lead.localidad) {
+    return false;
+  }
+  // Si el intent indica compra o cotizacion avanzada, mostrar formulario.
+  if (signal.intent === 'compra' || signal.hasExplicitBuy) return true;
+  // Si el score ya es alto pero faltan datos de contacto, mostrar.
+  if (score >= 40 && !hasValidContact_(ctx, cfg)) return true;
+  return false;
 }
 
 function buildBotReply_(ctx, signal, props, cfg) {
@@ -911,9 +958,8 @@ function buildBotReply_(ctx, signal, props, cfg) {
       '\n- Da una respuesta util con informacion concreta. Solo agrega 1 pregunta si realmente la necesitas para avanzar. Si ya tenes toda la info que necesitas, NO preguntes nada mas.',
       '\n- Estrategia: responder la consulta del cliente PRIMERO con datos reales, luego preguntar para refinar solo si falta un dato clave.',
       '\n- Si el cliente tiene dudas, respondelas primero con datos concretos.',
-      '\n- Si el cliente muestra intencion de compra, pedi nombre, telefono y localidad para derivar a un asesor.',
-      '\n- CONSENTIMIENTO IMPLICITO: Si el cliente te da nombre + telefono + localidad voluntariamente (en respuesta a tu pedido o por iniciativa propia), eso YA es consentimiento. Derivar directamente al asesor sin preguntar "confirmas?" ni "te parece bien?". Solo pedir confirmacion explicita si los datos fueron inferidos, no proporcionados directamente.',
-      '\n- NUNCA preguntar "te parece bien si le paso tu informacion?" cuando el cliente acaba de darte sus datos. Es redundante y rompe el flujo de venta. Agradece, confirma que ya lo derivaste, y listo.',
+      '\n- CAPTURA DE DATOS DE LEAD: Cuando el cliente confirme que quiere avanzar con la compra o instalacion, NO le pidas nombre, telefono y localidad por chat. En su lugar, decile algo como: "Genial! Para que un asesor te contacte, completa el breve formulario que aparece aca abajo con tus datos." El sistema mostrara automaticamente un formulario debajo de tu mensaje. Limitate a motivar al cliente a completarlo.',
+      '\n- Si el cliente ya envio sus datos por el formulario o ya los proporcionó antes, agradece y confirma que un asesor se va a comunicar. No pidas datos de nuevo.',
       '\n- No repitas textualmente la misma pregunta de turnos previos.',
       '\n- INTERPRETACION CONTEXTUAL: Interpreta el mensaje del cliente segun el CONTEXTO de la conversacion, no aislado. "no gracias" despues de una venta cerrada significa "no tengo mas consultas" (despedite cordialmente). "no gracias" al inicio o ante una oferta significa desinteres. Siempre lee el historial antes de interpretar.',
       '\n- DESPEDIDA: Cuando el cliente dice "no" a "tenes alguna pregunta mas?" o similares, despedite cordialmente: "Perfecto, cualquier cosa estamos para ayudarte. Que tengas un buen dia!" NO interpretes eso como desinteres en la compra.',
@@ -2569,10 +2615,14 @@ function maybeSyncLeadToForms_(ctx, signal, score, status, props, cfg) {
     return { synced: false, detail: 'Lead sin criterio de derivacion' };
   }
 
-  if (!consentOk_(ctx, cfg)) return { synced: false, detail: 'Sin consentimiento' };
+  // Consentimiento implicito: si el cliente dio datos voluntariamente o confirmo compra.
+  if (!consentOk_(ctx, cfg) && !signal.hasExplicitBuy && !signal.gaveContactData) {
+    return { synced: false, detail: 'Sin consentimiento' };
+  }
 
-  if (!ctx.lead.nombre || !ctx.lead.telefono || !ctx.lead.email || !ctx.lead.localidad) {
-    return { synced: false, detail: 'Faltan datos para hoja oficial (nombre/telefono/email/localidad)' };
+  // Nombre y telefono son obligatorios. Email es opcional (el form del chat lo captura).
+  if (!ctx.lead.nombre || !ctx.lead.telefono) {
+    return { synced: false, detail: 'Faltan datos minimos (nombre/telefono)' };
   }
 
   var payload = {
@@ -2580,9 +2630,9 @@ function maybeSyncLeadToForms_(ctx, signal, score, status, props, cfg) {
     nombreApellido: ctx.lead.nombre,
     telefono: ctx.lead.telefono,
     provincia: ctx.lead.localidad,
-    mail: ctx.lead.email,
-    pagina: ctx.sourcePage || 'chat',
-    url: ctx.sourcePage || 'chat',
+    mail: ctx.lead.email || '',
+    pagina: 'chat_ia_bot',
+    url: ctx.sourcePage || 'chat_ia_bot',
     userAgent: ctx.userAgent || 'chat-widget',
     website: '',
     tiempoSegundos: 10
