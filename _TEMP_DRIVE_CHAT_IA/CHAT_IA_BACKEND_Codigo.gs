@@ -560,43 +560,14 @@ function persistConversationTranscript_(ctx, botReplyText, props) {
     if (!docId) {
       var dateStr = Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd_HHmmss');
       var title = 'chat_' + ctx.sessionId + '_' + dateStr;
-      doc = DocumentApp.create(title);
-      docId = doc.getId();
 
-      // Mover a la carpeta Chats_History.
-      // Intenta primero con CHAT_TRANSCRIPTS_FOLDER_ID de Script Properties.
-      // Si no esta configurado, busca una carpeta llamada "Chats_History" en Drive.
+      // Resolver carpeta destino ANTES de crear el archivo.
       var targetFolderId = resolveTranscriptsFolderId_(props);
 
-      if (targetFolderId) {
-        try {
-          var file = DriveApp.getFileById(docId);
-          var folder = DriveApp.getFolderById(targetFolderId);
-          file.moveTo(folder);
-        } catch (moveErr) {
-          // moveTo fallo, intentar metodo clasico addFile/removeFile.
-          try {
-            var fileFb = DriveApp.getFileById(docId);
-            var folderFb = DriveApp.getFolderById(targetFolderId);
-            folderFb.addFile(fileFb);
-            var parents = fileFb.getParents();
-            while (parents.hasNext()) {
-              var parent = parents.next();
-              if (parent.getId() !== folderFb.getId()) {
-                parent.removeFile(fileFb);
-              }
-            }
-          } catch (fallbackMoveErr) {
-            writeErrorSafe_(ctx.sessionId, 'transcript_move_fallback_error',
-              'moveTo: ' + String(moveErr) + ' | addFile: ' + String(fallbackMoveErr),
-              'transcript', true);
-          }
-        }
-      } else {
-        writeErrorSafe_(ctx.sessionId, 'transcript_no_folder',
-          'No se encontro carpeta Chats_History. Configurar CHAT_TRANSCRIPTS_FOLDER_ID en Script Properties o crear carpeta Chats_History en Drive.',
-          'transcript', true);
-      }
+      // Crear el Google Doc directamente en la carpeta destino usando Drive API.
+      // Esto evita el problema de crear en raiz y fallar al mover.
+      docId = createDocInFolder_(title, targetFolderId, ctx.sessionId);
+      doc = DocumentApp.openById(docId);
 
       var head = doc.getBody();
       head.appendParagraph('=== Transcripcion de Chat Smarthome ===');
@@ -657,6 +628,69 @@ function resolveTranscriptsFolderId_(props) {
   // No encontrado: cachear resultado negativo 10 min para no buscar en cada turno.
   cache.put(cacheKey, '__NOT_FOUND__', 600);
   return null;
+}
+
+/**
+ * Crea un Google Doc y lo mueve a la carpeta destino.
+ * Metodo robusto: DocumentApp.create + addFile/removeFile (clasico, sin moveTo).
+ * Loguea cada paso para diagnosticar si algo falla.
+ */
+function createDocInFolder_(title, folderId, sessionId) {
+  // Paso 1: Crear el documento (siempre en raiz inicialmente).
+  var doc = DocumentApp.create(title);
+  var docId = doc.getId();
+
+  if (!folderId) {
+    writeErrorSafe_(sessionId, 'transcript_no_folder',
+      'No hay CHAT_TRANSCRIPTS_FOLDER_ID ni carpeta Chats_History en Drive. Archivo queda en raiz.',
+      'transcript', true);
+    return docId;
+  }
+
+  // Paso 2: Obtener file y folder.
+  var file;
+  var folder;
+  try {
+    file = DriveApp.getFileById(docId);
+  } catch (fileErr) {
+    writeErrorSafe_(sessionId, 'transcript_getfile_error',
+      'No se pudo obtener el file recien creado: ' + String(fileErr),
+      'transcript', true);
+    return docId;
+  }
+
+  try {
+    folder = DriveApp.getFolderById(folderId);
+  } catch (folderErr) {
+    writeErrorSafe_(sessionId, 'transcript_getfolder_error',
+      'Folder ID invalido (' + folderId + '): ' + String(folderErr),
+      'transcript', true);
+    return docId;
+  }
+
+  // Paso 3: Agregar el archivo a la carpeta destino.
+  try {
+    folder.addFile(file);
+  } catch (addErr) {
+    writeErrorSafe_(sessionId, 'transcript_addfolder_error',
+      'addFile fallo para folder ' + folderId + ': ' + String(addErr),
+      'transcript', true);
+    return docId;
+  }
+
+  // Paso 4: Quitar el archivo de la carpeta raiz.
+  try {
+    var root = DriveApp.getRootFolder();
+    root.removeFile(file);
+  } catch (removeErr) {
+    // No critico: el archivo ya esta en la carpeta correcta,
+    // solo queda tambien en raiz.
+    writeErrorSafe_(sessionId, 'transcript_removeroot_warn',
+      'removeFile de raiz fallo (archivo queda en ambas): ' + String(removeErr),
+      'transcript', true);
+  }
+
+  return docId;
 }
 
 function normalizeChatHistory_(historyRaw) {
