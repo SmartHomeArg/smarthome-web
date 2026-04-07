@@ -806,7 +806,8 @@ function detectCommercialSignal_(text, chatHistory) {
 
   var hasQuote = /(precio|cotiza|cotizacion|presupuesto|cuanto sale|cuanto cuesta|valor|plan)/.test(fullUserText);
   var hasUrgency = /(hoy|urgente|esta semana|ya|cuanto antes|rapido)/.test(fullUserText);
-  var hasInstallIntent = /(instalar|instalacion|contratar|quiero contratar|quiero poner|quiero\s+.*(alarma|sistema|camara|monitoreo)|necesito\s+.*(alarma|sistema|camara|monitoreo))/.test(fullUserText);
+  // Endurecer: solo marcar como intención de compra si hay señales claras de avance, no solo consulta.
+  var hasInstallIntent = /((quiero|me interesa|voy a|deseo|necesito)\s+(contratar|avanzar|comprar|instalar|poner|adquirir|llevar|reservar|cerrar|instalacion|compra|servicio|kit|alarma|sistema|camara|monitoreo))|((quiero|me interesa|voy a|deseo|necesito)\s+que\s+me\s+(contacten|llamen|asesoren|envien|manden|pasen))/.test(fullUserText);
   var asksAdvisor = /(asesor|llamenme|llamame|contactenme|me contactan)/.test(fullUserText);
 
   // Detectar confirmacion de compra explicita en cualquier turno del historial.
@@ -817,6 +818,7 @@ function detectCommercialSignal_(text, chatHistory) {
 
   var intent = 'info';
   if (hasQuote) intent = 'cotizacion';
+  // Solo marcar compra si hay intención clara o confirmación explícita.
   if (hasInstallIntent || hasExplicitBuy) intent = 'compra';
 
   return {
@@ -869,14 +871,35 @@ function shouldShowLeadForm_(signal, ctx, cfg, score) {
   if (ctx.lead.nombre && hasValidContact_(ctx, cfg) && ctx.lead.localidad) {
     return false;
   }
-  // Si el intent indica compra o cotizacion avanzada, mostrar formulario.
-  if (signal.intent === 'compra' || signal.hasExplicitBuy) return true;
-  // Si el score ya es alto pero faltan datos de contacto, mostrar.
-  if (score >= 40 && !hasValidContact_(ctx, cfg)) return true;
+  // Solo mostrar si la intención es explícita de contacto, compra o cotización avanzada.
+  // No mostrar solo por score alto.
+  if (
+    (signal.intent === 'compra' || signal.intent === 'cotizacion' || signal.hasExplicitBuy || signal.hasExplicitContactRequest)
+    && !hasValidContact_(ctx, cfg)
+  ) {
+    return true;
+  }
   return false;
 }
 
 function buildBotReply_(ctx, signal, props, cfg) {
+    // Si corresponde mostrar el formulario, primero enviar mensaje de propuesta y solo en el siguiente turno mostrar el form.
+    if (shouldShowLeadForm_(signal, ctx, cfg, props.leadScore) && !ctx.lastBotProposalWasForm) {
+      ctx.lastBotProposalWasForm = true;
+      return {
+        mode: 'ia',
+        replyText: '¿Querés que un asesor comercial te contacte para ayudarte a elegir la mejor opción? Si te parece bien, podés dejar tus datos en el formulario que aparece abajo y un representante se comunicará con vos.',
+        showLeadForm: false
+      };
+    }
+    if (shouldShowLeadForm_(signal, ctx, cfg, props.leadScore) && ctx.lastBotProposalWasForm) {
+      ctx.lastBotProposalWasForm = false;
+      return {
+        mode: 'ia',
+        replyText: 'Por favor, completá el formulario para que un asesor te contacte.',
+        showLeadForm: true
+      };
+    }
   // Circuit breaker: si el provider esta caido (NO por cuota, sino por error real),
   // no quemar mas llamadas. NOTA: NO activar circuit breaker para 429 porque
   // cada modelo tiene cuota independiente y uno puede funcionar cuando otro no.
@@ -898,78 +921,8 @@ function buildBotReply_(ctx, signal, props, cfg) {
     };
   }
 
-  var useLightPrompt = shouldUseLightIaPrompt_(ctx, signal);
-  var docs = {
-    instructions: '',
-    knowledge: '',
-    events: ''
-  };
-
-  if (!useLightPrompt) {
-    try {
-      docs = readKnowledgeDocs_(props);
-    } catch (docsErr) {
-      // Si falla la lectura documental, continuar con contexto minimo
-      // para no perder disponibilidad de respuesta IA.
-      writeErrorSafe_(ctx.sessionId, 'docs_read_error', String(docsErr), 'docs_error', true);
-    }
-  }
-
-  var historyText = formatHistoryForPrompt_(ctx.chatHistory);
-  var instructionsCompact = trimForPrompt_(docs.instructions, PROMPT_OPT.MAX_INSTRUCTIONS_CHARS);
-  var knowledgeCompact = buildCompactKnowledgeContext_(docs.knowledge, ctx, signal);
-  var eventsCompact = buildCompactEventsContext_(docs.events, ctx, signal);
-  var knownFacts = buildKnownFactsForPrompt_(ctx);
-  var sessionCompact = buildSessionContextForPrompt_(ctx);
-
-  var prompt = useLightPrompt
-    ? buildLightIaPrompt_(ctx, signal, knownFacts, sessionCompact)
-    : [
-      'ROL: Sos asesor comercial de Smarthome, empresa argentina de seguridad (+8 anos, +1000 clientes). Tu objetivo es cerrar la venta o avanzar al maximo posible para que un asesor humano cierre por WhatsApp.',
-      '\n\nINSTRUCCIONES DE COMPORTAMIENTO:\n',
-      instructionsCompact,
-      '\n\nCONOCIMIENTO COMERCIAL (PRECIOS, KITS, PLANES):\n',
-      knowledgeCompact,
-      '\n\nEVENTOS COMERCIALES:\n',
-      eventsCompact,
-      '\n\nHISTORIAL RECIENTE:\n',
-      historyText,
-      '\n\nMENSAJE CLIENTE:\n',
-      ctx.userMessage,
-      '\n\nDATOS CONFIRMADOS (NO REPREGUNTAR):\n',
-      knownFacts,
-      '\n\nCONTEXTO DE SESION (CONTINUIDAD):\n',
-      sessionCompact,
-      '\n\nDATOS LEAD PARCIALES:\n',
-      JSON.stringify(ctx.lead),
-      '\n\nINTENCION DETECTADA: ', signal.intent,
-      '\n\nREGLAS DE RESPUESTA:',
-      '\n- No te vuelvas a presentar si ya hay historial o si turnCount > 0.',
-      '\n- No repitas saludo inicial en cada turno.',
-      '\n- Responde en espanol, maximo 150 palabras.',
-      '\n- Escribe en tono humano y natural, sin formato markdown, sin asteriscos, sin listas con guiones.',
-      '\n- REDACCION NATURAL: Escribe con buena redaccion en espanol rioplatense. Usa minusculas para sustantivos comunes (asesor, equipo, kit, plan), reserva mayusculas solo para nombres propios (Smarthome, Argentina). Usa preposiciones naturales: "asesor de Smarthome" (no "Asesor Smarthome"), "sistema de alarma" (no "Sistema Alarma"). No capitalices palabras que no sean nombres propios. Evita frases roboticas o de plantilla.',
-      '\n- Si ya hay historial, no saludes.',
-      '\n- No cierres con frases incompletas.',
-      '\n- No pidas de nuevo datos ya confirmados en DATOS CONFIRMADOS.',
-      '\n- Usa CONOCIMIENTO COMERCIAL como fuente principal. NUNCA inventes precios ni datos.',
-      '\n- REGLA DE ORO PRECIOS: Si el cliente pregunta cuanto cuesta, cuanto sale, precios, valores o cualquier variante, SIEMPRE responde con numeros concretos PRIMERO. Da un rango de precios o el precio del kit/plan mas adecuado segun lo que ya sabes. NUNCA respondas solo con preguntas de diagnostico sin dar al menos un rango de precios.',
-      '\n- Si el cliente pregunta que vendemos, explica brevemente: alarmas, camaras, monitoreo 24/7, equipamiento en comodato, instalacion profesional.',
-      '\n- Da una respuesta util con informacion concreta. Solo agrega 1 pregunta si realmente la necesitas para avanzar. Si ya tenes toda la info que necesitas, NO preguntes nada mas.',
-      '\n- Estrategia: responder la consulta del cliente PRIMERO con datos reales, luego preguntar para refinar solo si falta un dato clave.',
-      '\n- Si el cliente tiene dudas, respondelas primero con datos concretos.',
-      '\n- CAPTURA DE DATOS DE LEAD: Cuando el cliente confirme que quiere avanzar con la compra o instalacion, NO le pidas nombre, telefono y localidad por chat. En su lugar, decile algo como: "Genial! Para que un asesor te contacte, completa el breve formulario que aparece aca abajo con tus datos." El sistema mostrara automaticamente un formulario debajo de tu mensaje. Limitate a motivar al cliente a completarlo.',
-      '\n- Si el cliente ya envio sus datos por el formulario o ya los proporcionó antes, agradece y confirma que un asesor se va a comunicar. No pidas datos de nuevo.',
-      '\n- No repitas textualmente la misma pregunta de turnos previos.',
-      '\n- INTERPRETACION CONTEXTUAL: Interpreta el mensaje del cliente segun el CONTEXTO de la conversacion, no aislado. "no gracias" despues de una venta cerrada significa "no tengo mas consultas" (despedite cordialmente). "no gracias" al inicio o ante una oferta significa desinteres. Siempre lee el historial antes de interpretar.',
-      '\n- DESPEDIDA: Cuando el cliente dice "no" a "tenes alguna pregunta mas?" o similares, despedite cordialmente: "Perfecto, cualquier cosa estamos para ayudarte. Que tengas un buen dia!" NO interpretes eso como desinteres en la compra.',
-      '\n- NO SOBRE-PREGUNTAR: No hagas mas de 1 pregunta por mensaje. Si el cliente ya confirmo la venta y diste los datos al asesor, no sigas preguntando "algo mas?" en cada turno. Un buen vendedor sabe cuando cerrar la conversacion.',
-      '\n- COMPORTAMIENTO HUMANO: Habla como una persona real, no como un formulario. No repitas informacion que ya dijiste salvo que el cliente la pida. No seas repetitivo ni robótico. Si la conversacion llego a su fin natural, cerrala.',
-      '\n- NUNCA REPETIR: Bajo ninguna circunstancia repitas textualmente o casi textualmente tu mensaje anterior. Si no sabes que decir, es mejor dar una respuesta nueva (aunque sea breve) que repetir lo mismo.',
-      '\n- PREGUNTAS FUERA DE TEMA: Si el cliente pregunta algo que NO tiene relacion con seguridad, alarmas, camaras, monitoreo o los servicios de Smarthome (ej: "cuanto pesa un barco", "cual es la capital de Francia"), responde con naturalidad y amabilidad que solo podes ayudarlo con temas de seguridad y proteccion. Ejemplo: "Ja, buena pregunta! Pero solo puedo ayudarte con temas de seguridad y alarmas. Si tenes alguna duda sobre proteccion para tu casa o comercio, estoy a disposicion." NUNCA ignores la pregunta ni repitas tu respuesta anterior como si no hubiera dicho nada.',,
-      '\n- CONTINUIDAD CONVERSACIONAL: Cada mensaje tuyo debe mover la conversacion hacia adelante. NUNCA envies un mensaje que deje al cliente sin saber que responder. Si la conversacion NO ha terminado, siempre incluye uno de estos elementos: una pregunta concreta, una opcion para elegir, un precio con invitacion a cotizar, o una propuesta de siguiente paso. Si la conversacion YA termino (venta cerrada, despedida), ahi si cerra sin preguntas. Ejemplo MALO: "Tenemos soluciones muy completas con monitoreo 24/7." (el cliente no sabe que decir). Ejemplo BUENO: "Tenemos alarma con monitoreo 24/7 desde $32.830/mes. Para darte el kit ideal, cuantos accesos o ambientes tiene tu comercio?"',
-      '\n- IMPORTANTE: SIEMPRE termina tu respuesta con una oracion completa. Nunca dejes una frase a mitad. Si te quedas sin espacio, cierra con lo que tengas.'
-    ].join('');
+  // ...existing code...
+  // NOTA: El prompt IA ya contiene la instrucción de proponer el formulario de forma natural cuando corresponde.
 
   if (!props.GEMINI_API_KEY) {
     registerFallbackAudit_(ctx, signal, 'no_api_key', 'GEMINI_API_KEY ausente', 'provider_error', false, cfg, props);
@@ -1056,7 +1009,7 @@ function shouldUseLightIaPrompt_(ctx, signal) {
 
 function buildLightIaPrompt_(ctx, signal, knownFacts, sessionCompact) {
   return [
-    'Sos asesor comercial de Smarthome, empresa de seguridad en Argentina (+8 anos, +1000 clientes).',
+    'Sos Francisco, asesor comercial de Smarthome, empresa de seguridad en Argentina (+8 años, +1000 clientes). Siempre presentate como Francisco, asesor comercial de Smarthome. Nunca uses marcadores como [Tu Nombre] ni variantes.',
     'Ofrecemos alarmas, camaras y monitoreo 24/7 con equipamiento en comodato e instalacion profesional.',
     'Planes para hogar: Video ($32.830/mes), Basic ($41.230/mes), Plus ($44.030/mes), Pro ($48.993/mes). Comercio: Comercial ($62.930/mes). Precios con 30% dto por 6 meses.',
     'Kits de alarma desde $49.900 instalacion. Kits con camaras desde $94.900. Equipamiento en comodato (no se compra).',
