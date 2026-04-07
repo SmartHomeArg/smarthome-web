@@ -1682,7 +1682,37 @@ function initContactLeadForm() {
       ciudadInput.appendChild(opt);
     });
 
+    // Agregar opción "Otra"
+    const otraOpt = document.createElement('option');
+    otraOpt.value = '__otra__';
+    otraOpt.textContent = 'Otra';
+    ciudadInput.appendChild(otraOpt);
+
     ciudadInput.disabled = false;
+
+    // Ocultar campo "otra ciudad" si estaba visible
+    const ciudadOtraInput = document.getElementById('contact-ciudad-otra');
+    if (ciudadOtraInput) {
+      ciudadOtraInput.style.display = 'none';
+      ciudadOtraInput.value = '';
+      ciudadOtraInput.required = false;
+    }
+    // Mostrar campo de texto si elige "Otra" en ciudad
+    if (ciudadInput && !ciudadInput._otraListener) {
+      ciudadInput.addEventListener('change', function () {
+        const ciudadOtraInput = document.getElementById('contact-ciudad-otra');
+        if (!ciudadOtraInput) return;
+        if (ciudadInput.value === '__otra__') {
+          ciudadOtraInput.style.display = '';
+          ciudadOtraInput.required = true;
+        } else {
+          ciudadOtraInput.style.display = 'none';
+          ciudadOtraInput.required = false;
+          ciudadOtraInput.value = '';
+        }
+      });
+      ciudadInput._otraListener = true;
+    }
   }
 
   function validateFiles(files) {
