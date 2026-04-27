@@ -2567,7 +2567,25 @@ function initChatIAWidget_(contenedor) {
     if (!msgEl) return;
     const statusEl = msgEl.querySelector('.chat-ia-msg__status');
     if (!statusEl) return;
-    statusEl.textContent = statusText || '';
+
+    // Limpiar clases anteriores
+    statusEl.className = 'chat-ia-msg__status';
+
+    // Asignar clase según el estado
+    if (statusText === '✓ Enviado') {
+      statusEl.className += ' status-sent';
+      statusEl.textContent = '✓';
+    } else if (statusText === '✓✓ Recibido') {
+      statusEl.className += ' status-delivered';
+      statusEl.textContent = '✓✓';
+    } else if (statusText === '✓✓ Leido') {
+      statusEl.className += ' status-read';
+      statusEl.textContent = '✓✓';
+    } else {
+      // Para errores y otros estados, mantener el texto normal
+      statusEl.textContent = statusText || '';
+    }
+
     savePersistedWidgetState_();
   }
 
@@ -2688,7 +2706,7 @@ function initChatIAWidget_(contenedor) {
 
       const statusEl = document.createElement('span');
       statusEl.className = 'chat-ia-msg__status';
-      statusEl.textContent = (options && options.statusText) ? options.statusText : 'Enviado';
+      statusEl.textContent = (options && options.statusText) ? options.statusText : '';
 
       msg.appendChild(textEl);
       msg.appendChild(statusEl);
@@ -3179,15 +3197,23 @@ function initChatIAWidget_(contenedor) {
     const userText = String(input.value || '').trim();
     if (!userText) return;
 
-    const userMsgEl = appendMessage('user', userText, true, { statusText: 'Enviando...' });
+    const userMsgEl = appendMessage('user', userText, true);
     input.value = '';
     setBusyState(true);
 
     const endpoint = getChatBackendUrl_();
     if (!endpoint) {
       hideTypingIndicator_();
-      setUserMessageStatus_(userMsgEl, 'No entregado');
-      appendMessage('bot', 'El chat aun no esta conectado. Si quieres, escribinos por WhatsApp y te respondemos ahora.');
+      // Simular flujo de estados incluso cuando no hay conexión
+      setTimeout(() => {
+        setUserMessageStatus_(userMsgEl, '✓ Enviado');
+      }, 800);
+
+      setTimeout(() => {
+        setUserMessageStatus_(userMsgEl, 'No entregado');
+        appendMessage('bot', 'El chat aun no esta conectado. Si quieres, escribinos por WhatsApp y te respondemos ahora.');
+      }, 2500);
+
       setBusyState(false);
       return;
     }
@@ -3201,7 +3227,19 @@ function initChatIAWidget_(contenedor) {
         chatHistory: conversationHistory.slice(-10)
       };
 
-      showTypingIndicator_();
+      // Simular flujo natural de WhatsApp con delays
+      setTimeout(() => {
+        setUserMessageStatus_(userMsgEl, '✓ Enviado');
+      }, 800);
+
+      setTimeout(() => {
+        setUserMessageStatus_(userMsgEl, '✓✓ Recibido');
+      }, 2000);
+
+      setTimeout(() => {
+        setUserMessageStatus_(userMsgEl, '✓✓ Leido');
+        showTypingIndicator_();
+      }, 3500);
 
       // Estrategia robusta: POST → JSONP → retry JSONP.
       // sendChatMessage_ maneja toda la cadena de intentos internamente.
@@ -3209,7 +3247,6 @@ function initChatIAWidget_(contenedor) {
       try {
         var result = await sendChatMessage_(endpoint, payload);
         data = result.data;
-        setUserMessageStatus_(userMsgEl, '✓ Enviado');
       } catch (sendErr) {
         // Todos los intentos fallaron
         setUserMessageStatus_(userMsgEl, '✓ Enviado');
@@ -3222,9 +3259,16 @@ function initChatIAWidget_(contenedor) {
 
         if (isAllTimeouts) {
           hideTypingIndicator_();
-          setUserMessageStatus_(userMsgEl, 'Demora en responder');
-          appendMessage('bot', 'El servidor esta tardando mas de lo habitual en responder. Por favor intenta de nuevo en unos segundos o escribinos por WhatsApp para atencion inmediata.');
-          appendFallbackSupportCard_();
+          // Simular flujo de estados en timeout
+          setTimeout(() => {
+            setUserMessageStatus_(userMsgEl, '✓ Enviado');
+          }, 800);
+
+          setTimeout(() => {
+            setUserMessageStatus_(userMsgEl, 'Demora en responder');
+            appendMessage('bot', 'El servidor esta tardando mas de lo habitual en responder. Por favor intenta de nuevo en unos segundos o escribinos por WhatsApp para atencion inmediata.');
+            appendFallbackSupportCard_();
+          }, 2500);
           return;
         }
 
@@ -3252,14 +3296,14 @@ function initChatIAWidget_(contenedor) {
         appendFallbackSupportCard_();
       } else if (hasBackendMessage) {
         const fallbackMode = isFallbackMode_(data);
-        setUserMessageStatus_(userMsgEl, fallbackMode ? '✓✓ Recibido' : '✓✓ Leido');
+        // Mantener el estado "✓✓ Leído" que ya se estableció
         const botText = String(data.reply || data.message || '');
         // TODO: QUITAR debug de API key/modelo cuando ya no se necesite.
         var _dk = (data.data && data.data._debugApiKey) ? data.data._debugApiKey : '?';
         var _dm = (data.data && data.data._debugModel) ? data.data._debugModel : '?';
         console.log('[CHAT DEBUG] Key: ' + _dk + ' | Model: ' + _dm);
         var debugSuffix = ' [K' + _dk + '|' + String(_dm).replace('gemini-2.5-', '') + ']';
-        appendMessage('bot', fallbackMode ? (botText + buildDiagnosticSuffix_(data, 'fallback', null)) : (botText + debugSuffix));
+        appendMessage('bot', fallbackMode ? (botText + buildDiagnosticSuffix_(data, 'fallback', null)) : botText);
         if (fallbackMode) {
           appendFallbackSupportCard_();
         }
@@ -3268,7 +3312,7 @@ function initChatIAWidget_(contenedor) {
           appendLeadFormCard_();
         }
       } else if (data.ok === true) {
-        setUserMessageStatus_(userMsgEl, '✓✓ Leido');
+        // Mantener el estado "✓✓ Leído" que ya se estableció
         appendMessage('bot', data.reply || 'Te leo. Si quieres, puedo ayudarte a cotizar ahora.');
       } else {
         setUserMessageStatus_(userMsgEl, 'No entregado');
@@ -3277,7 +3321,19 @@ function initChatIAWidget_(contenedor) {
       }
     } catch (error) {
       hideTypingIndicator_();
-      setUserMessageStatus_(userMsgEl, 'No entregado');
+      // Simular el flujo de estados incluso en error
+      setTimeout(() => {
+        setUserMessageStatus_(userMsgEl, '✓ Enviado');
+      }, 800);
+
+      setTimeout(() => {
+        setUserMessageStatus_(userMsgEl, '✓✓ Recibido');
+      }, 2000);
+
+      setTimeout(() => {
+        setUserMessageStatus_(userMsgEl, 'No entregado');
+      }, 3500);
+
       appendMessage('bot', 'En este momento no hay operador disponible para atencion. Comunicate por WhatsApp o completa el formulario y te contactamos a la brevedad.' + buildDiagnosticSuffix_(null, 'network', error));
       appendFallbackSupportCard_();
       console.error('Error enviando mensaje al chat IA:', error);

@@ -4782,7 +4782,7 @@ FOOTER
 }
 
 .chat-ia-panel__header {
-  background: linear-gradient(135deg, #0a4cb0 0%, #0b5ed7 55%, #2b7dff 100%);
+  background: linear-gradient(135deg, #0D7F6F 0%, #16A34A 55%, #15803D 100%);
   color: #fff;
   display: flex;
   align-items: center;
@@ -4860,7 +4860,7 @@ FOOTER
 
 .chat-ia-msg.is-user {
   margin-left: auto;
-  background: #0b5ed7;
+  background: #16A34A;
   color: #fff;
   border-bottom-right-radius: 5px;
   display: grid;
@@ -5027,10 +5027,25 @@ FOOTER
 }
 
 .chat-ia-msg__status {
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1;
   opacity: 0.9;
   justify-self: end;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+/* Estados de los mensajes - estilo WhatsApp */
+.chat-ia-msg__status.status-sent {
+  color: #666;
+}
+
+.chat-ia-msg__status.status-delivered {
+  color: #666;
+}
+
+.chat-ia-msg__status.status-read {
+  color: #007bff;
 }
 
 .chat-ia-msg.is-typing {
