@@ -871,10 +871,10 @@ function shouldShowLeadForm_(signal, ctx, cfg, score) {
   if (ctx.lead.nombre && hasValidContact_(ctx, cfg) && ctx.lead.localidad) {
     return false;
   }
-  // Solo mostrar si la intención es explícita de contacto, compra o cotización avanzada.
-  // No mostrar solo por score alto.
+  // SOLO mostrar cuando hay intención EXPLÍCITA de compra o contacto.
+  // NUNCA mostrar solo por preguntar precios/cotización.
   if (
-    (signal.intent === 'compra' || signal.intent === 'cotizacion' || signal.hasExplicitBuy || signal.hasExplicitContactRequest)
+    (signal.intent === 'compra' || signal.hasExplicitBuy || signal.hasExplicitContactRequest)
     && !hasValidContact_(ctx, cfg)
   ) {
     return true;

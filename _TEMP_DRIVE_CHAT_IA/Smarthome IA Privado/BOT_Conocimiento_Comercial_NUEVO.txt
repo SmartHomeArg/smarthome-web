@@ -1,6 +1,6 @@
 [[TIPO DE DOCUMENTO]
 Base de conocimiento comercial SmartHome
-Version: 1.1.0 - Actualizado 2026-04
+Version: 1.1.1 - Actualizado 2026-04 (Corregido flujo formulario)
 IMPORTANTE: Este documento es la UNICA fuente de verdad para precios, kits y planes.
 No inventar ni modificar datos que no esten aqui.
 
