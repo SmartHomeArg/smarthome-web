@@ -2615,18 +2615,18 @@ function initChatIAWidget_(contenedor) {
   // --- Linkificacion de nombres de kits/planes en mensajes del bot ---
   var PRODUCT_LINK_MAP = [
     // Kits — orden de match mas largo primero para evitar matches parciales.
-    { pattern: /\bKit\s+Smart\s+Cam\s+2[.,]2\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-smart-cam-2-2.html', label: 'Kit Smart Cam 2.2' },
-    { pattern: /\bSmart\s+Cam\s+2[.,]2\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-smart-cam-2-2.html', label: 'Smart Cam 2.2' },
-    { pattern: /\bKit\s+Smart\s+2[.,]2\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-smart-2-2.html', label: 'Kit Smart 2.2' },
-    { pattern: /\bKit\s+Smart\s+1[.,]1\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-smart-1-1.html', label: 'Kit Smart 1.1' },
-    { pattern: /\bKit\s+Cam\s*\+?\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-cam-plus.html', label: 'Kit Cam+' },
-    { pattern: /\bKit\s+Industrial\b/gi, url: 'https://smarthome.com.ar/pages/tienda/kit-industrial.html', label: 'Kit Industrial' },
+    { pattern: /\bKit\s+Smart\s+Cam\s+2[.,]2\b/gi, url: 'https://smarthome.net.ar/pages/tienda/kit-smart-cam-2-2.html', label: 'Kit Smart Cam 2.2' },
+    { pattern: /\bSmart\s+Cam\s+2[.,]2\b/gi, url: 'https://smarthome.net.ar/pages/tienda/kit-smart-cam-2-2.html', label: 'Smart Cam 2.2' },
+    { pattern: /\bKit\s+Smart\s+2[.,]2\b/gi, url: 'https://smarthome.net.ar/pages/tienda/kit-smart-2-2.html', label: 'Kit Smart 2.2' },
+    { pattern: /\bKit\s+Smart\s+1[.,]1\b/gi, url: 'https://smarthome.net.ar/pages/tienda/kit-smart-1-1.html', label: 'Kit Smart 1.1' },
+    { pattern: /\bKit\s+Cam\s*\+?\b/gi, url: 'https://smarthome.net.ar/pages/tienda/kit-cam-plus.html', label: 'Kit Cam+' },
+    { pattern: /\bKit\s+Industrial\b/gi, url: 'https://smarthome.net.ar/pages/tienda/kit-industrial.html', label: 'Kit Industrial' },
     // Planes — cuidado con "Plan" solo, matchear solo con nombre completo.
-    { pattern: /\bPlan\s+Comercial\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-comercial.html', label: 'Plan Comercial' },
-    { pattern: /\bPlan\s+Video\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-video.html', label: 'Plan Video' },
-    { pattern: /\bPlan\s+Basic\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-basic.html', label: 'Plan Basic' },
-    { pattern: /\bPlan\s+Plus\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-plus.html', label: 'Plan Plus' },
-    { pattern: /\bPlan\s+Pro\b/gi, url: 'https://smarthome.com.ar/pages/planes/plan-pro.html', label: 'Plan Pro' }
+    { pattern: /\bPlan\s+Comercial\b/gi, url: 'https://smarthome.net.ar/pages/planes/plan-comercial.html', label: 'Plan Comercial' },
+    { pattern: /\bPlan\s+Video\b/gi, url: 'https://smarthome.net.ar/pages/planes/plan-video.html', label: 'Plan Video' },
+    { pattern: /\bPlan\s+Basic\b/gi, url: 'https://smarthome.net.ar/pages/planes/plan-basic.html', label: 'Plan Basic' },
+    { pattern: /\bPlan\s+Plus\b/gi, url: 'https://smarthome.net.ar/pages/planes/plan-plus.html', label: 'Plan Plus' },
+    { pattern: /\bPlan\s+Pro\b/gi, url: 'https://smarthome.net.ar/pages/planes/plan-pro.html', label: 'Plan Pro' }
   ];
 
   /**

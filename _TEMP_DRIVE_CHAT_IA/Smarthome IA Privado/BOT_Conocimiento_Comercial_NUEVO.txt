@@ -6,7 +6,7 @@ No inventar ni modificar datos que no esten aqui.
 
 [EMPRESA]
 Nombre: SmartHome
-Sitio web: SmartHome.com.ar
+Sitio web: SmartHome.net.ar
 Ubicación: San Juan, Argentina
 Cobertura: Nacional (toda Argentina)
 Experiencia: Mas de 8 anos en el mercado

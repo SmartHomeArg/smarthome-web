@@ -1792,6 +1792,8 @@ function postProcessReply_(text, ctx) {
   var out = cleanText_(text);
   if (!out) return out;
 
+  out = normalizeSmarthomeDomain_(out);
+
   // Limpiar restos de markdown para que suene a chat humano.
   out = out
     .replace(/\*\*/g, '')
@@ -1824,6 +1826,12 @@ function postProcessReply_(text, ctx) {
     .trim();
 
   return out;
+}
+
+function normalizeSmarthomeDomain_(text) {
+  var out = String(text || '');
+  if (!out) return out;
+  return out.replace(/smarthome\.com\.ar/gi, 'smarthome.net.ar');
 }
 
 /**
