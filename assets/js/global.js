@@ -2491,6 +2491,7 @@ function initChatIAWidget_(contenedor) {
   root.dataset.initialized = 'true';
 
   const toggle = root.querySelector('.chat-ia-toggle');
+  const toggleGif = root.querySelector('[data-chat-toggle-gif]');
   const panel = root.querySelector('.chat-ia-panel');
   const minimizeBtn = root.querySelector('.chat-ia-panel__minimize');
   const closeBtn = root.querySelector('.chat-ia-panel__close');
@@ -2500,6 +2501,7 @@ function initChatIAWidget_(contenedor) {
   const messages = root.querySelector('.chat-ia-messages');
 
   if (!toggle || !panel || !minimizeBtn || !closeBtn || !form || !input || !sendBtn || !messages) return;
+  if (toggleGif) toggleGif.src = getSiteAssetUrl('components/chat-ia-float/animated-icon.gif');
 
   let sessionId = getChatSessionId_();
   const CHAT_WHATSAPP_URL = 'https://wa.me/5492646304866?text=Hola%20vengo%20desde%20la%20web';
