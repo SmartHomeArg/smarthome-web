@@ -448,8 +448,8 @@ function injectStructuredData() {
       category: "Hogar",
       image: "assets/img/tienda-hero-pc.webp",
       faq: [
-        { q: "Seguridad para Hogar con Monitoreo 24/7 | SmartHome", a: "Protege tu hogar con alarma inteligente, camaras, app movil y respuesta profesional las 24 horas." },
-        { q: "TU HOGAR PROTEGIDO", a: "Protege tu hogar con alarma inteligente, camaras, app movil y respuesta profesional las 24 horas." }
+        { q: "Seguridad para Hogar con Monitoreo 24/7 | SmartHome", a: "Protege tu hogar con alarma inteligente, cámaras, app móvil y respuesta profesional las 24 horas." },
+        { q: "TU HOGAR PROTEGIDO", a: "Protege tu hogar con alarma inteligente, cámaras, app móvil y respuesta profesional las 24 horas." }
       ]
     },
     "pages/comercio.html": {
@@ -458,8 +458,8 @@ function injectStructuredData() {
       category: "Comercio",
       image: "assets/img/tienda-hero-pc.webp",
       faq: [
-        { q: "Seguridad para Comercio con Monitoreo 24/7 | SmartHome", a: "Protege tu comercio con alarmas, camaras y control remoto desde app, con monitoreo activo todo el dia." },
-        { q: "TU COMERCIO PROTEGIDO", a: "Protege tu comercio con alarmas, camaras y control remoto desde app, con monitoreo activo todo el dia." }
+        { q: "Seguridad para Comercio con Monitoreo 24/7 | SmartHome", a: "Protege tu comercio con alarmas, cámaras y control remoto desde app, con monitoreo activo todo el día." },
+        { q: "TU COMERCIO PROTEGIDO", a: "Protege tu comercio con alarmas, cámaras y control remoto desde app, con monitoreo activo todo el día." }
       ]
     },
     "pages/tienda.html": {
@@ -477,10 +477,10 @@ function injectStructuredData() {
       category: "Proceso de servicio",
       image: "assets/img/tienda-hero-pc.webp",
       faq: [
-        { q: "Sirve para hogar y comercio?", a: "Si. Adaptamos la solucion al tipo de propiedad, cantidad de accesos y nivel de riesgo." },
+        { q: "¿Sirve para hogar y comercio?", a: "Sí. Adaptamos la solución al tipo de propiedad, cantidad de accesos y nivel de riesgo." },
         { q: "Tengo que comprar el equipamiento?", a: "No. El equipamiento se entrega en comodato junto con el plan contratado, sin inversion inicial en dispositivos." },
-        { q: "Puedo controlar todo desde el celular?", a: "Si. Podes armar y desarmar, ver eventos y recibir alertas en tiempo real desde la app." },
-        { q: "Que pasa si necesito soporte?", a: "Contas con asistencia postventa y seguimiento tecnico para resolver ajustes o incidencias." }
+        { q: "¿Puedo controlar todo desde el celular?", a: "Sí. Podés armar y desarmar, ver eventos y recibir alertas en tiempo real desde la app." },
+        { q: "¿Qué pasa si necesito soporte?", a: "Contás con asistencia postventa y seguimiento técnico para resolver ajustes o incidencias." }
       ]
     },
     "pages/contacto.html": {
@@ -536,10 +536,10 @@ function injectStructuredData() {
       sku: "kit-smart-cam-2-2",
       price: kitSmartCam22Pricing.installationPriceNumber,
       image: "pages/tienda/kit-smart-cam-2-2.webp",
-      schemaDescription: "Todo lo del Kit Smart 2.2 mas una camara Wi-Fi con grabacion en la nube y deteccion de movimiento."
+      schemaDescription: "Todo lo del Kit Smart 2.2 más una cámara Wi-Fi con grabación en la nube y detección de movimiento."
     },
-    "pages/soluciones-a-medida/cerco-electrico.html": { kind: "service", name: "Cerco Electrico Inteligente", category: "Soluciones a medida", image: "assets/img/pages/cercos-electricos/hero-cercos.jpg" },
-    "pages/soluciones-a-medida/domotica.html": { kind: "service", name: "Domotica", category: "Soluciones a medida", image: "assets/img/tienda-hero-pc.webp" },
+    "pages/soluciones-a-medida/cerco-electrico.html": { kind: "service", name: "Cerco Eléctrico Inteligente", category: "Soluciones a medida", image: "assets/img/pages/cercos-electricos/hero-cercos.jpg" },
+    "pages/soluciones-a-medida/domotica.html": { kind: "service", name: "Domótica", category: "Soluciones a medida", image: "assets/img/tienda-hero-pc.webp" },
     "pages/soluciones-a-medida/seguridad-comunitaria.html": { kind: "service", name: "Seguridad Comunitaria", category: "Soluciones a medida", image: "assets/img/tienda-hero-pc.webp" },
     "pages/soluciones-a-medida/sistemas-de-camaras.html": { kind: "service", name: "Sistemas de Camaras", category: "Soluciones a medida", image: "assets/img/tienda-hero-pc.webp" },
     "gracias.html": { kind: "thanks", name: "Consulta Enviada", image: "assets/img/tienda-hero-pc.webp" }
@@ -5363,7 +5363,7 @@ function initKitsTienda(container) {
       name: "KIT SMART CAM 2.2",
       image: "kit-smart-cam-2-2.webp",
       slug: "kit-smart-cam-2-2",
-      description: "Todo lo del Kit Smart 2.2 mas una camara Wi-Fi con grabacion en la nube y carteleria disuasiva.",
+      description: "Todo lo del Kit Smart 2.2 más una cámara Wi-Fi con grabación en la nube y carteleria disuasiva.",
       pricing: getStorefrontKitPricing("kit-smart-cam-2-2"),
       features: ["Monitoreo 24/7", "Camara Wi-Fi incluida", "Grabacion en la nube", "Alarma + video en un solo kit"]
     },
