@@ -5061,17 +5061,17 @@ async function cargarDetalleProductoKit() {
         subtitle: "Ideal para hogares y comercios.",
         planTitle: "Plan VIDEO Mensual",
         features: [
-          "Monitoreo 24/7 con deteccion de sabotaje",
-          "Camara incluida para visualizacion en tiempo real",
-          "Arma y desarma tu alarma desde la App SmartHome",
-          "Recibe alertas y notificaciones del estado del sistema"
+          "Cámara incluida para visualización en tiempo real",
+          "Monitoreo 24/7 desde smartphone con detección de personas",
+          "Programación por horario",
+          "Recibe alertas y notificaciones las 24 horas"
         ],
         includes: [
-          "Panel inteligente (incluye sistema)",
+          "Cámara WiFi",
           "Panel interactivo",
-          "Camara Full HD",
-          "2 detectores de movimiento",
-          "Placa disuasiva"
+          "Tarjeta de memoria",
+          "Cartelería disuasiva",
+          "Incluye instalación y configuración"
         ],
         includeFolder: "kit-cam-plus-que-incluye",
         galleryFiles: [
@@ -5089,17 +5089,18 @@ async function cargarDetalleProductoKit() {
         subtitle: "Ideal para hogares y comercios.",
         planTitle: "Plan BASIC Mensual",
         features: [
-          "Monitoreo 24/7 con deteccion de sabotaje",
-          "Personaliza codigos de usuario para saber quien ingresa y sale",
+          "Monitoreo 24/7 con detección de sabotaje",
+          "Personaliza códigos de usuario para saber quién ingresa y sale",
           "Arma y desarma tu alarma desde la App SmartHome",
           "Recibe alertas y notificaciones del estado del sistema"
         ],
         includes: [
-          "Panel inteligente (incluye sistema)",
           "Panel interactivo",
-          "1 sensor magnetico",
+          "Sirena",
+          "1 sensor magnético",
           "1 detector de movimiento",
-          "Placa disuasiva"
+          "Placa disuasiva",
+          "Incluye instalación y configuración"
         ],
         includeFolder: "kit-smart-1-1-que-incluye",
         galleryFiles: [
@@ -5120,17 +5121,18 @@ async function cargarDetalleProductoKit() {
         subtitle: "Ideal para hogares y comercios.",
         planTitle: "Plan PLUS Mensual",
         features: [
-          "Monitoreo 24/7 con deteccion de sabotaje",
-          "Personaliza codigos de usuario para saber quien ingresa y sale",
+          "Monitoreo 24/7 con detección de sabotaje",
+          "Personaliza códigos de usuario para saber quién ingresa y sale",
           "Arma y desarma tu alarma desde la App SmartHome",
           "Recibe alertas y notificaciones del estado del sistema"
         ],
         includes: [
-          "Panel inteligente (incluye sistema)",
           "Panel interactivo",
-          "2 sensores magneticos",
+          "Sirena",
+          "2 sensores magnéticos",
           "2 detectores de movimiento",
-          "Placa disuasiva"
+          "Placa disuasiva",
+          "Incluye instalación y configuración"
         ],
         includeFolder: "kit-smart-2-2-que-incluye",
         galleryFiles: [
@@ -5151,17 +5153,19 @@ async function cargarDetalleProductoKit() {
         subtitle: "Ideal para hogares y comercios.",
         planTitle: "Plan PRO Mensual",
         features: [
-          "Monitoreo 24/7 con deteccion de sabotaje",
-          "Incluye camara para ver eventos en vivo",
+          "Monitoreo 24/7 con detección de sabotaje",
+          "Incluye cámara para ver eventos en vivo",
           "Arma y desarma tu alarma desde la App SmartHome",
           "Recibe alertas y notificaciones del estado del sistema"
         ],
         includes: [
-          "Panel inteligente (incluye sistema)",
           "Panel interactivo",
-          "2 sensores magneticos",
+          "Sirena",
+          "2 sensores magnéticos",
           "2 detectores de movimiento",
-          "Camara Full HD"
+          "Cámara de video",
+          "Placa disuasiva",
+          "Incluye instalación y configuración"
         ],
         includeFolder: "kit-smart-cam-2-2-que-incluye",
         galleryFiles: [
@@ -5187,17 +5191,19 @@ async function cargarDetalleProductoKit() {
         subtitle: "Ideal para industrias y grandes superficies.",
         planTitle: "Plan COMERCIAL Mensual",
         features: [
-          "Monitoreo 24/7 con deteccion de sabotaje",
+          "Monitoreo 24/7 con detección de sabotaje",
           "Cobertura ampliada para mayor superficie",
           "Arma y desarma tu sistema desde la App SmartHome",
           "Recibe alertas y notificaciones en tiempo real"
         ],
         includes: [
-          "Panel inteligente (incluye sistema)",
           "Panel interactivo",
-          "4 sensores magneticos",
-          "4 detectores de movimiento",
-          "Sirena de alta potencia"
+          "Sirena interior y exterior",
+          "1 sensor magnético",
+          "1 detector de movimiento interior",
+          "1 detector de movimiento exterior",
+          "Placa disuasiva",
+          "Incluye instalación y configuración"
         ],
         includeFolder: "kit-industrial-que-incluye",
         galleryFiles: [
