@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SmartHome">
+  <rect width="64" height="64" rx="14" fill="#0b5ed7"/>
+  <path d="M32 11 14 25v24h14V35h8v14h14V25L32 11Z" fill="#fff"/>
+  <path d="M32 18 21 27v16h4V31h14v12h4V27L32 18Z" fill="#d8e8ff"/>
+</svg>

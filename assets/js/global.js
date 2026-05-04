@@ -5855,3 +5855,444 @@ function initCaracteristicasPanel() {
   startAutoPlay();
 }
 
+/* =========================================
+   CAPA SEO GLOBAL 2026
+========================================= */
+
+const SM_SEO_SITE_ORIGIN = "https://smarthome.net.ar";
+const SM_SEO_SERVICE_AREAS = ["San Juan Capital", "Rivadavia", "Santa Lucia", "Rawson", "Chimbas", "Pocito"];
+
+function getCurrentPageKey() {
+  let path = (window.location.pathname || "/").replace(/\/+$/, "");
+
+  if (!path || path === "/") return "index.html";
+
+  const marker = "/smarthome-web/";
+  const lowerPath = path.toLowerCase();
+  const markerIndex = lowerPath.indexOf(marker);
+  if (markerIndex >= 0) {
+    path = path.slice(markerIndex + marker.length);
+  }
+
+  path = path.replace(/^\/+/, "");
+
+  if (!path.endsWith(".html")) {
+    path += "/index.html";
+  }
+
+  return path;
+}
+
+function buildBreadcrumbItems(baseUrl, pageKey, pageName) {
+  const items = [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Inicio",
+      item: `${baseUrl}/`
+    }
+  ];
+
+  if (pageKey.startsWith("pages/planes/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Planes", item: `${baseUrl}/pages/como-funciona.html` });
+    items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+  } else if (pageKey.startsWith("pages/tienda/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Tienda", item: `${baseUrl}/pages/tienda.html` });
+    items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+  } else if (pageKey.startsWith("pages/soluciones-a-medida/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Soluciones a medida", item: `${baseUrl}/pages/comercio.html` });
+    items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+  } else if (pageKey.endsWith("/index.html")) {
+    items.push({ "@type": "ListItem", position: 2, name: pageName, item: `${baseUrl}/${pageKey.replace(/index\.html$/, "")}` });
+  } else if (pageKey !== "index.html") {
+    items.push({ "@type": "ListItem", position: 2, name: pageName, item: `${baseUrl}/${pageKey}` });
+  }
+
+  return items;
+}
+
+function smSeoCanonical(pageKey) {
+  if (pageKey === "index.html") return `${SM_SEO_SITE_ORIGIN}/`;
+  if (pageKey.endsWith("/index.html")) return `${SM_SEO_SITE_ORIGIN}/${pageKey.replace(/index\.html$/, "")}`;
+  return `${SM_SEO_SITE_ORIGIN}/${pageKey}`;
+}
+
+function smSeoAreas() {
+  return SM_SEO_SERVICE_AREAS.map((name) => ({
+    "@type": "City",
+    name,
+    containedInPlace: {
+      "@type": "AdministrativeArea",
+      name: "San Juan"
+    }
+  }));
+}
+
+function smSeoUpsertMeta(attrName, attrValue, content) {
+  let node = document.head.querySelector(`meta[${attrName}="${attrValue}"]`);
+  if (!node) {
+    node = document.createElement("meta");
+    node.setAttribute(attrName, attrValue);
+    document.head.appendChild(node);
+  }
+  node.setAttribute("content", content);
+  return node;
+}
+
+function smSeoUpsertLink(rel, attributes) {
+  let node = document.head.querySelector(`link[rel="${rel}"]`);
+  if (!node) {
+    node = document.createElement("link");
+    node.rel = rel;
+    document.head.appendChild(node);
+  }
+
+  Object.entries(attributes).forEach(([key, value]) => {
+    node.setAttribute(key, value);
+  });
+
+  return node;
+}
+
+function smSeoAltFromSrc(src) {
+  if (!src) return "Imagen SmartHome";
+  return String(src)
+    .split("/")
+    .pop()
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function smSeoPageMap() {
+  const kitCamPlus = getStorefrontKitPricing("kit-cam-plus");
+  const kitSmart11 = getStorefrontKitPricing("kit-smart-1-1");
+  const kitSmart22 = getStorefrontKitPricing("kit-smart-2-2");
+  const kitSmartCam22 = getStorefrontKitPricing("kit-smart-cam-2-2");
+  const kitIndustrial = getStorefrontKitPricing("kit-industrial");
+
+  return {
+    "index.html": {
+      kind: "home",
+      name: "Alarmas en San Juan",
+      title: "Alarmas en San Juan y Monitoreo 24/7 | SmartHome",
+      description: "SmartHome instala alarmas domiciliarias, monitoreo de alarmas 24/7, camaras de seguridad, cerco electrico, domotica y seguridad comunitaria en San Juan.",
+      image: "components/hero/hero-index.jpg",
+      serviceType: "Seguridad electronica",
+      faq: [
+        { q: "Que servicios ofrece SmartHome en San Juan?", a: "Brindamos alarmas domiciliarias, monitoreo de alarmas 24/7, camaras de seguridad, cerco electrico, domotica y soluciones de seguridad comunitaria." },
+        { q: "En que zonas trabajan?", a: "Atendemos San Juan Capital, Rivadavia, Santa Lucia, Rawson, Chimbas, Pocito y alrededores." }
+      ]
+    },
+    "pages/hogar.html": {
+      kind: "service",
+      name: "Alarmas domiciliarias",
+      title: "Alarmas Domiciliarias en San Juan | SmartHome",
+      description: "Protege tu vivienda con alarmas domiciliarias en San Juan, sensores inteligentes, app movil y monitoreo 24/7 con soporte local.",
+      image: "components/hero/hero-hogar.jpg",
+      serviceType: "Alarmas domiciliarias"
+    },
+    "pages/comercio.html": {
+      kind: "service",
+      name: "Alarmas para comercio",
+      title: "Alarmas para Comercio en San Juan | SmartHome",
+      description: "Protege tu negocio con alarmas para comercio en San Juan, monitoreo de alarmas, control de aperturas y soluciones adaptadas a cada rubro.",
+      image: "components/hero/hero-comercio.jpg",
+      serviceType: "Alarmas para comercio"
+    },
+    "pages/tienda.html": {
+      kind: "store",
+      name: "Kits de seguridad SmartHome",
+      title: "Kits de Alarmas y Camaras de Seguridad | SmartHome San Juan",
+      description: "Explora kits de alarmas y camaras de seguridad para hogar y comercio en San Juan con instalacion profesional y asesoramiento SmartHome.",
+      image: "assets/img/tienda-hero-pc.webp",
+      serviceType: "Kits de seguridad"
+    },
+    "pages/como-funciona.html": {
+      kind: "service",
+      name: "Monitoreo de alarmas",
+      title: "Monitoreo de Alarmas San Juan 24/7 | SmartHome",
+      description: "Conoce como funciona el monitoreo de alarmas en San Juan con recepcion de señales, verificacion profesional y respuesta coordinada.",
+      image: "components/hero/hero-plan-pro.jpg",
+      serviceType: "Monitoreo de alarmas"
+    },
+    "pages/contacto.html": {
+      kind: "contact",
+      name: "Contacto SmartHome",
+      title: "Contacto SmartHome San Juan | Seguridad Electronica",
+      description: "Contacta a SmartHome en San Juan para recibir asesoramiento en alarmas, camaras, domotica, control de acceso y monitoreo 24/7.",
+      image: "assets/img/pages/contacto/contacto-hero.jpg",
+      serviceType: "Atencion comercial y tecnica"
+    },
+    "pages/quienes-somos.html": {
+      kind: "about",
+      name: "Quienes somos",
+      title: "SmartHome San Juan | Empresa de Seguridad Electronica",
+      description: "Conoce a SmartHome, empresa de seguridad electronica en San Juan especializada en alarmas, monitoreo, camaras, cercos electricos y domotica.",
+      image: "assets/img/pages/quienes-somos/hero-quienes-somos.jpg"
+    },
+    "pages/politica-de-privacidad.html": {
+      kind: "legal",
+      name: "Politica de privacidad",
+      title: "Politica de Privacidad | SmartHome",
+      description: "Consulta la politica de privacidad de SmartHome y conoce como se trata la informacion enviada desde el sitio."
+    },
+    "pages/terminos-y-condiciones.html": {
+      kind: "legal",
+      name: "Terminos y condiciones",
+      title: "Terminos y Condiciones | SmartHome",
+      description: "Lee los terminos y condiciones del sitio de SmartHome y el alcance del contenido comercial publicado."
+    },
+    "pages/planes/plan-basic.html": { kind: "plan", name: "Plan Basic", title: "Plan Basic de Alarmas con Monitoreo | SmartHome San Juan", description: "Descubre el Plan Basic de SmartHome para proteger hogares y comercios en San Juan con monitoreo y soporte local.", image: "components/hero/hero-plan-basic.jpg", serviceType: "Plan de seguridad monitoreada" },
+    "pages/planes/plan-comercial.html": { kind: "plan", name: "Plan Comercial", title: "Plan Comercial con Monitoreo 24/7 | SmartHome San Juan", description: "Conoce el Plan Comercial de SmartHome para negocios que necesitan alarmas, monitoreo y control operativo en San Juan.", image: "components/hero/hero-plan-comercial.jpg", serviceType: "Plan comercial de seguridad" },
+    "pages/planes/plan-plus.html": { kind: "plan", name: "Plan Plus", title: "Plan Plus de Seguridad Inteligente | SmartHome San Juan", description: "El Plan Plus de SmartHome brinda mas cobertura, monitoreo y herramientas de control para propiedades en San Juan.", image: "components/hero/hero-plan-plus.jpg", serviceType: "Plan plus de seguridad" },
+    "pages/planes/plan-pro.html": { kind: "plan", name: "Plan Pro", title: "Plan Pro con Monitoreo Profesional | SmartHome San Juan", description: "Analiza el Plan Pro de SmartHome para propiedades que requieren una respuesta mas completa y monitoreo profesional.", image: "components/hero/hero-plan-pro.jpg", serviceType: "Plan pro de seguridad" },
+    "pages/planes/plan-video.html": { kind: "plan", name: "Plan Video", title: "Plan Video con Verificacion Visual | SmartHome San Juan", description: "Conoce el Plan Video de SmartHome con camaras y monitoreo inteligente para viviendas y comercios en San Juan.", image: "components/hero/hero-plan-video.jpg", serviceType: "Plan de videoverificacion" },
+    "pages/tienda/kit-cam-plus.html": { kind: "product", name: "Kit Cam Plus", title: "Kit Cam Plus | Camaras y Alarma en San Juan", description: "Kit Cam Plus de SmartHome con camara Wi-Fi y proteccion inteligente para reforzar seguridad en San Juan.", image: "pages/tienda/kit-cam-plus.webp", sku: "kit-cam-plus", price: kitCamPlus.installationPriceNumber, schemaDescription: "Kit de seguridad con camara Wi-Fi, almacenamiento y accesorios para reforzar la proteccion diaria." },
+    "pages/tienda/kit-industrial.html": { kind: "product", name: "Kit Industrial", title: "Kit Industrial de Alarmas | SmartHome San Juan", description: "Kit Industrial de SmartHome para propiedades con mayor exigencia, sensores exteriores y cobertura ampliada en San Juan.", image: "pages/tienda/kit-industrial.webp", sku: "kit-industrial", price: kitIndustrial.installationPriceNumber, schemaDescription: "Kit de alarma con cobertura interior y exterior pensado para proyectos que requieren mayor robustez." },
+    "pages/tienda/kit-smart-1-1.html": { kind: "product", name: "Kit Smart 1.1", title: "Kit Smart 1.1 para Hogar | SmartHome San Juan", description: "Kit Smart 1.1 de SmartHome para viviendas y espacios chicos con sensores, sirena y control simple en San Juan.", image: "pages/tienda/kit-smart-1-1.webp", sku: "kit-smart-1-1", price: kitSmart11.installationPriceNumber, schemaDescription: "Kit de alarma para espacios chicos con panel, sensores y sirena para una proteccion simple y escalable." },
+    "pages/tienda/kit-smart-2-2.html": { kind: "product", name: "Kit Smart 2.2", title: "Kit Smart 2.2 de Alarmas | SmartHome San Juan", description: "Kit Smart 2.2 con doble cobertura de sensores para reforzar la seguridad de hogares y comercios en San Juan.", image: "pages/tienda/kit-smart-2-2.webp", sku: "kit-smart-2-2", price: kitSmart22.installationPriceNumber, schemaDescription: "Kit de alarma con doble cobertura de movimiento y apertura para propiedades con mas puntos de ingreso." },
+    "pages/tienda/kit-smart-cam-2-2.html": { kind: "product", name: "Kit Smart Cam 2.2", title: "Kit Smart Cam 2.2 | SmartHome San Juan", description: "Kit Smart Cam 2.2 con alarma y camara Wi-Fi para combinar deteccion y video en una sola solucion en San Juan.", image: "pages/tienda/kit-smart-cam-2-2.webp", sku: "kit-smart-cam-2-2", price: kitSmartCam22.installationPriceNumber, schemaDescription: "Kit de seguridad que combina alarma, sensores y camara Wi-Fi para verificar y actuar mas rapido." },
+    "pages/soluciones-a-medida/cerco-electrico.html": { kind: "service", name: "Cerco electrico", title: "Cerco Electrico en San Juan | SmartHome", description: "Instalamos cerco electrico en San Juan para viviendas, comercios y perimetros con disuasion visible e integracion con alarmas.", image: "assets/img/pages/cercos-electricos/hero-cercos.jpg", serviceType: "Cerco electrico" },
+    "pages/soluciones-a-medida/domotica.html": { kind: "service", name: "Domotica", title: "Domotica en San Juan | SmartHome", description: "Implementamos domotica en San Juan para mejorar confort, automatizacion, eficiencia y control de la vivienda desde el celular.", image: "assets/img/tienda-hero-pc.webp", serviceType: "Domotica" },
+    "pages/soluciones-a-medida/seguridad-comunitaria.html": { kind: "service", name: "Seguridad comunitaria", title: "Seguridad Comunitaria en San Juan | SmartHome", description: "Desarrollamos proyectos de seguridad comunitaria en San Juan con alarmas, accesos, camaras y coordinacion entre vecinos.", image: "assets/img/tienda-hero-pc.webp", serviceType: "Seguridad comunitaria" },
+    "pages/soluciones-a-medida/sistemas-de-camaras.html": { kind: "service", name: "Camaras de seguridad", title: "Camaras de Seguridad en San Juan | SmartHome", description: "Instalamos camaras de seguridad en San Juan para hogares, comercios y espacios comunes con acceso remoto y video util.", image: "assets/img/tienda-hero-pc.webp", serviceType: "Camaras de seguridad" },
+    "gracias.html": { kind: "thanks", name: "Consulta enviada", title: "Consulta enviada | SmartHome", description: "Tu consulta fue enviada correctamente. El equipo de SmartHome se comunicara a la brevedad." },
+    "alarmas-san-juan/index.html": { kind: "service", name: "Alarmas en San Juan", title: "Alarmas en San Juan | SmartHome", description: "Instalacion de alarmas en San Juan para viviendas y comercios con asesoramiento local, sensores inteligentes y monitoreo opcional 24/7.", image: "components/hero/hero-hogar.jpg", serviceType: "Alarmas" },
+    "alarmas-domiciliarias-san-juan/index.html": { kind: "service", name: "Alarmas domiciliarias San Juan", title: "Alarmas Domiciliarias San Juan | SmartHome", description: "Alarmas domiciliarias en San Juan con instalacion prolija, sensores para accesos, app movil y monitoreo profesional opcional.", image: "components/hero/hero-hogar.jpg", serviceType: "Alarmas domiciliarias" },
+    "monitoreo-de-alarmas-san-juan/index.html": { kind: "service", name: "Monitoreo de alarmas San Juan", title: "Monitoreo de Alarmas San Juan | SmartHome", description: "Servicio de monitoreo de alarmas en San Juan con central activa 24/7, verificacion de eventos y protocolos de respuesta.", image: "components/hero/hero-plan-pro.jpg", serviceType: "Monitoreo de alarmas" },
+    "camaras-de-seguridad-san-juan/index.html": { kind: "service", name: "Camaras de seguridad San Juan", title: "Camaras de Seguridad San Juan | SmartHome", description: "Venta e instalacion de camaras de seguridad en San Juan con acceso remoto, disuasion visual y configuracion profesional.", image: "assets/img/tienda-hero-pc.webp", serviceType: "Camaras de seguridad" },
+    "cerco-electrico-san-juan/index.html": { kind: "service", name: "Cerco electrico San Juan", title: "Cerco Electrico San Juan | SmartHome", description: "Soluciones de cerco electrico en San Juan para reforzar perimetros residenciales, comerciales y comunitarios con disuasion real.", image: "assets/img/pages/cercos-electricos/hero-cercos.jpg", serviceType: "Cerco electrico" },
+    "domotica-san-juan/index.html": { kind: "service", name: "Domotica San Juan", title: "Domotica San Juan | SmartHome", description: "Domotica en San Juan para automatizar iluminacion, accesos, climatizacion y escenas con una experiencia simple y profesional.", image: "assets/img/tienda-hero-pc.webp", serviceType: "Domotica" },
+    "control-de-acceso-san-juan/index.html": { kind: "service", name: "Control de acceso San Juan", title: "Control de Acceso San Juan | SmartHome", description: "Control de acceso en San Juan para hogares, consorcios y comercios con lectores, registros, permisos y gestion segura de ingresos.", image: "assets/img/tienda-hero-pc.webp", serviceType: "Control de acceso" },
+    "cerraduras-inteligentes-san-juan/index.html": { kind: "service", name: "Cerraduras inteligentes San Juan", title: "Cerraduras Inteligentes San Juan | SmartHome", description: "Instalacion de cerraduras inteligentes en San Juan para sumar control de ingreso, comodidad y trazabilidad.", image: "assets/img/tienda-hero-pc.webp", serviceType: "Cerraduras inteligentes" },
+    "seguridad-comunitaria-san-juan/index.html": { kind: "service", name: "Seguridad comunitaria San Juan", title: "Seguridad Comunitaria San Juan | SmartHome", description: "Seguridad comunitaria en San Juan para barrios, calles internas y complejos con alarmas, accesos, camaras y trabajo coordinado.", image: "assets/img/tienda-hero-pc.webp", serviceType: "Seguridad comunitaria" }
+  };
+}
+
+function smSeoNormalizeHead(pageCfg, pageKey) {
+  const canonicalUrl = smSeoCanonical(pageKey);
+  const title = pageCfg.title || document.title || "SmartHome";
+  const description = pageCfg.description || "";
+  const imageUrl = getSiteAssetUrl(pageCfg.image || "assets/img/tienda-hero-pc.webp");
+
+  document.documentElement.lang = "es-AR";
+  document.title = title;
+
+  smSeoUpsertMeta("name", "description", description);
+  smSeoUpsertMeta("name", "robots", "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
+  smSeoUpsertMeta("property", "og:locale", "es_AR");
+  smSeoUpsertMeta("property", "og:type", pageCfg.kind === "product" ? "product" : "website");
+  smSeoUpsertMeta("property", "og:site_name", "SmartHome");
+  smSeoUpsertMeta("property", "og:title", title);
+  smSeoUpsertMeta("property", "og:description", description);
+  smSeoUpsertMeta("property", "og:url", canonicalUrl);
+  smSeoUpsertMeta("property", "og:image", imageUrl);
+  smSeoUpsertMeta("property", "og:image:alt", pageCfg.name || "SmartHome");
+  smSeoUpsertMeta("name", "twitter:card", "summary_large_image");
+  smSeoUpsertMeta("name", "twitter:title", title);
+  smSeoUpsertMeta("name", "twitter:description", description);
+  smSeoUpsertMeta("name", "twitter:image", imageUrl);
+  smSeoUpsertMeta("name", "twitter:url", canonicalUrl);
+
+  smSeoUpsertLink("canonical", { href: canonicalUrl });
+  smSeoUpsertLink("manifest", { href: getSiteAssetUrl("manifest.webmanifest") });
+  smSeoUpsertLink("sitemap", { type: "application/xml", title: "Sitemap", href: getSiteAssetUrl("sitemap.xml") });
+  smSeoUpsertLink("icon", { type: "image/svg+xml", href: getSiteAssetUrl("assets/img/favicon.svg") });
+  smSeoUpsertLink("apple-touch-icon", { href: getSiteAssetUrl("assets/img/favicon.png") });
+}
+
+function smSeoRenderBreadcrumbs(pageKey, pageCfg) {
+  const main = document.querySelector("main");
+  if (!main || pageKey === "index.html" || main.querySelector(".seo-breadcrumbs")) return;
+
+  const items = buildBreadcrumbItems(SM_SEO_SITE_ORIGIN, pageKey, pageCfg.name || "Pagina");
+  if (items.length < 2) return;
+
+  const nav = document.createElement("nav");
+  nav.className = "seo-breadcrumbs";
+  nav.setAttribute("aria-label", "Breadcrumb");
+
+  const container = document.createElement("div");
+  container.className = "container";
+  const list = document.createElement("ol");
+
+  items.forEach((item, index) => {
+    const li = document.createElement("li");
+    if (index === items.length - 1) {
+      const span = document.createElement("span");
+      span.textContent = item.name;
+      span.setAttribute("aria-current", "page");
+      li.appendChild(span);
+    } else {
+      const link = document.createElement("a");
+      link.href = item.item;
+      link.textContent = item.name;
+      li.appendChild(link);
+    }
+    list.appendChild(li);
+  });
+
+  container.appendChild(list);
+  nav.appendChild(container);
+  main.prepend(nav);
+}
+
+function smSeoEnhanceAccessibility() {
+  const main = document.querySelector("main");
+  if (main && !main.id) main.id = "contenido-principal";
+
+  document.querySelectorAll("img").forEach((img, index) => {
+    if (!img.getAttribute("alt")) {
+      img.alt = smSeoAltFromSrc(img.getAttribute("src") || img.dataset.src || "");
+    }
+
+    img.decoding = "async";
+
+    if (index === 0) {
+      img.loading = "eager";
+      img.setAttribute("fetchpriority", "high");
+    } else if (!img.hasAttribute("loading")) {
+      img.loading = "lazy";
+    }
+  });
+}
+
+function injectStructuredData() {
+  const pageKey = getCurrentPageKey();
+  const pageCfg = smSeoPageMap()[pageKey];
+  if (!pageCfg) return;
+
+  smSeoNormalizeHead(pageCfg, pageKey);
+  smSeoRenderBreadcrumbs(pageKey, pageCfg);
+  smSeoEnhanceAccessibility();
+
+  const canonicalUrl = smSeoCanonical(pageKey);
+  const title = document.title.trim();
+  const description = document.querySelector('meta[name="description"]')?.getAttribute("content") || "";
+  const imageUrl = getSiteAssetUrl(pageCfg.image || "assets/img/tienda-hero-pc.webp");
+  const organizationId = `${SM_SEO_SITE_ORIGIN}/#organization`;
+  const websiteId = `${SM_SEO_SITE_ORIGIN}/#website`;
+  const localBusinessId = `${SM_SEO_SITE_ORIGIN}/#localbusiness`;
+
+  document.querySelectorAll('script[data-smarthome-schema="1"]').forEach((node) => node.remove());
+
+  const graphItems = [
+    {
+      "@type": "Organization",
+      "@id": organizationId,
+      name: "SmartHome",
+      url: `${SM_SEO_SITE_ORIGIN}/`,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SM_SEO_SITE_ORIGIN}/assets/img/favicon.png`
+      },
+      image: imageUrl
+    },
+    {
+      "@type": "LocalBusiness",
+      "@id": localBusinessId,
+      name: "SmartHome",
+      url: `${SM_SEO_SITE_ORIGIN}/`,
+      image: imageUrl,
+      logo: `${SM_SEO_SITE_ORIGIN}/assets/img/favicon.png`,
+      telephone: "+54-264-630-4866",
+      email: "contacto.smarthome.ar@gmail.com",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "San Juan",
+        addressRegion: "San Juan",
+        addressCountry: "AR"
+      },
+      areaServed: smSeoAreas(),
+      priceRange: "$$"
+    },
+    {
+      "@type": "WebSite",
+      "@id": websiteId,
+      url: `${SM_SEO_SITE_ORIGIN}/`,
+      name: "SmartHome",
+      inLanguage: "es-AR",
+      publisher: { "@id": organizationId }
+    },
+    {
+      "@type": pageCfg.kind === "contact" ? "ContactPage" : pageCfg.kind === "about" ? "AboutPage" : "WebPage",
+      "@id": `${canonicalUrl}#webpage`,
+      url: canonicalUrl,
+      name: title,
+      description,
+      inLanguage: "es-AR",
+      isPartOf: { "@id": websiteId },
+      about: { "@id": localBusinessId },
+      primaryImageOfPage: {
+        "@type": "ImageObject",
+        url: imageUrl
+      }
+    }
+  ];
+
+  if (pageCfg.kind === "service" || pageCfg.kind === "plan") {
+    graphItems.push({
+      "@type": "Service",
+      "@id": `${canonicalUrl}#service`,
+      name: pageCfg.name,
+      description,
+      serviceType: pageCfg.serviceType || pageCfg.name,
+      provider: { "@id": localBusinessId },
+      areaServed: smSeoAreas(),
+      url: canonicalUrl
+    });
+  }
+
+  if (pageCfg.kind === "product") {
+    graphItems.push({
+      "@type": "Product",
+      "@id": `${canonicalUrl}#product`,
+      name: pageCfg.name,
+      sku: pageCfg.sku,
+      image: [imageUrl],
+      description: pageCfg.schemaDescription || description,
+      brand: {
+        "@type": "Brand",
+        name: "SmartHome"
+      },
+      offers: {
+        "@type": "Offer",
+        url: canonicalUrl,
+        price: pageCfg.price,
+        priceCurrency: "ARS",
+        availability: "https://schema.org/InStock",
+        seller: { "@id": localBusinessId }
+      }
+    });
+  }
+
+  if (Array.isArray(pageCfg.faq) && pageCfg.faq.length) {
+    graphItems.push({
+      "@type": "FAQPage",
+      "@id": `${canonicalUrl}#faq`,
+      mainEntity: pageCfg.faq.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.a
+        }
+      }))
+    });
+  }
+
+  document.head.appendChild(createJsonLdScript({
+    "@context": "https://schema.org",
+    "@graph": graphItems
+  }));
+
+  document.head.appendChild(createJsonLdScript({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: buildBreadcrumbItems(SM_SEO_SITE_ORIGIN, pageKey, pageCfg.name)
+  }));
+}
+
