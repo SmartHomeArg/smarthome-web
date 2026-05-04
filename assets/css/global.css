@@ -61,6 +61,45 @@ main {
   padding-top: 80px;
 }
 
+.page-reveal-item {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(28px);
+  transition:
+    opacity 0.42s ease var(--page-reveal-delay, 0ms),
+    transform 0.52s ease var(--page-reveal-delay, 0ms),
+    visibility 0s linear calc(var(--page-reveal-delay, 0ms) + 0.52s);
+  will-change: opacity, transform;
+}
+
+.page-reveal-item.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition:
+    opacity 0.42s ease var(--page-reveal-delay, 0ms),
+    transform 0.52s ease var(--page-reveal-delay, 0ms),
+    visibility 0s linear 0s;
+}
+
+.js-enhanced body.page-shell-loading #footer,
+.js-enhanced body.page-shell-loading #whatsapp-float {
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-reveal-item,
+  .page-reveal-item.is-visible,
+  .js-enhanced body.page-shell-loading #footer,
+  .js-enhanced body.page-shell-loading #whatsapp-float {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* ================================================= */
 /* CONTAINER DEL SITIO */
 /* ================================================= */

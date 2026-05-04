@@ -21,6 +21,14 @@
 
   "use strict";
 
+  if (document.documentElement) {
+    document.documentElement.classList.add("js-enhanced");
+  }
+
+  if (document.body) {
+    document.body.classList.add("page-shell-loading");
+  }
+
 
   /* =========================================================
      CONFIGURACIÓN DEL SITIO
@@ -713,6 +721,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   injectStructuredData();
+  setupProgressivePageReveal();
 
   cargarHeader();
   cargarFooter();
@@ -813,6 +822,133 @@ function getSiteRootUrl() {
 
 function getSiteAssetUrl(relativePath) {
   return new URL(relativePath, getSiteRootUrl()).toString();
+}
+
+let pageRevealItems = [];
+let pageRevealNextIndex = 0;
+let pageRevealObserver = null;
+let pageRevealFallbackTimer = null;
+
+function hasMeaningfulNodeContent(element) {
+  if (!(element instanceof HTMLElement)) return false;
+  if (element.children.length > 0) return true;
+
+  return Array.from(element.childNodes).some((node) => {
+    return node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0;
+  });
+}
+
+function isAsyncPlaceholderCandidate(element) {
+  if (!(element instanceof HTMLElement)) return false;
+  if (!element.id) return false;
+
+  return !hasMeaningfulNodeContent(element);
+}
+
+function collectPageRevealItems() {
+  const items = [];
+  const header = document.getElementById("header");
+  const main = document.querySelector("main");
+  const whatsapp = document.getElementById("whatsapp-float");
+  const footer = document.getElementById("footer");
+
+  if (header && isAsyncPlaceholderCandidate(header)) items.push(header);
+
+  if (main) {
+    Array.from(main.children).forEach((child) => {
+      if (isAsyncPlaceholderCandidate(child)) items.push(child);
+    });
+  }
+
+  if (whatsapp && isAsyncPlaceholderCandidate(whatsapp)) items.push(whatsapp);
+  if (footer && isAsyncPlaceholderCandidate(footer)) items.push(footer);
+
+  return items;
+}
+
+function isRevealItemReady(element) {
+  return hasMeaningfulNodeContent(element);
+}
+
+function revealPageItem(element) {
+  if (!(element instanceof HTMLElement) || element.dataset.revealDone === "true") return;
+
+  element.dataset.revealDone = "true";
+
+  requestAnimationFrame(() => {
+    element.classList.add("is-visible");
+  });
+}
+
+function flushPageRevealQueue() {
+  while (pageRevealNextIndex < pageRevealItems.length) {
+    const currentItem = pageRevealItems[pageRevealNextIndex];
+    if (!isRevealItemReady(currentItem)) break;
+
+    revealPageItem(currentItem);
+    pageRevealNextIndex += 1;
+  }
+
+  if (pageRevealNextIndex >= pageRevealItems.length) {
+    if (document.body) {
+      document.body.classList.remove("page-shell-loading");
+    }
+
+    if (pageRevealObserver) {
+      pageRevealObserver.disconnect();
+      pageRevealObserver = null;
+    }
+
+    if (pageRevealFallbackTimer) {
+      clearTimeout(pageRevealFallbackTimer);
+      pageRevealFallbackTimer = null;
+    }
+  }
+}
+
+function forceRevealRemainingItems() {
+  pageRevealItems.slice(pageRevealNextIndex).forEach(revealPageItem);
+  pageRevealNextIndex = pageRevealItems.length;
+  flushPageRevealQueue();
+}
+
+function setupProgressivePageReveal() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  pageRevealItems = collectPageRevealItems();
+  pageRevealNextIndex = 0;
+
+  if (!pageRevealItems.length) {
+    if (document.body) {
+      document.body.classList.remove("page-shell-loading");
+    }
+    return;
+  }
+
+  pageRevealItems.forEach((item, index) => {
+    item.classList.add("page-reveal-item");
+    item.style.setProperty("--page-reveal-delay", `${Math.min(index * 90, 360)}ms`);
+  });
+
+  pageRevealObserver = new MutationObserver(() => {
+    flushPageRevealQueue();
+  });
+
+  pageRevealItems.forEach((item) => {
+    pageRevealObserver.observe(item, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+  });
+
+  flushPageRevealQueue();
+
+  pageRevealFallbackTimer = window.setTimeout(() => {
+    forceRevealRemainingItems();
+  }, 1800);
+
+  window.addEventListener("load", forceRevealRemainingItems, { once: true });
 }
 
 
