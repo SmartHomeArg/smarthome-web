@@ -6166,7 +6166,6 @@ function injectStructuredData() {
   if (!pageCfg) return;
 
   smSeoNormalizeHead(pageCfg, pageKey);
-  smSeoRenderBreadcrumbs(pageKey, pageCfg);
   smSeoEnhanceAccessibility();
 
   const canonicalUrl = smSeoCanonical(pageKey);

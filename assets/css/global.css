@@ -3295,6 +3295,8 @@ FOOTER
   padding: 20px 16px 14px;
   position: relative;
   transition: all 0.25s ease;
+  white-space: nowrap;
+  font-size: 0.96rem;
 }
 
 @media (max-width: 991.98px) {
@@ -3371,6 +3373,27 @@ FOOTER
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
+}
+
+#menuPrincipal {
+  flex: 1 1 auto;
+}
+
+.menu-principal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+
+.menu-principal .nav-item {
+  flex: 0 0 auto;
+}
+
+.como-menu .dropdown-item {
+  white-space: nowrap;
 }
 
 @media (max-width: 991.98px) {
@@ -3397,6 +3420,7 @@ FOOTER
 
   .menu-principal {
     width: 100%;
+    flex-wrap: wrap;
   }
 
   .menu-principal .nav-item {
@@ -3407,6 +3431,8 @@ FOOTER
     display: block;
     width: 100%;
     padding: 14px 0 10px;
+    white-space: normal;
+    font-size: 1rem;
   }
 
   /* En mobile, feedback uniforme: links activos (madre e hija) en negrita */
