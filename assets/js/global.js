@@ -6100,7 +6100,7 @@ function smSeoNormalizeHead(pageCfg, pageKey) {
   smSeoUpsertLink("canonical", { href: canonicalUrl });
   smSeoUpsertLink("manifest", { href: getSiteAssetUrl("manifest.webmanifest") });
   smSeoUpsertLink("sitemap", { type: "application/xml", title: "Sitemap", href: getSiteAssetUrl("sitemap.xml") });
-  smSeoUpsertLink("icon", { type: "image/svg+xml", href: getSiteAssetUrl("assets/img/favicon.svg") });
+  smSeoUpsertLink("icon", { type: "image/png", href: getSiteAssetUrl("assets/img/favicon.png") });
   smSeoUpsertLink("apple-touch-icon", { href: getSiteAssetUrl("assets/img/favicon.png") });
 }
 
