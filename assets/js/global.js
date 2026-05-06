@@ -264,7 +264,7 @@ function activarMenu() {
         return;
       }
 
-      if (currentPath === childPath) {
+      if (currentPath === childPath || (childPath !== "/" && currentPath.startsWith(`${childPath}/`))) {
         hasChildMatch = true;
         childLink.classList.add("active");
         childLink.setAttribute("aria-current", "page");
@@ -333,6 +333,26 @@ function buildBreadcrumbItems(baseUrl, pageKey, pageName) {
   } else if (pageKey.startsWith("pages/soluciones-a-medida/")) {
     items.push({ "@type": "ListItem", position: 2, name: "Soluciones a Medida", item: `${baseUrl}/pages/comercio.html` });
     items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+  } else if (pageKey.startsWith("guias/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Guias", item: `${baseUrl}/guias/` });
+    if (pageKey !== "guias/index.html") {
+      items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+    }
+  } else if (pageKey.startsWith("comparativas/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Comparativas", item: `${baseUrl}/comparativas/` });
+    if (pageKey !== "comparativas/index.html") {
+      items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+    }
+  } else if (pageKey.startsWith("consejos/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Consejos", item: `${baseUrl}/consejos/` });
+    if (pageKey !== "consejos/index.html") {
+      items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+    }
+  } else if (pageKey.startsWith("recursos/")) {
+    items.push({ "@type": "ListItem", position: 2, name: "Recursos", item: `${baseUrl}/recursos/` });
+    if (pageKey !== "recursos/index.html") {
+      items.push({ "@type": "ListItem", position: 3, name: pageName, item: `${baseUrl}/${pageKey}` });
+    }
   } else if (pageKey !== "index.html") {
     items.push({ "@type": "ListItem", position: 2, name: pageName, item: `${baseUrl}/${pageKey}` });
   }
@@ -6141,6 +6161,20 @@ function smSeoRenderBreadcrumbs(pageKey, pageCfg) {
   main.prepend(nav);
 }
 
+function smSeoInferPageConfig(pageKey) {
+  const title = (document.title || "SmartHome").trim();
+  const description = document.querySelector('meta[name="description"]')?.getAttribute("content") || "";
+  const h1 = document.querySelector("h1")?.textContent?.trim() || title.replace(/\s*\|\s*SmartHome\s*$/i, "").trim();
+
+  return {
+    kind: "article",
+    name: h1 || "SmartHome",
+    title,
+    description,
+    image: "assets/img/tienda-hero-pc.webp"
+  };
+}
+
 function smSeoEnhanceAccessibility() {
   const main = document.querySelector("main");
   if (main && !main.id) main.id = "contenido-principal";
@@ -6163,7 +6197,7 @@ function smSeoEnhanceAccessibility() {
 
 function injectStructuredData() {
   const pageKey = getCurrentPageKey();
-  const pageCfg = smSeoPageMap()[pageKey];
+  const pageCfg = smSeoPageMap()[pageKey] || smSeoInferPageConfig(pageKey);
   if (!pageCfg) return;
 
   smSeoNormalizeHead(pageCfg, pageKey);
