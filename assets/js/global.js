@@ -742,40 +742,44 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   injectStructuredData();
   setupProgressivePageReveal();
+  smSeoObserveAsyncContent();
+  smSeoPreloadCurrentPageHero();
 
-  cargarHeader();
-  cargarFooter();
+  const headerLoad = Promise.resolve(cargarHeader());
+  const footerLoad = Promise.resolve(cargarFooter());
+  const heroLoad = cargarHero();
 
-  await cargarHero();
+  await Promise.allSettled([headerLoad, footerLoad, heroLoad]);
   cargarHeroForm();
   initContactLeadForm();
-  cargarPorQueSmartHome();
-  await cargarPlanesSlide();
-  await cargarCotizar();
-  await cargarEquipamiento();
-  await cargarFuncionalidades();
-  await cargarTuHogarProtegido();
-  await cargarTuComercioProtegido();
-
-  cargarContactate();
-  cargarWhatsappFloat();
-  cargarChatIAFloat();
-  cargarZonasProteccionHogar();
-  cargarZonasProteccionComercio();
-  await cargarServiciosParaComercios();
-  cargarCaracteristicasPanel();
-  cargarComparacionCaracteristicasPlanes();
-  cargarCentralMonitoreo247();
-  cargarApp();
-  cargarPlanesQueEs();
-  await cargarPlanesIncluye();
-  await cargarKitsQueIncluye();
-  await cargarBeneficiosConfianza();
-  await cargarKitsTienda();
-  await cargarContrata4Pasos();
-  await cargarPorQueElegir();
-  await cargarDetalleProductoKit();
-  await cargarEnConstruccion();
+  await Promise.allSettled([
+    Promise.resolve(cargarPorQueSmartHome()),
+    cargarPlanesSlide(),
+    cargarCotizar(),
+    cargarEquipamiento(),
+    cargarFuncionalidades(),
+    cargarTuHogarProtegido(),
+    cargarTuComercioProtegido(),
+    Promise.resolve(cargarContactate()),
+    Promise.resolve(cargarWhatsappFloat()),
+    Promise.resolve(cargarChatIAFloat()),
+    Promise.resolve(cargarZonasProteccionHogar()),
+    Promise.resolve(cargarZonasProteccionComercio()),
+    cargarServiciosParaComercios(),
+    Promise.resolve(cargarCaracteristicasPanel()),
+    Promise.resolve(cargarComparacionCaracteristicasPlanes()),
+    Promise.resolve(cargarCentralMonitoreo247()),
+    Promise.resolve(cargarApp()),
+    Promise.resolve(cargarPlanesQueEs()),
+    cargarPlanesIncluye(),
+    cargarKitsQueIncluye(),
+    cargarBeneficiosConfianza(),
+    cargarKitsTienda(),
+    cargarContrata4Pasos(),
+    cargarPorQueElegir(),
+    cargarDetalleProductoKit(),
+    cargarEnConstruccion()
+  ]);
 
 });
 
@@ -1140,17 +1144,6 @@ async function cargarHero() {
 
     const pageKey = heroConfig[pageSlug] ? pageSlug : "index";
 
-    const resolveHeroImagePath = async (relativePath) => {
-      const candidate = getSiteAssetUrl(relativePath || "components/hero/hero-index.jpg");
-      try {
-        const imgCheck = await fetch(candidate, { method: "HEAD" });
-        if (imgCheck.ok) return candidate;
-      } catch (e) {
-        // Ignore and fallback below
-      }
-      return getSiteAssetUrl("components/hero/hero-index.jpg");
-    };
-
     const response = await fetch(getSiteAssetUrl("components/hero/hero.html"));
     if (!response.ok) {
       throw new Error(`No se pudo cargar hero.html: ${response.status}`);
@@ -1158,9 +1151,10 @@ async function cargarHero() {
 
     const heroHTML = await responseAsUtf8Text(response);
     heroContainer.innerHTML = heroHTML;
+    smSeoEnhanceAccessibility(heroContainer);
 
     const config = heroConfig[pageKey] || heroConfig.index;
-    const heroImage = await resolveHeroImagePath(config.image);
+    const heroImage = getSiteAssetUrl(config.image || "components/hero/hero-index.jpg");
 
     const section = heroContainer.querySelector(".hero-page");
     if (section) {
@@ -6175,18 +6169,52 @@ function smSeoInferPageConfig(pageKey) {
   };
 }
 
-function smSeoEnhanceAccessibility() {
+function smSeoExtractFaqFromDom() {
+  return Array.from(document.querySelectorAll(".seo-faq-item")).map((item) => {
+    const question = item.querySelector("h3")?.textContent?.trim() || "";
+    const answer = Array.from(item.querySelectorAll("p"))
+      .map((node) => node.textContent.trim())
+      .filter(Boolean)
+      .join(" ");
+
+    return { q: question, a: answer };
+  }).filter((item) => item.q && item.a);
+}
+
+function smSeoPreloadImage(href) {
+  if (!href || document.head.querySelector(`link[rel="preload"][href="${href}"]`)) return;
+
+  const link = document.createElement("link");
+  link.rel = "preload";
+  link.as = "image";
+  link.href = href;
+  link.setAttribute("fetchpriority", "high");
+  document.head.appendChild(link);
+}
+
+function smSeoPreloadCurrentPageHero() {
+  const pageKey = getCurrentPageKey();
+  const pageCfg = smSeoPageMap()[pageKey] || smSeoInferPageConfig(pageKey);
+  if (!pageCfg?.image) return;
+
+  smSeoPreloadImage(getSiteAssetUrl(pageCfg.image));
+}
+
+function smSeoEnhanceAccessibility(root = document) {
+  const scope = root instanceof Element || root instanceof Document ? root : document;
   const main = document.querySelector("main");
   if (main && !main.id) main.id = "contenido-principal";
 
-  document.querySelectorAll("img").forEach((img, index) => {
+  scope.querySelectorAll("img").forEach((img, index) => {
     if (!img.getAttribute("alt")) {
       img.alt = smSeoAltFromSrc(img.getAttribute("src") || img.dataset.src || "");
     }
 
     img.decoding = "async";
 
-    if (index === 0) {
+    const isLikelyLcpImage = index === 0 && scope === document;
+
+    if (isLikelyLcpImage) {
       img.loading = "eager";
       img.setAttribute("fetchpriority", "high");
     } else if (!img.hasAttribute("loading")) {
@@ -6195,10 +6223,35 @@ function smSeoEnhanceAccessibility() {
   });
 }
 
+let smSeoAsyncContentObserver = null;
+
+function smSeoObserveAsyncContent() {
+  if (smSeoAsyncContentObserver || !document.body) return;
+
+  smSeoAsyncContentObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (!(node instanceof HTMLElement)) return;
+        smSeoEnhanceAccessibility(node);
+      });
+    });
+  });
+
+  smSeoAsyncContentObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
+
 function injectStructuredData() {
   const pageKey = getCurrentPageKey();
   const pageCfg = smSeoPageMap()[pageKey] || smSeoInferPageConfig(pageKey);
   if (!pageCfg) return;
+
+  const domFaq = smSeoExtractFaqFromDom();
+  if (domFaq.length && (!Array.isArray(pageCfg.faq) || !pageCfg.faq.length)) {
+    pageCfg.faq = domFaq;
+  }
 
   smSeoNormalizeHead(pageCfg, pageKey);
   smSeoEnhanceAccessibility();
@@ -6223,7 +6276,15 @@ function injectStructuredData() {
         "@type": "ImageObject",
         url: `${SM_SEO_SITE_ORIGIN}/assets/img/favicon.png`
       },
-      image: imageUrl
+      image: imageUrl,
+      contactPoint: [{
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        telephone: "+54-264-630-4866",
+        email: "contacto.smarthome.ar@gmail.com",
+        areaServed: "AR",
+        availableLanguage: ["es-AR", "es"]
+      }]
     },
     {
       "@type": "LocalBusiness",
