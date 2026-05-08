@@ -96,8 +96,6 @@
 
     console.log("SmartHome website initialized");
 
-    initNavigation();
-    initScrollEffects();
     initAnimations();
     initLazyLoading();
 
@@ -864,6 +862,14 @@ let siteRootUrlCache = null;
 
 function getSiteRootUrl() {
   if (siteRootUrlCache) {
+    return siteRootUrlCache;
+  }
+
+  if (window.location.protocol === 'file:') {
+    // For file:// URLs, construct the root manually
+    const path = window.location.pathname;
+    const rootPath = path.substring(0, path.lastIndexOf('/') + 1);
+    siteRootUrlCache = window.location.protocol + '//' + rootPath;
     return siteRootUrlCache;
   }
 
