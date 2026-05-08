@@ -1,194 +1,368 @@
 revisar Schema JSON-LD al final del proyecto
 
-"marker": { "x":
+Actúa como un Senior Frontend Performance Engineer especializado en optimización extrema para Core Web Vitals, Lighthouse y PageSpeed.
 
-prompt para migrar Bootstrap:
-Quiero que migres COMPLETAMENTE a recursos locales todas las librerías externas frontend de este proyecto, sin cambiar el diseño, sin cambiar el comportamiento funcional y sin introducir regresiones visibles ni técnicas.
+Proyecto:
+Sitio web corporativo de seguridad electrónica llamado SmartHome.
+Objetivo:
+llevar el sitio a:
 
-Contexto importante:
-- El sitio está alojado en GitHub Pages.
-- Hoy el proyecto depende de recursos externos cargados por CDN, principalmente desde jsDelivr.
-- Quiero eliminar esa dependencia externa y servir las librerías desde archivos locales dentro del proyecto.
-- El objetivo NO es rediseñar ni refactorizar el sitio, sino reemplazar dependencias externas por equivalentes locales manteniendo exactamente la misma versión y el mismo resultado.
-- Quiero que la migración sea conservadora, profesional y reversible.
-- Antes de tocar nada, auditá el proyecto completo para identificar TODAS las referencias a librerías externas en HTML, CSS y JS.
-- No quiero que dejes mezclado “una parte local y otra remota” salvo que lo justifiques explícitamente y me lo informes.
+* Performance mobile: 90+
+* Performance desktop: 98+
+* SEO: conservar 100
+* Accessibility: conservar 95+
+* Best Practices: conservar 95+
 
-Objetivo exacto:
-- Traer localmente y dejar funcionando desde archivos propios del proyecto:
-  1. Bootstrap CSS
-  2. Bootstrap JS bundle
-  3. Bootstrap Icons
-  4. Swiper CSS
-  5. Swiper JS
-- Mantener las mismas versiones exactas actualmente usadas en el proyecto, salvo que detectes una razón fuerte para no hacerlo. Si cambiás alguna versión, primero explicitá por qué.
-- Reemplazar todas las referencias remotas por rutas locales correctas.
-- Resolver también las cargas dinámicas desde JS, no solo los `<link>` y `<script>` en HTML.
-- Verificar que el sitio siga funcionando igual en desktop y mobile.
+Regla principal:
+NO cambiar diseño visual, branding, layout, copy ni funcionalidades existentes.
+Optimizar solamente arquitectura frontend, assets, carga, render y estructura técnica.
 
-Lo que espero que hagas, paso por paso:
-1. Auditar el proyecto completo.
-   - Encontrá todas las referencias a CDN o recursos externos relacionados con Bootstrap, Bootstrap Icons y Swiper.
-   - Revisá HTML, CSS y JS.
-   - Revisá especialmente `assets/js/global.js` porque ya sé que ahí hay carga dinámica.
-   - Identificá qué páginas dependen de cada librería.
-   - Identificá qué componentes o funciones concretas se rompen si falta cada una.
+Realiza una auditoría completa del proyecto y aplica TODAS las mejoras posibles.
 
-2. Proponer una estructura local ordenada.
-   - Guardá los archivos en una estructura profesional, por ejemplo algo tipo:
-     - `assets/vendor/bootstrap/...`
-     - `assets/vendor/bootstrap-icons/...`
-     - `assets/vendor/swiper/...`
-   - Si Bootstrap Icons necesita fuentes (`.woff`, `.woff2`, etc.), asegurate de traerlas y dejar sus rutas resueltas correctamente.
-   - No improvises rutas desordenadas.
+## 1) Optimización extrema de imágenes
 
-3. Mantener exactamente el comportamiento actual.
-   - No modifiques estilos del sitio salvo que sea necesario para corregir una ruta.
-   - No cambies clases, nombres ni arquitectura del HTML salvo que sea imprescindible.
-   - No alteres inicializaciones de componentes excepto lo necesario para que apunten a archivos locales.
-   - No cambies el diseño visual, espaciados, tipografías, íconos, animaciones ni comportamiento responsive.
+Auditar todas las imágenes del proyecto y aplicar:
 
-4. Migrar todas las referencias.
-   - Cambiá todos los `<link>` y `<script>` remotos en todas las páginas que correspondan.
-   - Cambiá también cualquier carga dinámica en JavaScript.
-   - En el caso de Swiper, revisá si hoy se está cargando de más en algunas páginas y unificá el criterio sin romper nada.
-   - Si una librería se está cargando de forma redundante, corregilo cuidadosamente.
+* convertir PNG/JPG/WebP a AVIF donde sea compatible
+* mantener fallback WebP/JPG
+* generar múltiples tamaños responsive:
 
-5. Verificar impacto funcional.
-   - Validá explícitamente que siga funcionando:
-     - Header
-     - Menú mobile
-     - Dropdowns
-     - Modales
-     - Sliders/carruseles
-     - Íconos
-     - Componentes inyectados por `global.js`
-     - Footer
-     - Páginas legales
-     - Páginas de tienda
-     - Páginas de planes
-     - Home
-   - Revisá tanto páginas raíz como páginas en subcarpetas, porque hay distintas profundidades de ruta.
+  * 320w
+  * 640w
+  * 960w
+  * 1280w
+  * 1920w
 
-6. Revisar rutas relativas.
-   - Este proyecto tiene páginas en `/`, `/pages/`, `/pages/planes/`, `/pages/tienda/`, `/pages/soluciones-a-medida/`, etc.
-   - Asegurate de que las rutas locales funcionen bien desde cualquier profundidad.
-   - Si hace falta, aprovechá lógica existente del proyecto para calcular rutas robustas, pero no reestructures de más.
+Reemplazar todas las etiquetas img por:
 
-7. No dejes dependencias remotas olvidadas.
-   - Confirmá si quedan otras referencias externas no relacionadas con estas librerías.
-   - Si encontrás otras, listalas claramente y NO las cambies sin avisar, salvo que yo lo haya pedido.
+* srcset
+* sizes
+* width
+* height
+* decoding="async"
+* loading="lazy" (excepto hero above the fold)
+* fetchpriority="high" solo para hero principal/logo si corresponde
 
-8. Entregar con verificación y resumen claro.
-   - Al final quiero:
-     - lista exacta de archivos modificados
-     - lista exacta de recursos externos eliminados
-     - lista exacta de archivos locales agregados
-     - riesgos residuales si los hubiera
-     - qué verificaste y qué no pudiste verificar
-     - cualquier punto que requiera revisión manual posterior
+Comprimir agresivamente sin pérdida visual perceptible.
 
-Criterios de calidad obligatorios:
-- La migración debe ser conservadora.
-- Debe priorizar no romper nada.
-- Debe mantener las mismas versiones.
-- Debe mantener el mismo look and feel.
-- Debe mantener la misma UX.
-- Debe ser coherente con GitHub Pages.
-- Debe dejar el proyecto menos dependiente de terceros.
-- No quiero “parches rápidos”; quiero una solución limpia y mantenible.
+Eliminar imágenes cargadas a resolución superior a la mostrada.
 
-Criterios de aceptación:
-- El sitio ya no debe depender de jsDelivr para Bootstrap, Bootstrap Icons y Swiper.
-- Debe seguir viéndose igual.
-- Debe seguir funcionando igual.
-- Los íconos deben seguir cargando bien.
-- Los sliders deben seguir funcionando igual.
-- El menú mobile y modales de Bootstrap deben seguir funcionando.
-- No deben aparecer errores por rutas rotas en páginas de subdirectorios.
-- No deben quedar referencias remotas viejas a esas librerías.
+Auditar backgrounds CSS pesados:
 
-Chequeos específicos que quiero que hagas:
-- Buscar todas las ocurrencias de:
-  - `cdn.jsdelivr.net`
-  - `bootstrap.min.css`
-  - `bootstrap.bundle.min.js`
-  - `bootstrap-icons`
-  - `swiper-bundle.min.css`
-  - `swiper-bundle.min.js`
-- Revisar si hay funciones en `global.js` que crean `<script>` o `<link>` dinámicamente.
-- Confirmar si Bootstrap Icons usa `url(...)` a fuentes y verificar esas rutas.
-- Confirmar si alguna página carga Swiper de forma directa y si además `global.js` también lo inyecta.
-- Detectar duplicaciones o inconsistencias.
-- Confirmar qué porcentaje del sitio dependía de cada librería.
+* convertir a AVIF/WebP
+* usar image-set()
+* responsive backgrounds
 
-Precauciones obligatorias:
-- No prometas riesgo cero.
-- Si detectás algo ambiguo o especialmente riesgoso, explicalo.
-- No borres nada importante sin confirmar antes que ya quedó reemplazado.
-- No hagas cambios destructivos innecesarios.
-- Si encontrás archivos remotos duplicados o legacy, no los elimines hasta verificar que ya no se usan.
-- Si necesitás dejar una etapa intermedia, explicitá cuál es y por qué.
+## 2) Reemplazar GIFs
 
-Estilo de trabajo esperado:
-- Primero auditá.
-- Después ejecutá la migración.
-- Después verificá.
-- Después resumí.
-- No te quedes solo en explicar: hacé el cambio completo.
-- Si encontrás algo inesperado, resolvelo con criterio de mínimo riesgo.
+Buscar todos los GIFs animados.
 
-Quiero que al final me respondas con esta estructura:
-1. Auditoría encontrada
-2. Cambios realizados
-3. Validaciones hechas
-4. Riesgos o puntos a revisar
-5. Resultado final
+Si existe:
+animated-icon.gif u otros gifs:
 
-Importante:
-- No hagas rediseño.
-- No modernices por tu cuenta.
-- No cambies textos.
-- No cambies SEO.
-- No cambies componentes salvo por lo necesario para migrar librerías.
-- No dejes mezcla innecesaria entre local y remoto.
-- No omitas ninguna referencia externa relacionada con estas librerías.
+reemplazar por:
 
-Si necesitás priorizar por riesgo, seguí este orden:
-1. Bootstrap
-2. Bootstrap Icons
-3. Swiper
+opción preferida:
+video WebM VP9 alpha transparent loop autoplay muted playsinline
 
-Y si encontrás que conviene hacer una migración por etapas, primero dejá un diagnóstico claro antes de seguir.
+estructura:
 
+<video autoplay muted loop playsinline preload="none">
+ <source src="archivo.webm" type="video/webm">
+ <img src="fallback.webp" alt="">
+</video>
 
-procedimiento chat ia 
-1 Definición de archivos
-Documento de instrucciones del bot (comportamiento comercial y límites).
-Base de conocimiento privada (datos de empresa, planes, FAQ).
-Archivo de configuración (umbrales de lead, alertas, fallback, correo destino).
-Plantilla de eventos comerciales (lead caliente, cotización solicitada, cierre probable).
+Reducir peso mínimo 90%.
 
-2 Estructura de datos
-Esquema claro de campos obligatorios para lead.
-Formato estándar para guardar resumen de conversación.
-Reglas de validación de teléfono, email y consentimiento.
+Si animación puede recrearse:
+usar CSS animation o SVG animation.
 
-3 Lógica de backend (Apps Script nuevo)
-Endpoint de chat.
-Lectura segura del conocimiento privado.
-Clasificación de intención comercial.
-Disparo de alerta por mail.
-Integración con tu Apps Script actual de formularios.
-Fallback sin IA cuando no haya cuota.
+## 3) CSS crítico
 
-4 Frontend del chat en web
-Widget embebido profesional.
-Flujo para pedir datos mínimos.
-Confirmación antes de enviar lead.
-Mensajes de error y continuidad cuando no hay IA.
+Extraer Critical CSS above-the-fold:
 
-5 Pruebas y ajuste
-Casos de prueba: consulta simple, lead caliente, falta de cuota, datos incompletos.
-Ajuste de scoring y mensajes de conversión.
-Verificación de seguridad y no exposición de conocimiento.
+incluir inline:
+
+* header
+* navbar
+* hero
+* CTA principal
+* primer viewport
+
+Todo CSS restante:
+cargar no bloqueante.
+
+usar:
+
+<link rel="preload" as="style">
+<link rel="stylesheet" media="print" onload="this.media='all'">
+
+Eliminar render blocking CSS.
+
+Eliminar CSS duplicado.
+
+Eliminar CSS no usado.
+
+Minificar todo.
+
+## 4) Eliminar dependencia de Bootstrap
+
+Auditar uso de Bootstrap.
+
+Migrar:
+
+* grid → CSS Grid/Flex
+* spacing → utility classes propias
+* botones → componentes CSS propios
+* navbar → propia
+* modals → propia
+* accordions → propia
+
+Eliminar:
+
+* bootstrap.min.css
+* bootstrap.bundle.js
+* bootstrap-icons
+
+Reemplazar iconos por:
+
+* SVG inline
+  o sprite SVG
+
+Reducir CSS/JS al mínimo.
+
+## 5) Optimización JS
+
+Auditar todo JS.
+
+Aplicar:
+
+* tree shaking
+* code splitting
+* lazy import
+* defer
+* async
+* eliminar librerías innecesarias
+* minificación máxima
+* eliminar código muerto
+* eliminar listeners duplicados
+* throttling/debouncing donde aplique
+
+Inicializar componentes solo cuando entren en viewport usando IntersectionObserver.
+
+No ejecutar JS innecesario en mobile.
+
+## 6) Reemplazar Swiper
+
+Buscar sliders/carousels.
+
+Eliminar Swiper.
+
+Reemplazar por:
+
+prioridad:
+
+* CSS scroll snap
+  o
+* Embla Carousel minimal
+
+Mantener UX igual.
+
+Reducir peso.
+
+## 7) Fonts
+
+Auditar fuentes.
+
+Aplicar:
+
+* self-hosted
+* woff2
+* subset latin
+* preload
+* font-display: swap
+
+Eliminar variantes no usadas.
+
+Máximo 1 familia / 2 weights si es posible.
+
+## 8) Third-party scripts
+
+Auditar:
+
+* GTM
+* GA4
+* pixels
+* embeds
+* chats
+* maps
+* widgets
+
+Reglas:
+
+eliminar lo innecesario.
+
+Mover third-party a lazy load post-interaction.
+
+Analytics:
+si GTM solo se usa para Analytics:
+reemplazar GTM por GA4 directo.
+
+Consent mode correcto.
+
+No bloquear render.
+
+## 9) Caché
+
+Configurar:
+
+assets versionados hash filename:
+
+app.a84df.css
+hero.f91ab.avif
+
+Headers:
+
+Cache-Control: public,max-age=31536000,immutable
+
+HTML:
+no-cache corto.
+
+gzip + brotli.
+
+## 10) Preload / preconnect
+
+Agregar estratégicamente:
+
+preconnect:
+
+* fonts
+* analytics
+* CDN necesarios
+
+preload:
+
+* hero
+* logo
+* font principal
+* CSS crítico
+
+No abusar.
+
+## 11) DOM
+
+Reducir DOM depth.
+
+Eliminar wrappers innecesarios.
+
+Reducir nesting.
+
+Eliminar elementos ocultos no usados.
+
+Mantener HTML semántico.
+
+## 12) CLS
+
+Garantizar CLS ~0:
+
+reservar espacio:
+
+* imágenes
+* embeds
+* sliders
+* banners
+* widgets
+
+usar aspect-ratio.
+
+## 13) Lazy everything
+
+Lazy load:
+
+* imágenes below fold
+* videos
+* iframes
+* mapas
+* sliders
+* secciones pesadas
+
+Usar IntersectionObserver.
+
+## 14) Accesibilidad
+
+Mantener o mejorar:
+
+* labels
+* aria
+* contraste
+* navegación teclado
+* focus visible
+* landmarks
+
+## 15) SEO técnico
+
+Mantener 100/100.
+
+Verificar:
+
+* canonical
+* sitemap
+* robots
+* schema.org
+* OG tags
+* Twitter cards
+* headings hierarchy
+* alt text
+* internal linking
+* crawlability
+
+No romper indexación.
+
+## 16) Seguridad
+
+Agregar:
+
+* CSP correcta
+* X-Frame-Options
+* X-Content-Type-Options
+* Referrer-Policy
+* Permissions-Policy
+
+## 17) Service Worker
+
+Evaluar cache inteligente:
+
+stale-while-revalidate
+
+solo si mejora UX.
+
+No romper SEO.
+
+## 18) Lighthouse target
+
+Optimizar hasta lograr:
+
+LCP < 2 s
+INP < 200 ms
+CLS < 0.02
+TTFB mínimo
+Total Blocking Time mínimo
+
+## 19) Entregable
+
+Modificar archivos reales del proyecto.
+
+Luego entregar:
+
+1. lista exacta de cambios
+2. archivos tocados
+3. peso antes/después
+4. requests antes/después
+5. Core Web Vitals estimados
+6. mejoras adicionales detectadas
+7. problemas de arquitectura encontrados
+8. sugerencias premium opcionales
+
+Trabajar con criterio de producción enterprise.
+No hacer cambios cosméticos.
+Solo mejoras reales.
