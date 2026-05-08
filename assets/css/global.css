@@ -752,7 +752,7 @@ FOOTER
   overflow: hidden;
   padding: 110px 0 90px;
   background-image: linear-gradient(120deg, rgba(7, 39, 99, 0.84), rgba(11, 59, 143, 0.72)),
-    url("../img/pages/quienes-somos/hero-quienes-somos.jpg");
+    url("../img/pages/quienes-somos/hero-quienes-somos.webp");
   background-size: cover;
   background-position: center;
 }
@@ -2504,7 +2504,7 @@ FOOTER
   overflow: hidden;
   padding: 100px 0 84px;
   background-image: linear-gradient(120deg, rgba(7, 39, 99, 0.88), rgba(11, 59, 143, 0.74)),
-    url("../img/pages/quienes-somos/hero-quienes-somos.jpg");
+    url("../img/pages/quienes-somos/hero-quienes-somos.webp");
   background-size: cover;
   background-position: center;
 }
@@ -9857,5 +9857,7 @@ FOOTER
     border-radius: 20px;
   }
 }
+
+
 
 
