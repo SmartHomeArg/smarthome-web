@@ -4707,9 +4707,11 @@ FOOTER
 ========================================================= */
 
 .whatsapp-float {
-  position: fixed;
+  position: fixed !important;
   right: 20px;
   bottom: 20px;
+  left: auto;
+  top: auto;
   width: auto;
   height: auto;
   border-radius: 0;
@@ -4718,7 +4720,7 @@ FOOTER
   justify-content: center;
   box-shadow: none;
   background: transparent;
-  z-index: 9999;
+  z-index: 99999;
   text-decoration: none;
   opacity: 0;
   transform: translateY(18px) scale(0.9);

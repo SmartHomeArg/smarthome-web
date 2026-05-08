@@ -2410,7 +2410,7 @@ function cargarContactate() {
 ========================================= */
 
 function cargarWhatsappFloat() {
-  const contenedor = document.getElementById("whatsapp-float");
+  const contenedor = ensureFloatingMount_("whatsapp-float");
   if (!contenedor) return;
 
   fetch(getSiteAssetUrl("components/whatsapp-float/whatsapp-float.html"))
@@ -2432,7 +2432,12 @@ function cargarWhatsappFloat() {
 
 function ensureFloatingMount_(id) {
   let mount = document.getElementById(id);
-  if (mount) return mount;
+  if (mount) {
+    if (mount.parentNode !== document.body) {
+      document.body.appendChild(mount);
+    }
+    return mount;
+  }
 
   mount = document.createElement('div');
   mount.id = id;
