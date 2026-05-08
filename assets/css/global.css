@@ -4723,11 +4723,9 @@ FOOTER
   z-index: 100000 !important;
   text-decoration: none;
   opacity: 1 !important;
-  transform: translateY(18px) scale(0.9);
-  animation:
-    whatsappEntrance 0.6s ease forwards,
-    whatsappBounce 3.5s ease-in-out 1.2s infinite;
-  transition: transform 0.25s ease;
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
   visibility: visible !important;
   pointer-events: auto !important;
 }

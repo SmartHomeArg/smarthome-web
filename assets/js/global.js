@@ -29,6 +29,13 @@
     document.body.classList.add("page-shell-loading");
   }
 
+  // Cargar WhatsApp flotante inmediatamente
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', cargarWhatsappFloat);
+  } else {
+    cargarWhatsappFloat();
+  }
+
 
   /* =========================================================
      CONFIGURACIÓN DEL SITIO
