@@ -757,7 +757,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     cargarEquipamiento(),
     cargarFuncionalidades(),
     cargarTuHogarProtegido(),
-    cargarTuComercioProtegido()
+    cargarTuComercioProtegido(),
+    Promise.resolve(cargarWhatsappFloat())
   ]);
 
   optimizeImages();
@@ -766,7 +767,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   runWhenIdle(() => {
     Promise.allSettled([
       Promise.resolve(cargarContactate()),
-      Promise.resolve(cargarWhatsappFloat()),
       Promise.resolve(cargarChatIAFloat()),
       Promise.resolve(cargarZonasProteccionHogar()),
       Promise.resolve(cargarZonasProteccionComercio()),
