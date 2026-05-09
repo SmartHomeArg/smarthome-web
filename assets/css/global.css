@@ -4706,26 +4706,39 @@ FOOTER
    BOTON FLOTANTE WHATSAPP
 ========================================================= */
 
+#whatsapp-float {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  left: auto;
+  top: auto;
+  z-index: 2147483647;
+  pointer-events: auto;
+}
+
 .whatsapp-float {
   position: fixed !important;
-  right: 20px !important;
-  bottom: 20px !important;
+  right: 20px;
+  bottom: 20px;
+  right: max(20px, calc(20px + env(safe-area-inset-right, 0px))) !important;
+  bottom: max(20px, calc(20px + env(safe-area-inset-bottom, 0px))) !important;
   left: auto !important;
   top: auto !important;
-  width: auto;
-  height: auto;
-  border-radius: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   display: flex !important;
   align-items: center;
   justify-content: center;
-  box-shadow: none;
-  background: transparent;
-  z-index: 100000 !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14);
+  background: #25d366;
+  overflow: hidden;
+  z-index: 2147483647 !important;
   text-decoration: none;
-  opacity: 1 !important;
-  transform: none !important;
-  animation: none !important;
-  transition: none !important;
+  opacity: 0;
+  transform: translateY(18px) scale(0.9);
+  animation: whatsappEntrance 0.6s ease forwards, whatsappBounce 3.5s ease-in-out 1.5s infinite;
+  transition: transform 0.25s ease;
   visibility: visible !important;
   pointer-events: auto !important;
 }
@@ -4735,10 +4748,17 @@ FOOTER
 }
 
 .whatsapp-float img {
-  width: 100px;
-  height: 100px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   display: block;
+  transform: scale(3);
+}
+
+@media (min-width: 992px) {
+  .whatsapp-float img {
+    transform: scale(1.55);
+  }
 }
 
 /* Aparición al cargar */
@@ -4764,27 +4784,41 @@ FOOTER
 
 /* Tablet */
 @media (max-width: 991.98px) {
+  #whatsapp-float {
+    right: 118px;
+    bottom: 20px;
+  }
+
   .whatsapp-float {
-    right: 18px;
-    bottom: 18px;
+    right: 118px;
+    bottom: 20px;
+    right: max(118px, calc(118px + env(safe-area-inset-right, 0px))) !important;
+    bottom: max(20px, calc(20px + env(safe-area-inset-bottom, 0px))) !important;
   }
 
   .whatsapp-float img {
-    width: 90px;
-    height: 90px;
+    width: 50%;
+    height: 50%;
   }
 }
 
 /* Mobile */
 @media (max-width: 575.98px) {
+  #whatsapp-float {
+    right: 31px;
+    bottom: 20px;
+  }
+
   .whatsapp-float {
-    right: 14px;
-    bottom: 14px;
+    right: 31px;
+    bottom: 20px;
+    right: max(31px, calc(31px + env(safe-area-inset-right, 0px))) !important;
+    bottom: max(20px, calc(20px + env(safe-area-inset-bottom, 0px))) !important;
   }
 
   .whatsapp-float img {
-    width: 84px;
-    height: 84px;
+    width: 50%;
+    height: 50%;
   }
 }
 
@@ -4795,8 +4829,8 @@ FOOTER
 .chat-ia-float {
   --chat-btn-size: 60px;
   position: fixed;
-  right: 130px;
-  bottom: 40px;
+  right: 20px;
+  bottom: 92px;
   width: var(--chat-btn-size);
   height: var(--chat-btn-size);
   overflow: visible;
@@ -4808,7 +4842,7 @@ FOOTER
   width: 100%;
   height: 100%;
   border: 0;
-  border-radius: 14px;
+  border-radius: 50%;
   background: linear-gradient(to right, #6ccad7 0%, #316aaa 100%);
   color: #fff;
   display: inline-flex;
@@ -5234,7 +5268,6 @@ FOOTER
   }
 
   .chat-ia-toggle {
-    border-radius: 12px;
     gap: 2px;
     font-size: 9px;
   }
@@ -5250,13 +5283,12 @@ FOOTER
 
 @media (max-width: 575.98px) {
   .chat-ia-float {
-    --chat-btn-size: 50px;
+    --chat-btn-size: 58px;
     right: 31px;
     bottom: 108px;
   }
 
   .chat-ia-toggle {
-    border-radius: 11px;
     gap: 2px;
     font-size: 9px;
   }

@@ -17,6 +17,8 @@
  * =========================================================
  */
 
+var siteRootUrlCache = null;
+
 (function () {
 
   "use strict";
@@ -864,8 +866,6 @@ function ensureSwiperResources() {
 
   return swiperResourcesPromise;
 }
-
-let siteRootUrlCache = null;
 
 function getSiteRootUrl() {
   if (siteRootUrlCache) {
@@ -2484,12 +2484,18 @@ function ensureFloatingMount_(id) {
     if (mount.parentNode !== document.body) {
       document.body.appendChild(mount);
     }
-    return mount;
+  } else {
+    mount = document.createElement('div');
+    mount.id = id;
+    document.body.appendChild(mount);
   }
 
-  mount = document.createElement('div');
-  mount.id = id;
-  document.body.appendChild(mount);
+  mount.style.position = 'fixed';
+  mount.style.left = 'auto';
+  mount.style.top = 'auto';
+  mount.style.zIndex = '2147483647';
+  mount.style.pointerEvents = 'auto';
+
   return mount;
 }
 
