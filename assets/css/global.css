@@ -9098,6 +9098,13 @@ FOOTER
   font-weight: 600;
 }
 
+.kit-producto__plan-note {
+  margin: 0.64rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #4c5666;
+}
+
 .kit-producto__description-block {
   margin-top: 0.7rem;
   padding: 0.9rem 1rem;
