@@ -8,12 +8,12 @@
         <img src="" class="logo" alt="SmartHome" decoding="async">
       </a>
 
-      <button class="navbar-toggler" type="button" data-sm-mobile-menu-toggle data-bs-target="#menuPrincipal"
-        aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu principal">
+      <button class="mobile-menu-button" type="button" aria-controls="menuPrincipal" aria-expanded="false"
+        aria-label="Abrir menu principal" onclick="return window.SM_toggleHeaderMenu ? window.SM_toggleHeaderMenu(event, this) : false;">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="collapse navbar-collapse" id="menuPrincipal">
+      <div class="navbar-collapse" id="menuPrincipal">
         <ul class="navbar-nav menu-principal">
 
           <li class="nav-item">
