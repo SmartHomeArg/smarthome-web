@@ -3430,6 +3430,10 @@ FOOTER
   .navbar-toggler {
     margin: 0;
     padding: 0.25rem 0.5rem;
+    position: relative;
+    z-index: 1002;
+    pointer-events: auto;
+    touch-action: manipulation;
   }
 
   .navbar-collapse {
@@ -4822,6 +4826,18 @@ FOOTER
   }
 }
 
+@media (max-width: 991.98px) and (orientation: landscape) {
+  #whatsapp-float {
+    right: 22px;
+    bottom: 18px;
+  }
+
+  .whatsapp-float {
+    right: max(22px, calc(22px + env(safe-area-inset-right, 0px))) !important;
+    bottom: max(18px, calc(18px + env(safe-area-inset-bottom, 0px))) !important;
+  }
+}
+
 /* =========================================================
    CHAT IA FLOTANTE
 ========================================================= */
@@ -5308,6 +5324,17 @@ FOOTER
   }
 }
 
+@media (max-width: 991.98px) and (orientation: landscape) {
+  .chat-ia-float {
+    right: max(94px, calc(94px + env(safe-area-inset-right, 0px)));
+    bottom: max(18px, calc(18px + env(safe-area-inset-bottom, 0px)));
+  }
+
+  .chat-ia-panel {
+    height: min(360px, calc(100vh - 28px));
+  }
+}
+
 /* =========================================================
    Suavizar la apertura/cierre del collapse del menú en mobile
    - Aplica solo en anchos <= 991.98px para no interferir en desktop
@@ -5323,6 +5350,11 @@ FOOTER
   .navbar-collapse.collapse.show {
     /* valor suficientemente alto para contener el menú; no debe cortar contenido */
     max-height: 1200px;
+  }
+  .navbar-collapse.collapse.is-mobile-open {
+    display: block;
+    max-height: 1200px;
+    overflow: visible;
   }
 }
 

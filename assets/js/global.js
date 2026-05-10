@@ -107,6 +107,7 @@ var siteRootUrlCache = null;
 
     initAnimations();
     initLazyLoading();
+    initMobileMenuToggleFallback();
 
   }
 
@@ -1077,6 +1078,11 @@ function cargarHeader() {
         initHeaderDropdownTouch();
       } catch (e) {
         // fail silently if function not available
+      }
+      try {
+        initMobileMenuToggleFallback();
+      } catch (e) {
+        // fail silently
       }
       try {
         initMobileMenuAutoClose();
@@ -3663,6 +3669,51 @@ function initHeaderDropdownTouch() {
      al tocar fuera, al hacer scroll o al hacer touchmove.
    - Usa la API de Bootstrap si está disponible.
 ========================================= */
+function initMobileMenuToggleFallback() {
+  try {
+    if (document.documentElement.dataset.mobileToggleFallbackInit === 'true') return;
+    document.documentElement.dataset.mobileToggleFallbackInit = 'true';
+
+    let lastTouchToggleAt = 0;
+
+    const handleToggle = function (event) {
+      const clickedToggler = event.target.closest && event.target.closest('[data-sm-mobile-menu-toggle], .navbar-toggler');
+      if (!clickedToggler) return;
+      if (window.innerWidth >= 992) return;
+
+      if (event.type === 'touchend') {
+        lastTouchToggleAt = Date.now();
+      } else if (event.type === 'click' && Date.now() - lastTouchToggleAt < 700) {
+        return;
+      }
+
+      const currentMenu = document.getElementById('menuPrincipal');
+      if (!currentMenu) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      if (typeof event.stopImmediatePropagation === 'function') {
+        event.stopImmediatePropagation();
+      }
+
+      currentMenu.classList.remove('collapsing');
+      currentMenu.style.height = '';
+      currentMenu.style.maxHeight = '';
+      currentMenu.style.overflow = '';
+
+      const shouldOpen = !currentMenu.classList.contains('show') && !currentMenu.classList.contains('is-mobile-open');
+      currentMenu.classList.toggle('show', shouldOpen);
+      currentMenu.classList.toggle('is-mobile-open', shouldOpen);
+      clickedToggler.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+    };
+
+    document.addEventListener('click', handleToggle, true);
+    document.addEventListener('touchend', handleToggle, true);
+  } catch (err) {
+    console.error('initMobileMenuToggleFallback error:', err);
+  }
+}
+
 function initMobileMenuAutoClose() {
   try {
     const menu = document.getElementById('menuPrincipal');
@@ -3672,10 +3723,10 @@ function initMobileMenuAutoClose() {
     if (menu.dataset.autoCloseInit === 'true') return;
     menu.dataset.autoCloseInit = 'true';
 
-    const isOpen = () => menu.classList.contains('show');
+    const isOpen = () => menu.classList.contains('show') || menu.classList.contains('is-mobile-open');
 
     const smoothClose = (el) => {
-      if (!el || !el.classList.contains('show')) return;
+      if (!el || (!el.classList.contains('show') && !el.classList.contains('is-mobile-open'))) return;
 
       // evitar reentradas
       if (el.dataset.animating === 'true') return;
@@ -3697,7 +3748,7 @@ function initMobileMenuAutoClose() {
       });
 
       let cleanup = () => {
-        el.classList.remove('show');
+        el.classList.remove('show', 'is-mobile-open');
         el.style.transition = '';
         el.style.maxHeight = '';
         el.style.overflow = '';
@@ -3725,6 +3776,11 @@ function initMobileMenuAutoClose() {
     };
     const closeMenu = () => {
       try {
+        if (menu.classList.contains('is-mobile-open')) {
+          smoothClose(menu);
+          return;
+        }
+
         // Preferir usar la API de Bootstrap (si existe) para cerrar correctamente y mantener estado interno
         if (window.bootstrap && typeof window.bootstrap.Collapse === 'function') {
           const inst = window.bootstrap.Collapse.getOrCreateInstance(menu, { toggle: false });
