@@ -161,7 +161,7 @@ window.SM_toggleHeaderMenu = function (event, button) {
 
   const SITE_CONFIG = {
 
-    siteName: "SmartHome",
+    siteName: "SmartHome Seguridad Electrónica",
 
     breakpoints: {
       mobile: 576,
@@ -717,7 +717,8 @@ function injectStructuredData() {
   const organization = {
     "@type": "Organization",
     "@id": organizationId,
-    name: "SmartHome",
+    name: "SmartHome Seguridad Electrónica",
+    alternateName: "SmartHome",
     url: `${baseUrl}/`,
     logo: {
       "@type": "ImageObject",
@@ -730,7 +731,8 @@ function injectStructuredData() {
     "@type": "WebSite",
     "@id": websiteId,
     url: `${baseUrl}/`,
-    name: "SmartHome",
+    name: "SmartHome Seguridad Electrónica",
+    alternateName: "SmartHome",
     inLanguage: "es-AR",
     publisher: { "@id": organizationId }
   };
@@ -6251,6 +6253,8 @@ function initCaracteristicasPanel() {
 ========================================= */
 
 const SM_SEO_SITE_ORIGIN = "https://smarthome.net.ar";
+const SM_SEO_SITE_NAME = "SmartHome Seguridad Electrónica";
+const SM_SEO_SITE_ALTERNATE_NAME = "SmartHome";
 const SM_SEO_SERVICE_AREAS = ["San Juan Capital", "Rivadavia", "Santa Lucia", "Rawson", "Chimbas", "Pocito"];
 
 function getCurrentPageKey() {
@@ -6465,7 +6469,7 @@ function smSeoPageMap() {
 
 function smSeoNormalizeHead(pageCfg, pageKey) {
   const canonicalUrl = smSeoCanonical(pageKey);
-  const title = pageCfg.title || document.title || "SmartHome";
+  const title = pageCfg.title || document.title || SM_SEO_SITE_ALTERNATE_NAME;
   const description = pageCfg.description || "";
   const imageUrl = getSiteAssetUrl(pageCfg.image || "assets/img/tienda-hero-pc.webp");
 
@@ -6476,12 +6480,12 @@ function smSeoNormalizeHead(pageCfg, pageKey) {
   smSeoUpsertMeta("name", "robots", "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
   smSeoUpsertMeta("property", "og:locale", "es_AR");
   smSeoUpsertMeta("property", "og:type", pageCfg.kind === "product" ? "product" : "website");
-  smSeoUpsertMeta("property", "og:site_name", "SmartHome");
+  smSeoUpsertMeta("property", "og:site_name", SM_SEO_SITE_NAME);
   smSeoUpsertMeta("property", "og:title", title);
   smSeoUpsertMeta("property", "og:description", description);
   smSeoUpsertMeta("property", "og:url", canonicalUrl);
   smSeoUpsertMeta("property", "og:image", imageUrl);
-  smSeoUpsertMeta("property", "og:image:alt", pageCfg.name || "SmartHome");
+  smSeoUpsertMeta("property", "og:image:alt", pageCfg.name || SM_SEO_SITE_ALTERNATE_NAME);
   smSeoUpsertMeta("name", "twitter:card", "summary_large_image");
   smSeoUpsertMeta("name", "twitter:title", title);
   smSeoUpsertMeta("name", "twitter:description", description);
@@ -6533,13 +6537,13 @@ function smSeoRenderBreadcrumbs(pageKey, pageCfg) {
 }
 
 function smSeoInferPageConfig(pageKey) {
-  const title = (document.title || "SmartHome").trim();
+  const title = (document.title || SM_SEO_SITE_ALTERNATE_NAME).trim();
   const description = document.querySelector('meta[name="description"]')?.getAttribute("content") || "";
   const h1 = document.querySelector("h1")?.textContent?.trim() || title.replace(/\s*\|\s*SmartHome\s*$/i, "").trim();
 
   return {
     kind: "article",
-    name: h1 || "SmartHome",
+    name: h1 || SM_SEO_SITE_ALTERNATE_NAME,
     title,
     description,
     image: "assets/img/tienda-hero-pc.webp"
@@ -6647,7 +6651,8 @@ function injectStructuredData() {
     {
       "@type": "Organization",
       "@id": organizationId,
-      name: "SmartHome",
+      name: SM_SEO_SITE_NAME,
+      alternateName: SM_SEO_SITE_ALTERNATE_NAME,
       url: `${SM_SEO_SITE_ORIGIN}/`,
       logo: {
         "@type": "ImageObject",
@@ -6666,7 +6671,8 @@ function injectStructuredData() {
     {
       "@type": "LocalBusiness",
       "@id": localBusinessId,
-      name: "SmartHome",
+      name: SM_SEO_SITE_NAME,
+      alternateName: SM_SEO_SITE_ALTERNATE_NAME,
       url: `${SM_SEO_SITE_ORIGIN}/`,
       image: imageUrl,
       logo: `${SM_SEO_SITE_ORIGIN}/assets/img/favicon.png`,
@@ -6685,7 +6691,8 @@ function injectStructuredData() {
       "@type": "WebSite",
       "@id": websiteId,
       url: `${SM_SEO_SITE_ORIGIN}/`,
-      name: "SmartHome",
+      name: SM_SEO_SITE_NAME,
+      alternateName: SM_SEO_SITE_ALTERNATE_NAME,
       inLanguage: "es-AR",
       publisher: { "@id": organizationId }
     },
