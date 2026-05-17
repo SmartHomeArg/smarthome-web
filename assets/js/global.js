@@ -5783,8 +5783,12 @@ async function cargarDetalleProductoKit() {
     const planPromo = container.querySelector("#kitProductoPlanPromo");
     const mainCta = container.querySelector("#kitProductoMainCta");
     const adviceCta = container.querySelector("#kitProductoAdviceCta");
+    const confirmationKitName = container.querySelector("#kitConfirmationKitName");
+    const confirmationPrice = container.querySelector("#kitConfirmationPrice");
+    const confirmationPlanTitle = container.querySelector("#kitConfirmationPlanTitle");
+    const confirmationWspCta = container.querySelector("#kitConfirmationWspCta");
 
-    if (!mainImage || !thumbs || !title || !subtitle || !price || !installments || !features || !includes || !planTitle || !planList || !planSell || !planPromo || !mainCta || !adviceCta) {
+    if (!mainImage || !thumbs || !title || !subtitle || !price || !installments || !features || !includes || !planTitle || !planList || !planSell || !planPromo || !mainCta || !adviceCta || !confirmationKitName || !confirmationPrice || !confirmationPlanTitle || !confirmationWspCta) {
       return;
     }
 
@@ -5796,6 +5800,9 @@ async function cargarDetalleProductoKit() {
     planList.textContent = kit.pricing.planListFormatted;
     planSell.textContent = kit.pricing.planFinalFormatted;
     planPromo.textContent = kit.pricing.planPromoLabel;
+    confirmationKitName.textContent = kit.title;
+    confirmationPrice.textContent = kit.pricing.installationPriceFormatted;
+    confirmationPlanTitle.textContent = kit.planTitle || "Plan Mensual";
 
     features.innerHTML = kit.features
       .map((item) => `<li><i class="bi bi-shield-check"></i><span>${String(item)}</span></li>`)
@@ -5846,7 +5853,7 @@ async function cargarDetalleProductoKit() {
     const mainMessage = encodeURIComponent(`Hola, quiero contratar el ${kit.title}.`);
     const adviceMessage = encodeURIComponent(`Hola, quiero asesoramiento sobre el ${kit.title}.`);
 
-    mainCta.href = `${baseWhatsapp}&text=${mainMessage}`;
+    confirmationWspCta.href = `${baseWhatsapp}&text=${mainMessage}`;
     adviceCta.href = `${baseWhatsapp}&text=${adviceMessage}`;
   } catch (error) {
     console.error("Error cargando detalle de producto de kit:", error);

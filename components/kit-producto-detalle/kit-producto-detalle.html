@@ -32,11 +32,34 @@
         </section>
 
         <div class="kit-producto__actions">
-          <a class="kit-producto__cta kit-producto__cta--primary" id="kitProductoMainCta" href="#">!Lo quiero!</a>
+          <a class="kit-producto__cta kit-producto__cta--primary" id="kitProductoMainCta" href="#" data-bs-toggle="modal" data-bs-target="#kitConfirmationModal">!Lo quiero!</a>
           <a class="kit-producto__cta kit-producto__cta--secondary" id="kitProductoAdviceCta" target="_blank" rel="noopener noreferrer" href="https://api.whatsapp.com/send?phone=5492646304866&text=Hola%2C%20quiero%20asesoramiento%20sobre%20un%20kit%20SmartHome.">
             <i class="bi bi-whatsapp"></i>
             Quiero asesoramiento
           </a>
+        </div>
+
+        <div class="modal fade" id="kitConfirmationModal" tabindex="-1" aria-labelledby="kitConfirmationModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="kitConfirmationModalLabel">Confirmar pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+              </div>
+              <div class="modal-body">
+                <p class="mb-3">Vas a solicitar este kit por WhatsApp. El precio mostrado es el costo de instalación; luego confirmamos el plan mensual, medios de pago y fecha de instalación.</p>
+                <ul class="list-unstyled mb-0">
+                  <li><strong>Kit:</strong> <span id="kitConfirmationKitName">Kit SmartHome</span></li>
+                  <li><strong>Instalación:</strong> <span id="kitConfirmationPrice">$0</span></li>
+                  <li><strong>Plan:</strong> <span id="kitConfirmationPlanTitle">Plan Mensual</span></li>
+                </ul>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Volver</button>
+                <a id="kitConfirmationWspCta" class="btn btn-primary" target="_blank" rel="noopener noreferrer" href="#">Continuar por WhatsApp</a>
+              </div>
+            </div>
+          </div>
         </div>
 
         <p class="kit-producto__contact-note">
